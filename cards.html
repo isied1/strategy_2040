@@ -477,7 +477,6 @@
     function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
     function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
     
-    // حفظ وإضافة الجهات المنفذة عبر سوبابيس
     async function saveEntity() {
        const id = document.getElementById('ent_rowIndex').value;
        const name = document.getElementById('ent_name').value.trim();
@@ -496,7 +495,7 @@
        else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-    // 2. جلب البيانات الشاملة من جدول المبادرات المكون من 28 عموداً في سوبابيس
+    // 2. معالجة وتفكيك حقول النص التي تفصل بينها علامة الـ Pipe (|)
     async function loadAllDataFromServer() {
       showToast("⏳ جاري جلب البيانات السحابية...");
       try {
@@ -510,9 +509,41 @@
         } else { entitiesList = entData || []; }
 
         initiatives = (initData || []).map(item => {
-          let parsedGoals = []; if(item.goals) { try { parsedGoals = JSON.parse(item.goals); } catch(e) { parsedGoals = item.goals.split('\n').filter(Boolean); } }
-          let parsedKpis = []; if(item.kpis) { try { parsedKpis = JSON.parse(item.kpis); } catch(e) { parsedKpis = item.kpis.split('\n').filter(Boolean); } }
-          let parsedPlan = []; if(item.action_plan) { try { parsedPlan = JSON.parse(item.action_plan); } catch(e) { parsedPlan = []; } }
+          // تفكيك الأهداف بناء على علامة الـ Pipe
+          let parsedGoals = []; 
+          if(item.goals) { 
+            parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean); 
+          }
+          
+          // تفكيك المؤشرات بناء على علامة الـ Pipe
+          let parsedKpis = []; 
+          if(item.kpis) { 
+            parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean); 
+          }
+          
+          // تفكيك خطة العمل وبناء المصفوفة الهيكلية للجدول برمجياً
+          let parsedPlan = []; 
+          if(item.action_plan) { 
+            let segments = item.action_plan.split('|').map(s => s.trim()).filter(Boolean);
+            segments.forEach((seg, idx) => {
+              let no = idx + 1;
+              let procedure = seg;
+              let status = "جاري";
+              
+              let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
+              if (numMatch) {
+                no = numMatch[1];
+                procedure = numMatch[2];
+              }
+              
+              let statMatch = procedure.match(/^(.*)\s*\(([^)]+)\)\s*$/);
+              if (statMatch) {
+                procedure = statMatch[1].trim();
+                status = statMatch[2].trim();
+              }
+              parsedPlan.push({ no: no, procedure: procedure, status: status });
+            });
+          }
 
           return {
             id: item.id,
@@ -568,7 +599,7 @@
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
-    // 3. بناء وحقن البطاقات ذات العرض الكامل بناءً على المعرّف الفريد للجدول (id)
+    // 3. بناء وحقن بطاقة العرض الكامل وزر التعديل الكلاسيكي المنسق باللون الأصفر
     function renderCards(){
       if(isListView) { els.cards.classList.add('list-view'); } else { els.cards.classList.remove('list-view'); }
       const data = getFilteredData();
@@ -580,6 +611,8 @@
       
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
+        
+        // زر التعديل الأصلي المنسق بالكامل المتوافق مع معرّف سوبابيس
         const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
@@ -748,7 +781,7 @@
       tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
     }
 
-    // 4. حفظ البيانات المعدلة فوراً داخل سوبابيس (28 عموداً) وإعادة معالجة التنسيق
+    // 4. تجميع وإعادة بناء النص باستخدام علامة الـ Pipe (|) قبل رفعه وحفظه في سوبابيس
     async function saveInCardEdit(id) {
       const card = document.getElementById(`card-${id}`);
       showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
@@ -766,6 +799,11 @@
         
         const suppEntityVal = isListViewActive ? getVal(`f_supp_head_${id}`) : getVal(`f_supp_body_${id}`);
         
+        // تجميع السطور بربطها بـ الـ Pipe لإرجاعها لقاعدة البيانات متطابقة 1:1
+        const goalsStringified = goalsArr.join(' | ');
+        const kpisStringified = indArr.join(' | ');
+        const actionPlanStringified = planArr.map(p => `${p.no}- ${p.procedure} (${p.status})`).join(' | ');
+
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
           initiative_name: getVal(`f_name_${id}`),
@@ -791,9 +829,9 @@
           email: getVal(`f_email_${id}`),
           last_modified_by: currentUser.name,
           last_modified_date: new Date().toISOString(),
-          goals: JSON.stringify(goalsArr),
-          kpis: JSON.stringify(indArr),
-          action_plan: JSON.stringify(planArr)
+          goals: goalsStringified,
+          kpis: kpisStringified,
+          action_plan: actionPlanStringified
         };
         
         const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);
@@ -891,7 +929,6 @@
         executivePosition: item.executivePosition || "لم يتم تدوين الموقف التنفيذي الحالي بعد"
       };
 
-      // استدعاء دالة Edge Function المخصصة بدلاً من سكربت جوجل القديم
       const { data: res, error } = await window.supabaseClient.functions.invoke('get-card-ai-advice', { body: payload });
 
       loading.style.display = 'none'; content.style.display = 'block';
@@ -932,7 +969,6 @@
       let contextData = initiatives.map(item => `رقم: ${item.initiativeNo} | المبادرة: ${item.initiativeName} | التنفيذ: ${Math.round(pctNumber(item.completionPercent))}% | الموقف: ${item.executivePosition}`).join('\n');
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
-      // استدعاء دالة الشات الذكي عبر سوبابيس
       const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
 
       document.getElementById(loadingId).remove();
