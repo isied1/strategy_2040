@@ -284,7 +284,7 @@
     const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
     
     // هنا نستخدم المكتبة القادمة من الـ CDN لتوليد العميل الخاص بنا
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let initiatives = [];
     let currentUser = null;
@@ -339,10 +339,10 @@
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true; btn.textContent = "جاري الإرسال...";
       
-      // تعيين الإيميل مباشرة في كائن window لتفادي خطأ الـ Initialization نهائياً
       window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
 
-      const { data, error } = await supabaseClient.auth.signInWithOtp({
+      // الاستدعاء من الـ window مباشرة لفك الحظر البرمجي
+      const { data, error } = await window.supabaseClient.auth.signInWithOtp({
         email: window.currentAuthEmail,
         options: { shouldCreateUser: false }
       });
@@ -354,7 +354,7 @@
       } else {
         document.getElementById('step1').classList.add('hidden'); 
         document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الكترونياً."; 
+        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني كترونياً."; 
         showToast("تم إرسال رمز OTP بنجاح", "success");
       }
     }
@@ -367,8 +367,7 @@
       const btn = document.getElementById('btnVerifyCode'); 
       btn.disabled = true; btn.textContent = "جاري التحقق...";
 
-      // قراءة البريد المحفوظ من الـ window بثبات كامل
-      const { data, error } = await supabaseClient.auth.verifyOtp({
+      const { data, error } = await window.supabaseClient.auth.verifyOtp({
         email: window.currentAuthEmail,
         token: code,
         type: 'email'
