@@ -283,7 +283,7 @@
   </div>
 
   <script>
-    // 1. الاتصال الموثق المباشر بخادم سوبابيس (Supabase Cloud Client) - تأكد من ملء البيانات هنا داخل علامات السنجل كوتس ''
+    // 1. الاتصال الموثق المباشر بخادم سوبابيس (Supabase Cloud Client)
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -318,7 +318,7 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    // 🔄 فحص ومشاركة الجلسة البرمجية الموحدة تلقائياً عبر المتصفح (Supabase Native Session)
+    // 🔄 فحص ومشاركة الجلسة البرمجية الموحدة تلقائياً عبر المتصفح
     window.onload = async function() {
       try {
         const { data: { session }, error } = await window.supabaseClient.auth.getSession();
@@ -330,7 +330,6 @@
           };
           initAppAfterLogin();
         } else {
-          // إذا لم تكن هناك جلسة نشطة، تظهر شاشة الدخول
           document.getElementById('loginContainer').classList.remove('hidden');
         }
       } catch(e) {
@@ -403,8 +402,6 @@
     }
     
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
-    
-    // دوال الانتقال المباشرة بين صفحات سوبابيس النقية دون وسيط
     function goToDashboard() { window.location.href = "index.html"; }
     function goToAdminPage() { window.location.href = "admin.html"; }
 
@@ -475,7 +472,7 @@
        else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-    // 2. تفكيك نصوص الـ Pipe (|) مع ترك الموقف فارغاً تماماً إن لم يوجد في قاعدة البيانات
+    // 2. تفكيك نصوص الـ Pipe (|) مع تحديث تعبير القراءة ليعتمد على العلامات السحابية الجديدة <>
     async function loadAllDataFromServer() {
       showToast("⏳ جاري جلب البيانات السحابية...");
       try {
@@ -503,7 +500,8 @@
               let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
               if (numMatch) { no = numMatch[1]; procedure = numMatch[2]; }
               
-              let statMatch = procedure.match(/^(.*)\s*\(([^)]+)\)\s*$/);
+              // 🛠️ التحديث الجوهري: التعبير البرمجي يبحث الآن عن الموقف داخل علامتي < > بدلاً من الأقواس ()
+              let statMatch = procedure.match(/^(.*)\s*<([^>]+)>\s*$/);
               if (statMatch) { procedure = statMatch[1].trim(); status = statMatch[2].trim(); }
               parsedPlan.push({ no: no, procedure: procedure, status: status });
             });
@@ -563,7 +561,7 @@
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
-    // 3. بناء وحقن البطاقات وزر التعديل الأصفر الكلاسيكي الثابت لكل المبادرات بدون أي شروط تعوقه
+    // 3. بناء وحقن البطاقات وزر التعديل الأصفر الكلاسيكي الثابت لكل المبادرات بشكل دائم
     function renderCards(){
       if(isListView) { els.cards.classList.add('list-view'); } else { els.cards.classList.remove('list-view'); }
       const data = getFilteredData();
@@ -575,8 +573,6 @@
       
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
-        
-        // زر التعديل الأصفر الأصلي الكلاسيكي محقون هنا مباشرة بشكل دائم وثابت
         const editButtonHtml = `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>`;
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
@@ -745,7 +741,7 @@
       tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
     }
 
-    // 4. تجميع وحفظ البيانات المعدلة في قاعدة بيانات سوبابيس (28 عموداً) بربط الـ Pipe (|)
+    // 4. تجميع البيانات وحفظها بربط علامات الـ Pipe ومغشاة الموقف بالعلامات السحابية الجديدة <>
     async function saveInCardEdit(id) {
       const card = document.getElementById(`card-${id}`);
       showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
@@ -765,7 +761,11 @@
         
         const goalsStringified = goalsArr.join(' | ');
         const kpisStringified = indArr.join(' | ');
-        const actionPlanStringified = planArr.map(p => p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`).join(' | ');
+        
+        // 🛠️ التحديث الجوهري: الموقف التنفيذي يغلف الآن داخل < > بدلاً من الأقواس المدوّرة عند تجميع السلسلة النصية للحفظ
+        const actionPlanStringified = planArr.map(p => {
+          return p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`;
+        }).join(' | ');
 
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
@@ -818,10 +818,11 @@
     els.entityOptions.addEventListener('mousedown', e => { const opt = e.target.closest('.entity-option'); if(opt) { selectedEntity = opt.dataset.value; els.entitySearchBox.value = selectedEntity; els.entitySearchBox.placeholder = selectedEntity || 'كل الجهات المنفذة'; els.entityOptions.classList.add('hidden'); renderCards(); } });
     function toggleMenu() { document.getElementById("dropdownMenu").classList.toggle("show"); }
 
+    // 🛠️ تحديث دالة التصدير لتطابق الهيكلة السحابية الجديدة وعلامات الحصر <>
     function exportToExcel() {
       const data = getFilteredData();
       if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
-      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`).join(' \n ') : "" })));
+      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`).join(' \n ') : "" })));
       ws['!dir'] = 'rtl'; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "المبادرات"); XLSX.writeFile(wb, "المبادرات_الصناعية.xlsx"); showToast("✅ تم التحميل.", "success");
     }
 
