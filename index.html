@@ -421,12 +421,13 @@
       fetchCloudData();
     }
 
-    // 3. جلب البيانات من جدول سوبابيس (28 عموداً)
+// 3. جلب البيانات من جدول سوبابيس (28 عموداً)
     async function fetchCloudData() {
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
       
-      const { data, error } = await supabaseClient
+      // القراءة الآمنة من الـ window
+      const { data, error } = await window.supabaseClient
         .from('initiatives')
         .select('*')
         .order('created_at', { ascending: true });
