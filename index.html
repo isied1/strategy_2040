@@ -332,7 +332,7 @@
       } catch(e) {}
     };
 
-    // 2. نظام مصادقة سوبابيس بإرسال رمز OTP للمصرح لهم
+// 2. نظام مصادقة سوبابيس بإرسال رمز OTP للمصرح لهم
     async function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
       if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
@@ -340,10 +340,11 @@
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true; btn.textContent = "جاري الإرسال...";
       
-      currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
+      // تعيين الإيميل مباشرة في كائن window لتفادي خطأ الـ Initialization نهائياً
+      window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
 
       const { data, error } = await supabaseClient.auth.signInWithOtp({
-        email: currentAuthEmail,
+        email: window.currentAuthEmail,
         options: { shouldCreateUser: false }
       });
 
@@ -367,8 +368,9 @@
       const btn = document.getElementById('btnVerifyCode'); 
       btn.disabled = true; btn.textContent = "جاري التحقق...";
 
+      // قراءة البريد المحفوظ من الـ window بثبات كامل
       const { data, error } = await supabaseClient.auth.verifyOtp({
-        email: currentAuthEmail,
+        email: window.currentAuthEmail,
         token: code,
         type: 'email'
       });
