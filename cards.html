@@ -4,11 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>بطاقات المبادرات - الاستراتيجية الصناعية 2040</title>
-  <!-- المكتبات الأساسية للتصدير والاتصال الموثق -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/libs/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-  <!-- مكتبة سوبابيس الرسمية للاتصال والمصادقة السحابية -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -174,7 +172,6 @@
 <body>
   <div id="toastPopup" class="toast-popup"></div>
 
-  <!-- مودال إدارة الجهات المنفذة -->
   <div class="modal-overlay" id="entityModal">
     <div class="modal-content">
       <h2 style="color:var(--brand2); margin-top:0;">إدارة الجهات المنفذة</h2>
@@ -199,7 +196,6 @@
     </div>
   </div>
 
-  <!-- شاشة الدخول الموثق عبر OTP سوبابيس -->
   <div id="loginContainer" class="login-container">
     <div class="login-box">
       <h2>الاستراتيجية الصناعية 2040</h2>
@@ -217,7 +213,6 @@
     </div>
   </div>
 
-  <!-- الهيدر العلوي للموقع -->
   <header id="appHeader" class="header-bar hidden">
     <h1>الاستراتيجية الصناعية 2040 - استعراض المبادرات</h1>
     <div class="header-user">
@@ -233,7 +228,6 @@
     </div>
   </header>
 
-  <!-- الفلاتر والبطاقات كاملة العرض أو الشبكية -->
   <main class="shell hidden" id="appContent" style="padding-top:24px;">
     <section class="panel">
       <div class="filters">
@@ -286,7 +280,6 @@
     <section id="cards" class="cards"></section>
   </main>
 
-  <!-- مودال المستشار الاستراتيجي AI -->
   <div class="modal-overlay" id="aiModal">
     <div class="modal-content" style="max-width: 850px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--soft); padding-bottom:10px; margin-bottom:15px;">
@@ -307,7 +300,6 @@
     </div>
   </div>
 
-  <!-- 💬 زر الدردشة العائم ونافذة الشات المشتركة -->
   <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
@@ -326,15 +318,16 @@
   </div>
 
   <script>
-    // 1. تهيئة وربط سوبابيس العالمي من خلال كائن window لتفادي أي أخطاء تهيئة مسبقة
+    // تهيئة وتثبيت اتصال سوبابيس (Supabase) لقراءة وحفظ جداول الـ 28 عموداً سحابياً
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
-    window.supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let entitiesList = [];
     let initiatives = [];
     let selectedEntity = '';
     let currentUser = null;
+    let currentAuthEmail = "";
     let isListView = false;
     let chatHistoryLog = [];
     
@@ -349,6 +342,7 @@
       statEntities: document.getElementById('statEntities'), statAvg: document.getElementById('statAvg')
     };
     
+    function getScriptUrl() { return document.location.href.split('?')[0]; }
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function normalizeForCompare(v){ return String(v ?? '').replace(/\s+/g,' ').trim().replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ًٌٍَُِّْـ]/g,'').toLowerCase(); }
     function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
@@ -361,88 +355,64 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    // إدارة الجلسة للمستخدم تلقائياً عند تحميل الصفحة
-    window.onload = async function() {
+    // 🔄 نسخ بيانات وربط جلسة الدخول الأصلية المعتمدة من الداشبورد (ملفات جوجل شيت)
+    window.onload = function() {
       try {
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-        if (session) {
-          currentUser = {
-            email: session.user.email,
-            name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
-            role: session.user.user_metadata.role || 'viewer'
-          };
-          initAppAfterLogin();
-        } else {
-          const stored = localStorage.getItem('industry_user_session');
-          if (stored) {
-            const sessionData = JSON.parse(stored);
-            const now = new Date().getTime();
-            if (now - sessionData.loginTime <= 1800000) {
-              sessionData.loginTime = now;
-              localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
-              currentUser = sessionData;
-              initAppAfterLogin();
-            } else {
-              localStorage.removeItem('industry_user_session');
-            }
+        const stored = localStorage.getItem('industry_user_session');
+        if (stored) {
+          const sessionData = JSON.parse(stored);
+          const now = new Date().getTime();
+          if (now - sessionData.loginTime <= 1800000) {
+            sessionData.loginTime = now;
+            localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
+            currentUser = sessionData;
+            initAppAfterLogin();
+          } else {
+            localStorage.removeItem('industry_user_session');
           }
         }
       } catch(e) {}
     };
 
-    // إرسال كود التحقق OTP
-    async function sendCode() {
+    // إرسال كود الـ OTP عبر بيئة سكربت جوجل الأصلي المربوط بـ الداشبورد دون تعليق
+    function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
-      if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
+      if(!identifier) { showToast("يرجى إدخال اسم المستخدم أو البريد.", "error"); return; }
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true; btn.textContent = "جاري الإرسال...";
-      
-      window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
-
-      const { data, error } = await window.supabaseClient.auth.signInWithOtp({
-        email: window.currentAuthEmail,
-        options: { shouldCreateUser: false }
-      });
-
-      btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
-      if(error) showToast(error.message, "error");
-      else {
-        document.getElementById('step1').classList.add('hidden'); document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني."; showToast("تم إرسال الرمز بنجاح", "success");
-      }
+      google.script.run.withSuccessHandler(res => {
+        btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
+        if(res.success) {
+          currentAuthEmail = res.email; document.getElementById('step1').classList.add('hidden'); document.getElementById('step2').classList.remove('hidden');
+          document.getElementById('otpMsg').innerText = res.message; showToast(res.message, "success");
+        } else showToast(res.message, "error");
+      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "إرسال رمز التحقق"; showToast("خطأ في الاتصال.", "error"); }).requestOTP(identifier);
     }
 
-    // تأكيد كود التحقق ودخول النظام
-    async function verifyCode() {
+    // التحقق الفوري والدخول باستخدام نظام جوجل المتكامل
+    function verifyCode() {
       const code = document.getElementById('loginOtp').value.trim();
-      if(!code) { showToast("يرجى إدخال الرمز السري.", "error"); return; }
-      const btn = document.getElementById('btnVerifyCode'); btn.disabled = true; btn.textContent = "جاري التحقق...";
-      
-      const { data, error } = await window.supabaseClient.auth.verifyOtp({
-        email: window.currentAuthEmail,
-        token: code,
-        type: 'email'
-      });
-
-      btn.disabled = false; btn.textContent = "تحقق ودخول";
-      if(error) showToast(error.message, "error");
-      else {
-        currentUser = {
-          email: data.user.email,
-          name: data.user.user_metadata.full_name || data.user.email.split('@')[0],
-          role: data.user.user_metadata.role || 'viewer',
-          loginTime: new Date().getTime()
-        };
-        try { localStorage.setItem('industry_user_session', JSON.stringify(currentUser)); } catch(e){}
-        initAppAfterLogin(); showToast("تم تسجيل الدخول بنجاح!", "success");
-      }
+      if(!code) { showToast("يرجى إدخال الرمز.", "error"); return; }
+      const btn = document.getElementById('btnVerifyCode'); btn.disabled = true;
+      btn.textContent = "جاري التحقق...";
+      google.script.run.withSuccessHandler(res => {
+        btn.disabled = false; btn.textContent = "تحقق ودخول";
+        if(res.success) {
+          currentUser = res;
+          res.loginTime = new Date().getTime();
+          try { localStorage.setItem('industry_user_session', JSON.stringify(res)); } catch(e){}
+          initAppAfterLogin(); showToast("تم تسجيل الدخول بنجاح!", "success");
+        } else showToast(res.message, "error");
+      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "تحقق ودخول"; showToast("خطأ في الاتصال.", "error"); }).verifyOTP(currentAuthEmail, code);
     }
     
     function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
-    async function logoutUser() { await window.supabaseClient.auth.signOut(); try { localStorage.removeItem('industry_user_session'); } catch(e){} currentUser = null; document.getElementById('appHeader').classList.add('hidden'); document.getElementById('appContent').classList.add('hidden'); document.getElementById('loginContainer').classList.remove('hidden'); resetLogin(); showToast("تم تسجيل الخروج.", "success"); }
+    function logoutUser() { try { localStorage.removeItem('industry_user_session'); } catch(e){} currentUser = null; document.getElementById('appHeader').classList.add('hidden'); document.getElementById('appContent').classList.add('hidden'); document.getElementById('loginContainer').classList.remove('hidden'); resetLogin(); showToast("تم تسجيل الخروج.", "success"); }
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
-    function goToDashboard() { window.location.href = "index.html"; }
-    function goToAdminPage() { window.location.href = "admin.html"; }
+    
+    // دوال الانتقال العلوية الأصلية المتوافقة مع أمان النطاقات
+    function goToDashboard() { showToast("⏳ جاري الانتقال..."); google.script.run.withSuccessHandler(function(url) { window.open(url, "_top"); }).getScriptUrl(); }
+    function goToAdminPage() { showToast("⏳ جاري الانتقال..."); google.script.run.withSuccessHandler(function(url) { window.open(url + "?page=admin&email=" + encodeURIComponent(currentUser.email) + "&token=" + encodeURIComponent(currentUser.adminToken), "_top"); }).getScriptUrl(); }
 
     function initAppAfterLogin() {
       document.getElementById('loginContainer').classList.add('hidden'); document.getElementById('appHeader').classList.remove('hidden'); document.getElementById('appContent').classList.remove('hidden');
@@ -503,7 +473,7 @@
        else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-    // 2. معالجة وتفكيك حقول النص التي تفصل بينها علامة الـ Pipe (|) مع ترك الموقف فارغاً إن لم يوجد
+    // 2. سحب ومعالجة الـ 28 عموداً من سوبابيس مع الحفاظ على تفريغ خانة الموقف (فارغة بدلاً من جاري)
     async function loadAllDataFromServer() {
       showToast("⏳ جاري جلب البيانات السحابية...");
       try {
@@ -517,38 +487,22 @@
         } else { entitiesList = entData || []; }
 
         initiatives = (initData || []).map(item => {
-          // تفكيك الأهداف بناء على علامة الـ Pipe
-          let parsedGoals = []; 
-          if(item.goals) { 
-            parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean);
-          }
+          let parsedGoals = []; if(item.goals) { parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean); }
+          let parsedKpis = []; if(item.kpis) { parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean); }
           
-          // تفكيك المؤشرات بناء على علامة الـ Pipe
-          let parsedKpis = []; 
-          if(item.kpis) { 
-            parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean);
-          }
-          
-          // تفكيك خطة العمل وبناء المصفوفة الهيكلية للجدول برمجياً
           let parsedPlan = []; 
           if(item.action_plan) { 
             let segments = item.action_plan.split('|').map(s => s.trim()).filter(Boolean);
             segments.forEach((seg, idx) => {
               let no = idx + 1;
               let procedure = seg;
-              let status = ""; // الافتراضي فارغ تماماً بناءً على الشرط المعدل
+              let status = ""; // ترك الموقف التنفيذي فارغاً تماماً كما طلبت
               
               let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
-              if (numMatch) {
-                no = numMatch[1];
-                procedure = numMatch[2];
-              }
+              if (numMatch) { no = numMatch[1]; procedure = numMatch[2]; }
               
               let statMatch = procedure.match(/^(.*)\s*\(([^)]+)\)\s*$/);
-              if (statMatch) {
-                procedure = statMatch[1].trim();
-                status = statMatch[2].trim();
-              }
+              if (statMatch) { procedure = statMatch[1].trim(); status = statMatch[2].trim(); }
               parsedPlan.push({ no: no, procedure: procedure, status: status });
             });
           }
@@ -607,7 +561,7 @@
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
-    // 3. بناء وحقن بطاقة العرض الكامل وزر التعديل الكلاسيكي الأصفر المتطابق تماماً مع الملف المرفق
+    // 3. بناء البطاقات وزر التعديل باللون الأصفر الكلاسيكي والتحكم الكامل المستمد من سوبابيس
     function renderCards(){
       if(isListView) { els.cards.classList.add('list-view'); } else { els.cards.classList.remove('list-view'); }
       const data = getFilteredData();
@@ -620,8 +574,8 @@
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
         
-        // زر تعديل البيانات المعتمد والمطابق لشكل وهيئة زر الملف المرفق الأساسي
-        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;[cite: 4]
+        // تثبيت زر تعديل البيانات الأصفر المتناسق تماماً مع كودك المرفق
+        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
         const checkBoxesHeadHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_head_${item.id}', 'exec_disp_head_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
@@ -782,7 +736,7 @@
       document.getElementById(containerId).appendChild(li); li.querySelector('textarea').focus();
     }
     
-    // تعديل الدالة لترك الموقف التنفيذي المضاف فارغاً تماماً بدلاً من تدوين كلمة "جاري"
+    // ترك خانة الموقف التنفيذي خالية تماماً عند الإضافة بناء على شرطك
     function addTableRow(id, emptyId) {
       const emptyEl = document.getElementById(emptyId); if(emptyEl) emptyEl.remove();
       const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); const tr = document.createElement('tr'); tr.className = 'action-row';
@@ -790,15 +744,13 @@
       tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
     }
 
-    // 4. تجميع وإعادة بناء النص باستخدام علامة الـ Pipe (|) قبل رفعه وحفظه في سوبابيس
+    // 4. تجميع البيانات بربط البنود بعلامة الـ Pipe (|) المعتمدة ورفعها لسوبابيس
     async function saveInCardEdit(id) {
       const card = document.getElementById(`card-${id}`);
       showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
       try {
         const goalsArr = Array.from(card.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean);
         const indArr = Array.from(card.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
-        
-        // بناء خطة العمل والتحقق من وجود موقف تنفيذي لإضافته بين قوسين، وإن لم يوجد يُحفظ النص الأساسي فقط
         const planArr = Array.from(card.querySelectorAll('.action-row')).map(tr => ({ no: tr.querySelector('.act-no').value.trim(), procedure: tr.querySelector('.act-proc').value.trim(), status: tr.querySelector('.act-stat').value.trim() })).filter(r => r.procedure !== "" || r.status !== "");
         const getVal = (fieldId) => { const el = document.getElementById(fieldId); return el ? el.value : ""; };
         const getEditVal = (idBase, itemId) => { const editEl = document.getElementById(idBase + '_edit_' + itemId); return editEl ? editEl.value : getVal(idBase + '_' + itemId); };
@@ -810,11 +762,10 @@
         
         const suppEntityVal = isListViewActive ? getVal(`f_supp_head_${id}`) : getVal(`f_supp_body_${id}`);
         
-        // ربط البنود بعلامة الـ Pipe لحفظ الملف ممتداً بالكامل ومتناسقاً في السيرفر
         const goalsStringified = goalsArr.join(' | ');
         const kpisStringified = indArr.join(' | ');
         
-        // تحسين طريقة التجميع البرمجي لتفادي إضافة أقواس فارغة إذا كان الموقف فارغاً
+        // التحقق وتجميع خطة العمل بدون إضافة أقواس فارغة إذا كانت الخانة خالية
         const actionPlanStringified = planArr.map(p => {
           return p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`;
         }).join(' | ');
@@ -849,7 +800,7 @@
           action_plan: actionPlanStringified
         };
         
-        const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);[cite: 1]
+        const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);
         if (error) throw error;
 
         showToast("✅ تم الحفظ بنجاح!", "success");
@@ -873,7 +824,7 @@
     function exportToExcel() {
       const data = getFilteredData();
       if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
-      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة Tقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`).join(' \n ') : "" })));
+      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`).join(' \n ') : "" })));
       ws['!dir'] = 'rtl'; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "المبادرات"); XLSX.writeFile(wb, "المبادرات_الصناعية.xlsx"); showToast("✅ تم التحميل.", "success");
     }
 
