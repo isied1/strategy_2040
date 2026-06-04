@@ -278,11 +278,13 @@
     </div>
   </div>
 
-  <script>
-    // 1. ربط وإعدادات سوبابيس (Supabase Client Configuration)
-    const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ <script>
+    // 1. ربط وإعدادات سوبابيس (استخدام اسم فريدsupabaseClient لمنع التعارض مع الـ CDN)
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL'; 
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    
+    // هنا نستخدم المكتبة القادمة من الـ CDN لتوليد العميل الخاص بنا
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let initiatives = [];
     let currentUser = null;
@@ -304,7 +306,7 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // إدارة الجلسة تلقائياً عند تحميل الصفحة
     window.onload = async function() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
           currentUser = {
             email: session.user.email,
@@ -340,9 +342,9 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       
       currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
 
-      const { data, error } = await supabase.auth.signInWithOtp({
+      const { data, error } = await supabaseClient.auth.signInWithOtp({
         email: currentAuthEmail,
-        options: { shouldCreateUser: false } // الدخول فقط للحسابات المنشأة مسبقاً
+        options: { shouldCreateUser: false }
       });
 
       btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
@@ -365,7 +367,7 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const btn = document.getElementById('btnVerifyCode'); 
       btn.disabled = true; btn.textContent = "جاري التحقق...";
 
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabaseClient.auth.verifyOtp({
         email: currentAuthEmail,
         token: code,
         type: 'email'
@@ -391,7 +393,7 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
     
     async function logoutUser() { 
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       try { localStorage.removeItem('industry_user_session'); } catch(e){} 
       currentUser = null; 
       document.getElementById('appHeader').classList.add('hidden'); 
@@ -402,7 +404,7 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
     
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
-    function goToCards() { window.location.href = "cards.html"; } // الانتقال لصفحة عرض البطاقات الشاملة
+    function goToCards() { window.location.href = "cards.html"; } 
     function goToAdminPage() { window.location.href = "admin.html"; }
 
     function initAppAfterLogin() {
@@ -419,12 +421,12 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       fetchCloudData();
     }
 
-    // 3. جلب البيانات من جدول سوبابيس (28 عموداً) بدلاً من جوجل شيت
+    // 3. جلب البيانات من جدول سوبابيس (28 عموداً)
     async function fetchCloudData() {
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('initiatives')
         .select('*')
         .order('created_at', { ascending: true });
@@ -446,7 +448,7 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       'الحوكمة وإدارة التنمية الصناعية': 'البرنامج الرابع: الحوكمة وإدارة التنمية الصناعية'
     };
 
-    // 4. معالجة وحساب المؤشرات التقديرية والجهات والبطاقات كاملة العرض
+    // 4. معالجة وحساب المؤشرات
     function calculateAndRenderDashboard() {
       if (initiatives.length === 0) return;
       const total = initiatives.length;
@@ -583,8 +585,7 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         delayedNames: delayedNamesArr.slice(0, 5).join("، "), initiativesDetails: initsDetailsArr.join("\n") 
       };
 
-      // الاتصال بـ Supabase Edge Function المخصصة للتحليل الاستراتيجي
-      const { data: res, error } = await supabase.functions.invoke('analyze-dashboard', { body: payload });
+      const { data: res, error } = await supabaseClient.functions.invoke('analyze-dashboard', { body: payload });
 
       loading.style.display = 'none'; content.style.display = 'block';
       if (!error && res.success) {
@@ -634,8 +635,7 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
-      // استدعاء المستشار الذكي عبر وظائف سوبابيس
-      const { data: res, error } = await supabase.functions.invoke('strategy-chat', { body: payload });
+      const { data: res, error } = await supabaseClient.functions.invoke('strategy-chat', { body: payload });
 
       document.getElementById(loadingId).remove();
       sendBtn.disabled = false; input.disabled = false; input.focus();
