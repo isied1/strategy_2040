@@ -278,10 +278,13 @@
     </div>
   </div>
 
-  <script>
+<script>
+    // 1. ضع رابط مشروعك ومفتاحك هنا
     const SUPABASE_URL = "https://ictyhtprnmfewjrlrctg.supabase.co"; 
     const SUPABASE_ANON_KEY = "sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI"; 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // تم إصلاح التعارض البرمجي بتسمية المتغير db بدلاً من supabase
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let initiatives = [];
     let currentUser = null;
@@ -322,7 +325,8 @@
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true; btn.textContent = "جاري الإرسال...";
 
-      const { error } = await supabase.auth.signInWithOtp({
+      // تم التعديل إلى db
+      const { error } = await db.auth.signInWithOtp({
         email: identifier
       });
 
@@ -344,7 +348,8 @@
       const btn = document.getElementById('btnVerifyCode'); 
       btn.disabled = true; btn.textContent = "جاري التحقق...";
 
-      const { data, error } = await supabase.auth.verifyOtp({
+      // تم التعديل إلى db
+      const { data, error } = await db.auth.verifyOtp({
         email: currentAuthEmail,
         token: code,
         type: 'email'
@@ -354,7 +359,8 @@
         btn.disabled = false; btn.textContent = "تحقق ودخول";
         showToast("رمز التحقق غير صحيح أو انتهت صلاحيته.", "error");
       } else {
-        const { data: profile } = await supabase
+        // تم التعديل إلى db
+        const { data: profile } = await db
           .from('profiles')
           .select('*')
           .eq('email', currentAuthEmail)
@@ -376,7 +382,8 @@
     function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
     
     async function logoutUser() { 
-      await supabase.auth.signOut();
+      // تم التعديل إلى db
+      await db.auth.signOut();
       try { localStorage.removeItem('industry_user_session'); } catch(e){} 
       currentUser = null; 
       document.getElementById('appHeader').classList.add('hidden'); 
@@ -388,8 +395,8 @@
     
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
     
-    function goToCards() { showToast("⏳ جاري الانتقال..."); window.open("/cards", "_top"); }
-    function goToAdminPage() { showToast("⏳ جاري الانتقال..."); window.open("/admin", "_top"); }
+    function goToCards() { showToast("⏳ جاري الانتقال..."); window.open("/cards.html", "_top"); }
+    function goToAdminPage() { showToast("⏳ جاري الانتقال..."); window.open("/admin.html", "_top"); }
 
     function initAppAfterLogin() {
       document.getElementById('loginContainer').classList.add('hidden');
@@ -411,7 +418,8 @@
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
       
-      const { data, error } = await supabase
+      // تم التعديل إلى db
+      const { data, error } = await db
         .from('initiatives')
         .select('*');
 
@@ -585,7 +593,8 @@
       const payload = { total: initiatives.length, completed: comp, inProgress: prog, notStarted: not, delayed: delayedCount, avgCompletion: avgPct, delayedNames: delayedNamesStr, initiativesDetails: initsDetailsStr };
 
       try {
-        const { data, error } = await supabase.functions.invoke('analyze-dashboard', {
+        // تم التعديل إلى db
+        const { data, error } = await db.functions.invoke('analyze-dashboard', {
           body: payload
         });
 
@@ -636,7 +645,8 @@
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
       try {
-        const { data, error } = await supabase.functions.invoke('chat-strategy-ai', {
+        // تم التعديل إلى db
+        const { data, error } = await db.functions.invoke('chat-strategy-ai', {
           body: payload
         });
 
