@@ -4,26 +4,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>الاستراتيجية الصناعية 2040 - لوحة التحكم</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    :root { --bg: #f0f4f8; --card: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --brand: #176b87; --brand2: #0b4f6c; --soft: #f0f7f9; --shadow: 0 10px 25px rgba(15, 23, 42, .05); --radius: 16px; }
+    :root { --bg: #f0f4f8;
+      --card: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --brand: #176b87; --brand2: #0b4f6c; --soft: #f0f7f9;
+      --shadow: 0 10px 25px rgba(15, 23, 42, .05); --radius: 16px; }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Tahoma, Arial, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6; }
     .shell { max-width: 1400px; margin: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
     
-    .header-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 18px 32px; box-shadow: var(--shadow); border-bottom: 3px solid var(--brand); width: 100%; margin-bottom:0;}
+    .header-bar { display: flex; justify-content: space-between; align-items: center; background: #fff;
+      padding: 18px 32px; box-shadow: var(--shadow); border-bottom: 3px solid var(--brand); width: 100%; margin-bottom:0;}
     .header-bar h1 { margin: 0; color: var(--brand2); font-size: 22px; font-weight: 800; }
     .header-user { display: flex; align-items: center; gap: 16px; font-weight: bold; }
     
-    .btn-primary { background: var(--brand); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.2s; }
+    .btn-primary { background: var(--brand); color: #fff; border: none; border-radius: 8px;
+      padding: 10px 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.2s; }
     .btn-primary:hover { background: var(--brand2); }
-    .btn-logout { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; }
+    .btn-logout { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; cursor: pointer;
+      font-family: inherit; font-weight: bold; transition: 0.2s; }
     .btn-logout:hover { background: #dc2626; }
-    .btn-menu { display: inline-flex; align-items: center; justify-content: center; height: 100%; padding: 8px 12px; background: var(--brand2); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-menu { display: inline-flex; align-items: center; justify-content: center; height: 100%; padding: 8px 12px; background: var(--brand2);
+      color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     
     .dropdown { position: relative; display: inline-block; }
-    .dropdown-content { display: none; position: absolute; left: 0; top: calc(100% + 8px); background-color: #fff; min-width: 240px; box-shadow: var(--shadow); border: 1px solid var(--line); border-radius: 12px; z-index: 1000; overflow: hidden; }
+    .dropdown-content { display: none; position: absolute; left: 0; top: calc(100% + 8px); background-color: #fff; min-width: 240px;
+      box-shadow: var(--shadow); border: 1px solid var(--line); border-radius: 12px; z-index: 1000; overflow: hidden; }
     .dropdown-content.show { display: block; }
-    .dropdown-content button { width: 100%; text-align: right; padding: 14px 16px; border: none; background: transparent; font-family: inherit; font-size: 13.5px; cursor: pointer; color: var(--ink); border-bottom: 1px solid var(--line); }
+    .dropdown-content button { width: 100%; text-align: right; padding: 14px 16px; border: none; background: transparent; font-family: inherit;
+      font-size: 13.5px; cursor: pointer; color: var(--ink); border-bottom: 1px solid var(--line); }
     .dropdown-content button:hover { background-color: var(--soft); color: var(--brand2); font-weight: bold; }
 
     .login-container { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; }
@@ -32,7 +43,9 @@
     .login-box p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
     .login-box input { margin-bottom: 16px; padding: 12px; font-size: 14px; width: 100%; border: 1px solid var(--line); border-radius: 10px; outline: none; }
     .login-box button { width: 100%; padding: 12px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
-    .toast-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand2); color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-size: 14.5px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10005; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
+    
+    .toast-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand2); color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-size: 14.5px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10005; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
     .toast-popup.show { opacity: 1; top: 40px; }
     .toast-popup.success { background: #16a34a; }
     .toast-popup.error { background: #ef4444; }
@@ -45,7 +58,9 @@
     .legend-item span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
     .seg-bar { display: flex; height: 32px; border-radius: 16px; overflow: hidden; background: #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
     .seg { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12.5px; font-weight: bold; transition: width 0.6s ease; white-space: nowrap; overflow: hidden; }
-    .seg.completed { background: #16a34a; } .seg.inprogress { background: #eab308; } .seg.notstarted { background: #94a3b8; }
+    .seg.completed { background: #16a34a; } 
+    .seg.inprogress { background: #eab308; } 
+    .seg.notstarted { background: #94a3b8; }
 
     .dash-row { display: flex; gap: 24px; flex-wrap: wrap; }
     .programs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; flex: 1; min-width: 600px; }
@@ -56,7 +71,8 @@
     .prog-card .pct { font-size: 32px; font-weight: 900; color: var(--brand); line-height:1;}
     .prog-card .count { font-size: 12px; color: var(--muted); background: var(--soft); padding: 4px 10px; border-radius: 12px; }
 
-    .delay-card { flex: 0 0 280px; background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.2s; cursor: pointer; }
+    .delay-card { flex: 0 0 280px; background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.2s; cursor: pointer; }
     .delay-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(220, 38, 38, 0.15); background: #fff; border-color: #ef4444; }
     .delay-card h3 { color: #dc2626; margin: 0; font-size: 15px; font-weight: bold; }
     .delay-card .counter { font-size: 54px; font-weight: 900; color: #b91c1c; margin: 15px 0; transition: 0.2s; }
@@ -76,19 +92,21 @@
     .top-init-flex { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); }
     .top-init-pct { font-weight: bold; color: var(--brand); background: #fff; padding: 2px 8px; border-radius: 8px; border: 1px solid var(--line); }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.25s ease; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+      display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.25s ease; }
     .modal-overlay.show { opacity: 1; pointer-events: auto; }
     .modal-content { background: #fff; border-radius: var(--radius); width: 750px; max-width: 95vw; max-height: 92vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
 
     .loading-overlay { text-align: center; padding: 60px; font-size: 16px; color: var(--muted); font-weight: bold; }
     .hidden { display: none !important; }
-    
     @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
 
     /* 💬 تصميم واجهة الدردشة العائمة */
-    .chat-fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; transition: transform 0.2s; border: none; }
+    .chat-fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; display: flex; align-items: center;
+      justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; transition: transform 0.2s; border: none; }
     .chat-fab:hover { transform: scale(1.1); }
-    .chat-window { position: fixed; bottom: 100px; left: 30px; width: 360px; max-width: 90vw; height: 500px; max-height: 80vh; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; z-index: 9999; transform: translateY(20px); opacity: 0; pointer-events: none; transition: all 0.3s ease; border: 1px solid var(--line); overflow: hidden; }
+    .chat-window { position: fixed; bottom: 100px; left: 30px; width: 360px; max-width: 90vw; height: 500px; max-height: 80vh; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex;
+      flex-direction: column; z-index: 9999; transform: translateY(20px); opacity: 0; pointer-events: none; transition: all 0.3s ease; border: 1px solid var(--line); overflow: hidden; }
     .chat-window.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
     .chat-header { background: var(--brand2); color: #fff; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14.5px; }
     .chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: var(--bg); scroll-behavior: smooth; }
@@ -111,7 +129,7 @@
       <h2>الاستراتيجية الصناعية 2040</h2>
       <p>بوابة الدخول للمصرح لهم فقط</p>
       <div id="step1">
-        <input type="text" id="loginIdentifier" placeholder="اسم المستخدم أو البريد الإلكتروني" />
+        <input type="text" id="loginIdentifier" placeholder="البريد الإلكتروني المعتمد" />
         <button onclick="sendCode()" id="btnSendCode">إرسال رمز التحقق</button>
       </div>
       <div id="step2" class="hidden">
@@ -247,8 +265,7 @@
         جاري تحليل بيانات الداشبورد، واستشراف المخاطر، وصياغة تقرير استراتيجي للقيادة العليا... <br>
         <span style="font-size:12px; color:var(--muted); font-weight:normal;">(يرجى الانتظار بضع ثوانٍ)</span>
       </div>
-      <div id="aiDashResponseContent" style="display:none; line-height:1.8; color:var(--ink); font-size:14.5px; padding:10px; background:#f8fafc; border-radius:12px; border:1px solid var(--line);">
-      </div>
+      <div id="aiDashResponseContent" style="display:none; line-height:1.8; color:var(--ink); font-size:14.5px; padding:10px; background:#f8fafc; border-radius:12px; border:1px solid var(--line);"></div>
       <div style="text-align:left; margin-top:24px; padding-top:15px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;">
          <button id="btnDownloadDashWord" class="btn-primary" style="background:#16a34a; padding:8px 24px; display:none;" onclick="downloadModalAsWord('aiDashResponseContent', 'التقرير_الاستشرافي_الشامل')">تحميل التقرير (Word) 📝</button>
          <button class="btn-primary" style="background:#ef4444; padding:8px 24px" onclick="document.getElementById('aiDashboardModal').classList.remove('show')">إغلاق التقرير</button>
@@ -256,9 +273,7 @@
     </div>
   </div>
 
-  <!-- 💬 زر الدردشة العائم ونافذة الشات -->
   <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
-  
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
       <div style="display:flex; align-items:center; gap:8px;"><span>🤖</span> مساعد الاستراتيجية 2040</div>
@@ -276,74 +291,123 @@
   </div>
 
   <script>
+    // تهيئة عميل الاتصال بـ Supabase
+    const SUPABASE_URL = "https://your-project-id.supabase.co"; // استبدله برابط سوبابيس الخاص بك
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // استبدله بمفتاح ANON الآمن
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     let initiatives = [];
     let currentUser = null;
     let currentAuthEmail = "";
     window.currentTopInits = []; 
     window.currentDelayedInits = []; 
+    let chatHistoryLog = [];
 
-    function getScriptUrl() { return document.location.href.split('?')[0]; }
     function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function pctNumber(v) { const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
     
     let toastTimeout;
     function showToast(message, type = "") {
       const toast = document.getElementById("toastPopup"); toast.className = "toast-popup show " + type; toast.innerHTML = message;
-      clearTimeout(toastTimeout); if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
+      clearTimeout(toastTimeout);
+      if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    window.onload = function() {
-      try {
-        const stored = localStorage.getItem('industry_user_session');
-        if (stored) {
-          const sessionData = JSON.parse(stored);
-          const now = new Date().getTime();
-          if (now - sessionData.loginTime <= 1800000) {
-            sessionData.loginTime = now;
-            localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
-            currentUser = sessionData;
-            initAppAfterLogin();
-          } else {
-            localStorage.removeItem('industry_user_session');
-          }
+    // التحقق التلقائي الآمن من الجلسة (Session) عند تحميل الصفحة
+    window.onload = async function() {
+      const session = localStorage.getItem('industry_user_session');
+      if (session) {
+        const sessionData = JSON.parse(session);
+        const now = new Date().getTime();
+        if (now - sessionData.loginTime <= 1800000) {
+          sessionData.loginTime = now;
+          localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
+          currentUser = sessionData;
+          initAppAfterLogin();
+        } else {
+          localStorage.removeItem('industry_user_session');
         }
-      } catch(e) {}
+      }
     };
 
-    function sendCode() {
+    // إرسال الـ OTP عن طريق النظام السحابي الخاص بسوبابيس والمحمي بالكامل
+    async function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
-      if(!identifier) { showToast("يرجى إدخال اسم المستخدم أو البريد.", "error"); return; }
-      const btn = document.getElementById('btnSendCode'); btn.disabled = true; btn.textContent = "جاري الإرسال...";
-      google.script.run.withSuccessHandler(res => {
-        btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
-        if(res.success) {
-          currentAuthEmail = res.email; document.getElementById('step1').classList.add('hidden'); document.getElementById('step2').classList.remove('hidden');
-          document.getElementById('otpMsg').innerText = res.message; showToast(res.message, "success");
-        } else showToast(res.message, "error");
-      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "إرسال رمز التحقق"; showToast("خطأ في الاتصال.", "error"); }).requestOTP(identifier);
+      if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني.", "error"); return; }
+      const btn = document.getElementById('btnSendCode');
+      btn.disabled = true; btn.textContent = "جاري الإرسال...";
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: identifier
+      });
+
+      btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
+      if(error) {
+        showToast("خطأ أمني: " + error.message, "error");
+      } else {
+        currentAuthEmail = identifier;
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('otpMsg').innerText = "✅ تم إرسال الرمز السري المكون من 6 أرقام إلى بريدك الإلكتروني.";
+        showToast("تم إرسال الرمز بنجاح", "success");
+      }
     }
 
-    function verifyCode() {
+    // التحقق من الرمز المدخل واستخراج صلاحيات المستخدم المعتمدة بقاعدة البيانات
+    async function verifyCode() {
       const code = document.getElementById('loginOtp').value.trim();
       if(!code) { showToast("يرجى إدخال الرمز.", "error"); return; }
-      const btn = document.getElementById('btnVerifyCode'); btn.disabled = true; btn.textContent = "جاري التحقق...";
-      google.script.run.withSuccessHandler(res => {
+      const btn = document.getElementById('btnVerifyCode'); 
+      btn.disabled = true; btn.textContent = "جاري التحقق...";
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: currentAuthEmail,
+        token: code,
+        type: 'email'
+      });
+
+      if(error) {
         btn.disabled = false; btn.textContent = "تحقق ودخول";
-        if(res.success) {
-          currentUser = res;
-          res.loginTime = new Date().getTime();
-          try { localStorage.setItem('industry_user_session', JSON.stringify(res)); } catch(e){}
-          initAppAfterLogin(); showToast("تم تسجيل الدخول بنجاح!", "success");
-        } else showToast(res.message, "error");
-      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "تحقق ودخول"; showToast("خطأ في الاتصال.", "error"); }).verifyOTP(currentAuthEmail, code);
+        showToast("رمز التحقق غير صحيح أو انتهت صلاحيته.", "error");
+      } else {
+        // جلب الصلاحيات والاسم الكامل من جدول الحماية الجانبي profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', currentAuthEmail)
+          .single();
+
+        currentUser = {
+          email: currentAuthEmail,
+          role: profile ? profile.role : 'viewer',
+          name: profile ? profile.name : currentAuthEmail.split('@')[0],
+          loginTime: new Date().getTime()
+        };
+
+        localStorage.setItem('industry_user_session', JSON.stringify(currentUser));
+        initAppAfterLogin(); 
+        showToast("تم تسجيل الدخول بنجاح!", "success");
+      }
     }
     
     function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
-    function logoutUser() { try { localStorage.removeItem('industry_user_session'); } catch(e){} currentUser = null; document.getElementById('appHeader').classList.add('hidden'); document.getElementById('appContent').classList.add('hidden'); document.getElementById('loginContainer').classList.remove('hidden'); resetLogin(); showToast("تم تسجيل الخروج.", "success"); }
+    
+    async function logoutUser() { 
+      await supabase.auth.signOut();
+      try { localStorage.removeItem('industry_user_session'); } catch(e){} 
+      currentUser = null; 
+      document.getElementById('appHeader').classList.add('hidden'); 
+      document.getElementById('appContent').classList.add('hidden'); 
+      document.getElementById('loginContainer').classList.remove('hidden'); 
+      resetLogin();
+      showToast("تم تسجيل الخروج الآمن.", "success"); 
+    }
+    
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
     
-    function goToCards() { showToast("⏳ جاري الانتقال إلى صفحة المبادرات..."); google.script.run.withSuccessHandler(function(url) { window.open(url + "?page=cards", "_top"); }).getScriptUrl(); }
-    function goToAdminPage() { showToast("⏳ جاري الانتقال إلى لوحة الصلاحيات..."); google.script.run.withSuccessHandler(function(url) { window.open(url + "?page=admin&email=" + encodeURIComponent(currentUser.email) + "&token=" + encodeURIComponent(currentUser.adminToken), "_top"); }).getScriptUrl(); }
+    // روابط Netlify النظيفة المتوافقة مع الـ Redirects الجديدة
+    function goToCards() { showToast("⏳ جاري الانتقال..."); window.open("/cards", "_top"); }
+    function goToAdminPage() { showToast("⏳ جاري الانتقال..."); window.open("/admin", "_top"); }
 
     function initAppAfterLogin() {
       document.getElementById('loginContainer').classList.add('hidden');
@@ -351,18 +415,61 @@
       document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
       if (currentUser.role === 'admin') {
-        document.getElementById('displayUserRole').textContent = 'مدير النظام'; document.getElementById('displayUserName').style.cursor = 'pointer'; document.getElementById('displayUserName').style.textDecoration = 'underline';
+        document.getElementById('displayUserRole').textContent = 'مدير النظام'; document.getElementById('displayUserName').style.cursor = 'pointer';
+        document.getElementById('displayUserName').style.textDecoration = 'underline';
         if(document.getElementById('btnAdminUsers')) document.getElementById('btnAdminUsers').classList.remove('hidden');
-      } else { document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط'; document.getElementById('displayUserName').style.cursor = 'default'; document.getElementById('displayUserName').style.textDecoration = 'none'; }
+      } else { 
+        document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
+        document.getElementById('displayUserName').style.cursor = 'default'; document.getElementById('displayUserName').style.textDecoration = 'none'; 
+      }
       fetchCloudData();
     }
 
-    function fetchCloudData() {
-      document.getElementById('loading').classList.remove('hidden'); document.getElementById('dashboardContent').classList.add('hidden');
-      google.script.run.withSuccessHandler(function(data) {
-          document.getElementById('loading').classList.add('hidden'); document.getElementById('dashboardContent').classList.remove('hidden');
-          initiatives = data.initiatives || []; calculateAndRenderDashboard();
-      }).withFailureHandler(function(err) { alert("فشل الاتصال: " + err); }).loadDataFromSheet(currentUser ? currentUser.email : "");
+    // جلب البيانات من جدول Supabase مباشرة بدلاً من معالجات جوجل سكريبت القديمة
+    async function fetchCloudData() {
+      document.getElementById('loading').classList.remove('hidden'); 
+      document.getElementById('dashboardContent').classList.add('hidden');
+      
+      const { data, error } = await supabase
+        .from('initiatives')
+        .select('*');
+
+      if (error) {
+        showToast("فشل في الاتصال بقاعدة البيانات الآمنة", "error");
+        return;
+      }
+
+      // تحويل المخرجات البرمجية لتتطابق تماماً مع محرك البناء والرندر الحالي دون أي تغيير في الواجهة
+      initiatives = data.map(item => ({
+        rowIndex: item.id,
+        initiativeNo: item.initiative_no,
+        initiativeName: item.initiative_name,
+        timeline: item.timeline,
+        completionPercent: item.completion_percent,
+        description: item.description,
+        goals: item.goals || [],
+        indicators: item.indicators || [],
+        actionPlan: item.action_plan || [],
+        executingEntity: item.executing_entity,
+        supportingEntity: item.supporting_entity,
+        responsibleDepartment: item.responsible_department,
+        programName: item.program_name,
+        startDate: item.start_date,
+        endDate: item.end_date,
+        status: item.status,
+        executivePosition: item.executive_position,
+        challenges: item.challenges,
+        notes: item.notes,
+        executionManager: item.execution_manager,
+        phone: item.phone,
+        email: item.email,
+        isTopInitiative: item.is_top_initiative,
+        lastUpdate: item.last_update
+      }));
+
+      document.getElementById('loading').classList.add('hidden'); 
+      document.getElementById('dashboardContent').classList.remove('hidden');
+      calculateAndRenderDashboard();
     }
 
     const programTitles = {
@@ -374,10 +481,11 @@
 
     function calculateAndRenderDashboard() {
       if (initiatives.length === 0) return;
-      const total = initiatives.length; let completedCount = 0, inProgressCount = 0, notStartedCount = 0, delayedCount = 0;
+      const total = initiatives.length;
+      let completedCount = 0, inProgressCount = 0, notStartedCount = 0, delayedCount = 0;
       const programs = { 'ابتكار صناعات جديدة وذات تكنولوجيا متقدمة': { count: 0, totalPct: 0 }, 'ريادة الاعمال والابتكار': { count: 0, totalPct: 0 }, 'التطوير والتحديث': { count: 0, totalPct: 0 }, 'الحوكمة وإدارة التنمية الصناعية': { count: 0, totalPct: 0 } };
       const entities = {}; window.currentTopInits = []; window.currentDelayedInits = []; const today = new Date(); today.setHours(0,0,0,0);
-
+      
       initiatives.forEach(item => {
         const status = (item.status || "").trim(); const pct = pctNumber(item.completionPercent);
         if (status === "مكتملة" || pct === 100) completedCount++; else if (status === "قيد التنفيذ") inProgressCount++; else notStartedCount++;
@@ -399,7 +507,6 @@
           const parts = entityField.split(/[،,]/).map(p => p.trim()).filter(Boolean);
           parts.forEach(ent => { if (!entities[ent]) entities[ent] = { count: 0, totalPct: 0 }; entities[ent].count++; entities[ent].totalPct += pct; });
         }
-        
         if (item.isTopInitiative && String(item.isTopInitiative).trim() === "نعم") { window.currentTopInits.push(item); }
       });
 
@@ -418,7 +525,8 @@
 
       const entList = document.getElementById('entitiesList'); entList.innerHTML = '';
       const sortedEntities = Object.entries(entities).sort((a,b) => b[1].count - a[1].count);
-      if(sortedEntities.length === 0) { entList.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px;">لا يوجد بيانات.</div>'; } else {
+      if(sortedEntities.length === 0) { entList.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px;">لا يوجد بيانات.</div>';
+      } else {
         sortedEntities.forEach(([name, data]) => {
           const avg = Math.round(data.totalPct / data.count);
           entList.innerHTML += `<div class="entity-item"><div class="entity-info"><span>${escapeHtml(name)}</span><span style="color:var(--brand)">${avg}% (${data.count} مبادرة)</span></div><div class="entity-bar-bg"><div class="entity-bar-fill" style="width: ${avg}%"></div></div></div>`;
@@ -426,7 +534,8 @@
       }
 
       const topList = document.getElementById('topInitiativesList'); topList.innerHTML = '';
-      if(window.currentTopInits.length === 0) { topList.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px; line-height:1.6">لا توجد مبادرات مميزة محددة حالياً.</div>'; } else {
+      if(window.currentTopInits.length === 0) { topList.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px; line-height:1.6">لا توجد مبادرات مميزة محددة حالياً.</div>';
+      } else {
         window.currentTopInits.forEach(item => {
           topList.innerHTML += `<div class="top-init-item" onclick="openInitModal(${item.rowIndex})"><h4>${escapeHtml(item.initiativeName)}</h4><div class="top-init-flex"><span>الجهة المنفذة: <b>${escapeHtml(item.executingEntity || 'غير محددة')}</b></span><span class="top-init-pct">${Math.round(pctNumber(item.completionPercent))}%</span></div></div>`;
         });
@@ -440,16 +549,18 @@
       document.getElementById('modal_name').innerText = item.initiativeName || "—";
       document.getElementById('modal_desc').innerText = item.description || "لا يوجد وصف";
       const gList = document.getElementById('modal_goals'); gList.innerHTML = '';
-      if(item.goals && item.goals.length && item.goals[0] !== '') { item.goals.forEach(g => gList.innerHTML += `<li>${escapeHtml(g)}</li>`); } else { gList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل أهداف</div>'; }
+      if(item.goals && item.goals.length && item.goals[0] !== '') { item.goals.forEach(g => gList.innerHTML += `<li>${escapeHtml(g)}</li>`);
+      } else { gList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل أهداف</div>'; }
       const iList = document.getElementById('modal_inds'); iList.innerHTML = '';
-      if(item.indicators && item.indicators.length && item.indicators[0] !== '') { item.indicators.forEach(ind => iList.innerHTML += `<li>${escapeHtml(ind)}</li>`); } else { iList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل مؤشرات</div>'; }
+      if(item.indicators && item.indicators.length && item.indicators[0] !== '') { item.indicators.forEach(ind => iList.innerHTML += `<li>${escapeHtml(ind)}</li>`);
+      } else { iList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل مؤشرات</div>'; }
       document.getElementById('topInitModal').classList.add('show');
     }
 
     function openDelayedModal() {
-      const list = document.getElementById('delayedList');
-      list.innerHTML = '';
-      if(window.currentDelayedInits.length === 0) { list.innerHTML = '<div style="color:var(--muted); text-align:center; padding:30px; font-weight:bold;">ممتاز! لا توجد مبادرات متأخرة زمنياً في النظام.</div>'; } else {
+      const list = document.getElementById('delayedList'); list.innerHTML = '';
+      if(window.currentDelayedInits.length === 0) { list.innerHTML = '<div style="color:var(--muted); text-align:center; padding:30px; font-weight:bold;">ممتاز! لا توجد مبادرات متأخرة زمنياً في النظام.</div>';
+      } else {
         window.currentDelayedInits.sort((a,b) => b.delayedDays - a.delayedDays).forEach(item => {
           list.innerHTML += `<div class="top-init-item" style="cursor:default; border-right-color:#ef4444;"><h4 style="color:#b91c1c;">${escapeHtml(item.initiativeName)}</h4><div class="top-init-flex"><span style="color:#dc2626; font-weight:bold;">تأخير: ${item.delayedDays} يوم</span><span class="top-init-pct" style="color:#16a34a; border-color:#bbf7d0;">إنجاز: ${Math.round(pctNumber(item.completionPercent))}%</span></div></div>`;
         });
@@ -457,7 +568,8 @@
       document.getElementById('delayedModal').classList.add('show');
     }
 
-    function analyzeDashboardAI() {
+    // استدعاء المستشار الذكي بشكل آمن عبر الـ Edge Function لحماية الـ Gemini API Key من السرقة والاختراق
+    async function analyzeDashboardAI() {
       if (initiatives.length === 0) { showToast("لا توجد بيانات لتحليلها.", "error"); return; }
       const modal = document.getElementById('aiDashboardModal'); 
       const loading = document.getElementById('aiDashLoading'); 
@@ -465,16 +577,12 @@
       const btnDownloadWord = document.getElementById('btnDownloadDashWord');
       
       modal.classList.add('show');
-      loading.style.display = 'block'; 
-      content.style.display = 'none'; 
-      content.innerHTML = '';
-      btnDownloadWord.style.display = 'none';
-
+      loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = ''; btnDownloadWord.style.display = 'none';
+      
       let comp = 0, prog = 0, not = 0, delayedCount = 0;
-      let sumPct = 0; let delayedNamesArr = [];
-      let initsDetailsArr = []; 
-
+      let sumPct = 0; let delayedNamesArr = []; let initsDetailsArr = []; 
       const today = new Date(); today.setHours(0,0,0,0);
+
       initiatives.forEach(item => {
         const status = (item.status || "").trim(); const pct = pctNumber(item.completionPercent); sumPct += pct;
         if (status === "مكتملة" || pct === 100) comp++; else if (status === "قيد التنفيذ") prog++; else not++;
@@ -483,184 +591,91 @@
         const name = item.initiativeName || "بدون اسم";
         const desc = item.description || "لا يوجد وصف مدون";
         const goals = (item.goals && item.goals.length > 0 && item.goals[0] !== '') ? item.goals.join("، ") : "لا توجد أهداف مسجلة";
-        const start = item.startDate || "غير محدد";
-        const end = item.endDate || "غير محدد";
+        const start = item.startDate || "غير محدد"; const end = item.endDate || "غير محدد";
         const execPos = item.executivePosition || "لم يحدد الموقف التنفيذي بعد";
         const chals = item.challenges || "لا توجد تحديات أو معوقات مسجلة حالياً";
 
-        initsDetailsArr.push(
-          `📌 المبادرة: ${name}\n` +
-          ` 📄 الوصف: ${desc}\n` +
-          ` 🎯 الأهداف: ${goals}\n` +
-          ` 📊 مستوى الإنجاز: ${Math.round(pct)}%\n` +
-          ` 📅 المدى الزمني: من [${start}] إلى [${end}]\n` +
-          ` ⚙️ الموقف التنفيذي الحالي: ${execPos}\n` +
-          ` ⚠️ التحديات والمعوقات: ${chals}\n` +
-          `--------------------------------------------------`
-        );
+        initsDetailsArr.push(`📌 المبادرة: ${name}\n 📄 الوصف: ${desc}\n 🎯 الأهداف: ${goals}\n 📊 مستوى الإنجاز: ${Math.round(pct)}%\n 📅 المدى الزمني: من [${start}] إلى [${end}]\n ⚙️ الموقف التنفيذي الحالي: ${execPos}\n ⚠️ التحديات والمعوقات: ${chals}\n--------------------------------------------------`);
       });
 
       const avgPct = Math.round(sumPct / initiatives.length);
       const delayedNamesStr = delayedNamesArr.length > 0 ? delayedNamesArr.slice(0, 5).join("، ") + (delayedNamesArr.length > 5 ? " (وغيرها...)" : "") : "لا يوجد مبادرات متأخرة";
       const initsDetailsStr = initsDetailsArr.join("\n"); 
 
-      const payload = { 
-        total: initiatives.length, 
-        completed: comp, 
-        inProgress: prog, 
-        notStarted: not, 
-        delayed: delayedCount, 
-        avgCompletion: avgPct, 
-        delayedNames: delayedNamesStr,
-        initiativesDetails: initsDetailsStr 
-      };
+      const payload = { total: initiatives.length, completed: comp, inProgress: prog, notStarted: not, delayed: delayedCount, avgCompletion: avgPct, delayedNames: delayedNamesStr, initiativesDetails: initsDetailsStr };
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          loading.style.display = 'none'; content.style.display = 'block';
-          if(res.success) {
-            let modelBadge = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">
-                                🤖 الذكاء الاصطناعي النشط حالياً: <b style="color: var(--brand); font-family: monospace;">${res.modelUsed || 'Gemini'}</b>
-                              </div>`;
-            content.innerHTML = modelBadge + res.advice;
-            btnDownloadWord.style.display = 'inline-block';
-          }
-          else content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ خطأ: ${res.error}</div>`;
-        })
-        .withFailureHandler(function(err) {
-          loading.style.display = 'none'; content.style.display = 'block'; content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ فشل الاتصال: ${err}</div>`;
-        }).getDashboardAIAdvice(payload);
+      try {
+        // استدعاء آمن تماماً يمر عبر خوادم سوبابيس المشفرة دون كشف مفتاحك للذكاء الاصطناعي
+        const { data, error } = await supabase.functions.invoke('analyze-dashboard', {
+          body: payload
+        });
+
+        loading.style.display = 'none'; content.style.display = 'block';
+        if(error) throw error;
+
+        if(data.success) {
+          let modelBadge = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">🤖 الذكاء الاصطناعي النشط حالياً: <b style="color: var(--brand); font-family: monospace;">${data.modelUsed || 'Gemini'}</b></div>`;
+          content.innerHTML = modelBadge + data.advice;
+          btnDownloadWord.style.display = 'inline-block';
+        } else {
+          content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ خطأ: ${data.error}</div>`;
+        }
+      } catch (err) {
+        loading.style.display = 'none'; content.style.display = 'block';
+        content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ فشل الاتصال بالسيرفر الآمن: ${err.message || err}</div>`;
+      }
     }
 
     function downloadModalAsWord(elementId, baseFilename) {
       const content = document.getElementById(elementId).innerHTML;
-      const htmlString = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-          <meta charset="utf-8">
-          <title>تقرير الاستراتيجية الصناعية 2040</title>
-          <style>
-            body { font-family: 'Tahoma', 'Arial', sans-serif; direction: rtl; text-align: right; line-height: 1.6; }
-            h3 { color: #0b4f6c; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-top: 20px; font-size: 16px; }
-            ul { padding-right: 20px; }
-            li { margin-bottom: 8px; }
-            b { color: #0f172a; }
-          </style>
-        </head>
-        <body>
-          ${content}
-        </body>
-        </html>
-      `;
-      
+      const htmlString = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>تقرير الاستراتيجية الصناعية 2040</title><style>body { font-family: 'Tahoma', 'Arial', sans-serif; direction: rtl; text-align: right; line-height: 1.6; } h3 { color: #0b4f6c; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-top: 20px; font-size: 16px; } ul { padding-right: 20px; } li { margin-bottom: 8px; } b { color: #0f172a; }</style></head><body>${content}</body></html>`;
       const blob = new Blob(['\ufeff' + htmlString], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = baseFilename + '_' + new Date().toISOString().slice(0,10) + '.doc';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = baseFilename + '_' + new Date().toISOString().slice(0,10) + '.doc'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    // 💬 دوال التحكم في الشات العائم
-// 💬 متغير عام لتخزين سجل المحادثة
-    // 💬 متغير عام لتخزين سجل المحادثة (الذاكرة)
-    let chatHistoryLog = [];
+    function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
-    // دوال التحكم في الشات العائم
-    function toggleChat() {
-      document.getElementById('chatWindow').classList.toggle('show');
-    }
+    // إرسال رسائل الشات العائم والاتصال بالـ Edge Function الخاصة بالمساعد الذكي
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput'); const msg = input.value.trim();
+      if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error"); return; }
 
-    function sendChatMessage() {
-      const input = document.getElementById('chatInput');
-      const msg = input.value.trim();
-      if(!msg || initiatives.length === 0) { 
-        if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error");
-        return; 
-      }
-
-      const chatBody = document.getElementById('chatBody');
-      const sendBtn = document.getElementById('chatSendBtn');
-
-      // إظهار رسالة المستخدم في الشاشة
+      const chatBody = document.getElementById('chatBody'); const sendBtn = document.getElementById('chatSendBtn');
       chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`;
-      
-      // 🧠 حفظ الرسالة في الذاكرة بتنسيق Gemini الرسمي (دور المستخدم)
       chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
-      
-      input.value = '';
-      sendBtn.disabled = true;
-      input.disabled = true;
+      input.value = ''; sendBtn.disabled = true; input.disabled = true;
       
       const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري التفكير...</div>`;
-      chatBody.scrollTop = chatBody.scrollHeight;
-
-
-      // تجميع كافة البيانات التفصيلية لكل مبادرة لإرسالها للذكاء الاصطناعي
+      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري التفكير...</div>`; chatBody.scrollTop = chatBody.scrollHeight;
+      
       let contextData = initiatives.map(item => {
         const goals = (item.goals && item.goals.length > 0 && item.goals[0] !== '') ? item.goals.join('، ') : "لا يوجد";
         const inds = (item.indicators && item.indicators.length > 0 && item.indicators[0] !== '') ? item.indicators.join('، ') : "لا يوجد";
         const plan = (item.actionPlan && item.actionPlan.length > 0) ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (${p.status})`).join('، ') : "لا يوجد";
-        const pct = Math.round(pctNumber(item.completionPercent));
-        
-        return `📌 [رقم المبادرة: ${escapeHtml(item.initiativeNo || "—")}]
-      - اسم المبادرة: ${escapeHtml(item.initiativeName || "—")}
-      - اسم البرنامج: ${escapeHtml(item.programName || "—")}
-      - الخطة الزمنية: ${escapeHtml(item.timeline || "—")}
-      - نسبة التنفيذ: ${pct}%
-      - الحالة: ${escapeHtml(item.status || "—")}
-      - تاريخ البدء: ${escapeHtml(item.startDate || "—")} | تاريخ الانتهاء: ${escapeHtml(item.endDate || "—")}
-      - وصف المبادرة: ${escapeHtml(item.description || "—")}
-      - أهداف المبادرة: ${escapeHtml(goals)}
-      - المؤشرات الرئيسية: ${escapeHtml(inds)}
-      - خطة العمل/خطوات التنفيذ: ${escapeHtml(plan)}
-      - الجهة المنفذة: ${escapeHtml(item.executingEntity || "—")}
-      - الجهة المساندة: ${escapeHtml(item.supportingEntity || "—")}
-      - المديرية/الدائرة المسؤولة: ${escapeHtml(item.responsibleDepartment || "—")}
-      - الموازنة التقديرية: ${escapeHtml(item.estimatedBudget || "—")} | المبلغ المتبقي: ${escapeHtml(item.remainingAmount || "—")}
-      - الموقف التنفيذي: ${escapeHtml(item.executivePosition || "—")}
-      - التحديات/المعوقات: ${escapeHtml(item.challenges || "—")}
-      - المسؤول عن المتابعة: ${escapeHtml(item.followUpManager || "—")}
-      - مسؤول تنفيذ المبادرة: ${escapeHtml(item.executionManager || "—")} | رقم الهاتف: ${escapeHtml(item.phone || "—")} | البريد الإلكتروني: ${escapeHtml(item.email || "—")}
-      - أهم المبادرات: ${escapeHtml(item.isTopInitiative || "—")}
-      - الملاحظات: ${escapeHtml(item.notes || "—")}
-      - آخر تحديث: ${escapeHtml(item.lastUpdate || "—")}
-      --------------------------------------------------`;
+        return `📌 [رقم المبادرة: ${item.initiativeNo || "—"}]\n - اسم المبادرة: ${item.initiativeName || "—"}\n - نسبة التنفيذ: ${Math.round(pctNumber(item.completionPercent))}%\n - الحالة: ${item.status || "—"}\n - الموقف التنفيذي: ${item.executivePosition || "—"}\n - التحديات: ${item.challenges || "—"}\n--------------------------------------------------`;
       }).join('\n');
 
+      const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
-      const payload = {
-        context: contextData,
-        history: chatHistoryLog.slice(-10) // نرسل آخر 10 رسائل فقط لضمان السرعة وعدم استهلاك الحصة
-      };
+      try {
+        const { data, error } = await supabase.functions.invoke('chat-strategy-ai', {
+          body: payload
+        });
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          document.getElementById(loadingId).remove();
-          sendBtn.disabled = false; input.disabled = false; input.focus();
-          
-          if(res.success) {
-             chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
-             // 🧠 حفظ رد النموذج في الذاكرة بتنسيق Gemini الرسمي (دور النموذج)
-             chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
-          } else {
-             chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ خطأ: ${res.error}</div>`;
-             chatHistoryLog.pop(); // حذف رسالتك من الذاكرة إذا فشل الرد حتى لا يختل السياق
-          }
-          chatBody.scrollTop = chatBody.scrollHeight;
-        })
-        .withFailureHandler(function(err) {
-          document.getElementById(loadingId).remove();
-          sendBtn.disabled = false; input.disabled = false; input.focus();
-          chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ فشل الاتصال: ${err}</div>`;
-          chatHistoryLog.pop(); // حذف الرسالة من الذاكرة إذا انقطع الاتصال
-          chatBody.scrollTop = chatBody.scrollHeight;
-        })
-        .chatWithStrategyAI(payload);
+        document.getElementById(loadingId).remove(); sendBtn.disabled = false; input.disabled = false; input.focus();
+        if(error) throw error;
+
+        if(data.success) {
+           chatBody.innerHTML += `<div class="chat-msg ai">${data.reply}</div>`;
+           chatHistoryLog.push({ role: 'model', parts: [{ text: data.reply }] });
+        } else {
+           chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ خطأ: ${data.error}</div>`; chatHistoryLog.pop();
+        }
+      } catch (err) {
+        document.getElementById(loadingId).remove(); sendBtn.disabled = false; input.disabled = false; input.focus();
+        chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ فشل الاتصال بالمساعد.</div>`; chatHistoryLog.pop();
+      }
+      chatBody.scrollTop = chatBody.scrollHeight;
     }
   </script>
 </body>
