@@ -7,6 +7,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/libs/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <style>
     :root{ --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --brand:#176b87; --brand2:#0b4f6c; --soft:#f0f7f9; --shadow:0 10px 30px rgba(15, 23, 42, .04); --radius:16px; }
     *{box-sizing:border-box}
@@ -117,7 +119,7 @@
     .multi-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--brand); border-radius: 8px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 5px; }
     .multi-select-dropdown.show { display: block; }
     .multi-select-item { display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; font-size: 12.5px; border-radius: 6px; transition: 0.2s; }
-    .multi-select-item:hover { background: var(--soft); color: var(--brand2); }
+    .multi-select-item:hover { background: var(--soft); color: var(--brand2); font-weight: bold }
     .multi-select-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin:0; }
 
     .btn-circle { width: 22px; height: 22px; border-radius: 50%; border: none; color: white; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -250,7 +252,6 @@
         </div>
         
         <div style="display: flex; gap: 8px; height: 100%;">
-          
           <button onclick="loadAllDataFromServer()" class="btn-menu" title="تحديث البيانات">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           </button>
@@ -268,7 +269,6 @@
             </div>
           </div>
         </div>
-
       </div>
       <div class="stats">
         <div class="stat"><b id="statInitiatives">0</b><span>المبادرات المعروضة</span></div>
@@ -287,15 +287,12 @@
           <span>🤖</span> المستشار الاستراتيجي المدعوم بالذكاء الاصطناعي
         </h2>
       </div>
-      
       <div id="aiLoading" style="text-align:center; padding:50px 20px; color:var(--brand2); font-weight:bold; display:none;">
         <div style="font-size:40px; margin-bottom:15px; animation: pulse 1.5s infinite;">🧠</div>
         جاري تحليل المبادرة، واستشراف الموقف التنفيذي، والبحث عن تجارب محلية ودولية مشابهة... <br>
         <span style="font-size:12px; color:var(--muted); font-weight:normal;">(قد تستغرق العملية بضع ثوانٍ)</span>
       </div>
-      
       <div id="aiResponseContent" style="display:none; line-height:1.8; color:var(--ink); font-size:14.5px; padding:10px;"></div>
-
       <div style="text-align:left; margin-top:24px; padding-top:15px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;">
          <button id="btnDownloadCardWord" class="btn-primary" style="background:#16a34a; padding:8px 24px; display:none;" onclick="downloadModalAsWord('aiResponseContent', 'تقرير_المبادرة_الذكية')">تحميل التقرير (Word) 📝</button>
          <button class="btn-primary" style="background:var(--muted); padding:8px 24px" onclick="document.getElementById('aiModal').classList.remove('show')">إغلاق التقرير</button>
@@ -303,9 +300,7 @@
     </div>
   </div>
 
-  <!-- 💬 زر الدردشة العائم ونافذة الشات -->
   <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
-  
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
       <div style="display:flex; align-items:center; gap:8px;"><span>🤖</span> مساعد الاستراتيجية 2040</div>
@@ -322,24 +317,22 @@
     </div>
   </div>
 
-  <style>
-    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
-    #aiResponseContent h3 { color: var(--brand); border-bottom: 1px dashed var(--line); padding-bottom: 5px; margin-top: 20px; font-size:16px;}
-    #aiResponseContent ul { margin-top: 5px; padding-right: 20px;}
-    #aiResponseContent li { margin-bottom: 8px;}
-  </style>
-
   <script>
+    // 1. تهيئة وربط سوبابيس العالمي من خلال كائن window لتفادي أي أخطاء تهيئة مسبقة
+    const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     let entitiesList = [];
     let initiatives = [];
     let selectedEntity = '';
     let currentUser = null;
-    let currentAuthEmail = "";
     let isListView = false;
+    let chatHistoryLog = [];
     
     const PROGRAM_OPTIONS = ['ابتكار صناعات جديدة وذات تكنولوجيا متقدمة','ريادة الاعمال والابتكار','التطوير والتحديث','الحوكمة وإدارة التنمية الصناعية'];
     const STATUS_OPTIONS = ['لم تبدأ', 'قيد التنفيذ', 'مكتملة'];
-
+    
     const els = {
       cards: document.getElementById('cards'), searchInput: document.getElementById('searchInput'),
       entitySearchBox: document.getElementById('entitySearchBox'), entityOptions: document.getElementById('entityOptions'),
@@ -347,97 +340,122 @@
       viewToggleBtn: document.getElementById('viewToggleBtn'), statInitiatives: document.getElementById('statInitiatives'),
       statEntities: document.getElementById('statEntities'), statAvg: document.getElementById('statAvg')
     };
-
-    function getScriptUrl() { return document.location.href.split('?')[0]; }
+    
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function normalizeForCompare(v){ return String(v ?? '').replace(/\s+/g,' ').trim().replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ًٌٍَُِّْـ]/g,'').toLowerCase(); }
-    
-    function pctNumber(v){ 
-      const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, ''));
-      if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; 
-    }
+    function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
     
     let toastTimeout;
     function showToast(message, type = "") {
-      const toast = document.getElementById("toastPopup"); toast.className = "toast-popup show " + type; toast.innerHTML = message;
-      clearTimeout(toastTimeout); if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
+      const toast = document.getElementById("toastPopup");
+      toast.className = "toast-popup show " + type; toast.innerHTML = message;
+      clearTimeout(toastTimeout);
+      if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    window.onload = function() {
+    // إدارة الجلسة للمستخدم تلقائياً عند تحميل الصفحة
+    window.onload = async function() {
       try {
-        const stored = localStorage.getItem('industry_user_session');
-        if (stored) {
-          const sessionData = JSON.parse(stored);
-          const now = new Date().getTime();
-          if (now - sessionData.loginTime <= 1800000) {
-            sessionData.loginTime = now;
-            localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
-            currentUser = sessionData;
-            initAppAfterLogin();
-          } else {
-            localStorage.removeItem('industry_user_session');
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (session) {
+          currentUser = {
+            email: session.user.email,
+            name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
+            role: session.user.user_metadata.role || 'viewer'
+          };
+          initAppAfterLogin();
+        } else {
+          const stored = localStorage.getItem('industry_user_session');
+          if (stored) {
+            const sessionData = JSON.parse(stored);
+            const now = new Date().getTime();
+            if (now - sessionData.loginTime <= 1800000) {
+              sessionData.loginTime = now;
+              localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
+              currentUser = sessionData;
+              initAppAfterLogin();
+            } else {
+              localStorage.removeItem('industry_user_session');
+            }
           }
         }
       } catch(e) {}
     };
 
-    function sendCode() {
+    // إرسال كود التحقق OTP
+    async function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
-      if(!identifier) { showToast("يرجى إدخال اسم المستخدم أو البريد.", "error"); return; }
-      const btn = document.getElementById('btnSendCode'); btn.disabled = true; btn.textContent = "جاري الإرسال...";
-      google.script.run.withSuccessHandler(res => {
-        btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
-        if(res.success) {
-          currentAuthEmail = res.email; document.getElementById('step1').classList.add('hidden'); document.getElementById('step2').classList.remove('hidden');
-          document.getElementById('otpMsg').innerText = res.message; showToast(res.message, "success");
-        } else showToast(res.message, "error");
-      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "إرسال رمز التحقق"; showToast("خطأ في الاتصال.", "error"); }).requestOTP(identifier);
+      if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
+      const btn = document.getElementById('btnSendCode');
+      btn.disabled = true; btn.textContent = "جاري الإرسال...";
+      
+      window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
+
+      const { data, error } = await window.supabaseClient.auth.signInWithOtp({
+        email: window.currentAuthEmail,
+        options: { shouldCreateUser: false }
+      });
+
+      btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
+      if(error) showToast(error.message, "error");
+      else {
+        document.getElementById('step1').classList.add('hidden'); document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني."; showToast("تم إرسال الرمز بنجاح", "success");
+      }
     }
 
-    function verifyCode() {
+    // تأكيد كود التحقق ودخول النظام
+    async function verifyCode() {
       const code = document.getElementById('loginOtp').value.trim();
-      if(!code) { showToast("يرجى إدخال الرمز.", "error"); return; }
+      if(!code) { showToast("يرجى إدخال الرمز السري.", "error"); return; }
       const btn = document.getElementById('btnVerifyCode'); btn.disabled = true; btn.textContent = "جاري التحقق...";
-      google.script.run.withSuccessHandler(res => {
-        btn.disabled = false; btn.textContent = "تحقق ودخول";
-        if(res.success) {
-          currentUser = res;
-          res.loginTime = new Date().getTime();
-          try { localStorage.setItem('industry_user_session', JSON.stringify(res)); } catch(e){}
-          initAppAfterLogin(); showToast("تم تسجيل الدخول بنجاح!", "success");
-        } else showToast(res.message, "error");
-      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "تحقق ودخول"; showToast("خطأ في الاتصال.", "error"); }).verifyOTP(currentAuthEmail, code);
+      
+      const { data, error } = await window.supabaseClient.auth.verifyOtp({
+        email: window.currentAuthEmail,
+        token: code,
+        type: 'email'
+      });
+
+      btn.disabled = false; btn.textContent = "تحقق ودخول";
+      if(error) showToast(error.message, "error");
+      else {
+        currentUser = {
+          email: data.user.email,
+          name: data.user.user_metadata.full_name || data.user.email.split('@')[0],
+          role: data.user.user_metadata.role || 'viewer',
+          loginTime: new Date().getTime()
+        };
+        try { localStorage.setItem('industry_user_session', JSON.stringify(currentUser)); } catch(e){}
+        initAppAfterLogin(); showToast("تم تسجيل الدخول بنجاح!", "success");
+      }
     }
     
     function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
-    function logoutUser() { try { localStorage.removeItem('industry_user_session'); } catch(e){} currentUser = null; document.getElementById('appHeader').classList.add('hidden'); document.getElementById('appContent').classList.add('hidden'); document.getElementById('loginContainer').classList.remove('hidden'); resetLogin(); showToast("تم تسجيل الخروج.", "success"); }
+    async function logoutUser() { await window.supabaseClient.auth.signOut(); try { localStorage.removeItem('industry_user_session'); } catch(e){} currentUser = null; document.getElementById('appHeader').classList.add('hidden'); document.getElementById('appContent').classList.add('hidden'); document.getElementById('loginContainer').classList.remove('hidden'); resetLogin(); showToast("تم تسجيل الخروج.", "success"); }
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
-    
-    function goToDashboard() { showToast("⏳ جاري الانتقال..."); google.script.run.withSuccessHandler(function(url) { window.open(url, "_top"); }).getScriptUrl(); }
-    function goToAdminPage() { showToast("⏳ جاري الانتقال..."); google.script.run.withSuccessHandler(function(url) { window.open(url + "?page=admin&email=" + encodeURIComponent(currentUser.email) + "&token=" + encodeURIComponent(currentUser.adminToken), "_top"); }).getScriptUrl(); }
+    function goToDashboard() { window.location.href = "index.html"; }
+    function goToAdminPage() { window.location.href = "admin.html"; }
 
     function initAppAfterLogin() {
       document.getElementById('loginContainer').classList.add('hidden'); document.getElementById('appHeader').classList.remove('hidden'); document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
       if (currentUser.role === 'admin') {
-        document.getElementById('displayUserRole').textContent = 'مدير النظام'; document.getElementById('displayUserName').style.cursor = 'pointer'; document.getElementById('displayUserName').style.textDecoration = 'underline';
+        document.getElementById('displayUserRole').textContent = 'مدير النظام'; document.getElementById('displayUserName').style.cursor = 'pointer';
+        document.getElementById('displayUserName').style.textDecoration = 'underline';
         document.getElementById('btnAdminUsers').classList.remove('hidden'); document.getElementById('btnAdminEntities').classList.remove('hidden');
-      } else { document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط'; document.getElementById('displayUserName').style.cursor = 'default'; document.getElementById('displayUserName').style.textDecoration = 'none'; }
+      } else { document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
+        document.getElementById('displayUserName').style.cursor = 'default'; document.getElementById('displayUserName').style.textDecoration = 'none'; }
       loadAllDataFromServer();
     }
 
     function autoResize(el) { if(!el) return; el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
     function initAutoResize() { document.querySelectorAll('textarea.card-control').forEach(el => { autoResize(el); el.addEventListener('input', function() { autoResize(this); }); }); }
-
-    function toggleLayout() {
-      isListView = !isListView;
-      if(isListView) { els.viewToggleBtn.innerHTML = 'عرض شبكي 🪟'; } else { els.viewToggleBtn.innerHTML = 'عرض ملء الشاشة 🔲'; }
-      renderCards();
-    }
+    function toggleLayout() { isListView = !isListView; if(isListView) { els.viewToggleBtn.innerHTML = 'عرض شبكي 🪟'; } else { els.viewToggleBtn.innerHTML = 'عرض ملء الشاشة 🔲'; } renderCards(); }
 
     function confirmRemoveRow(btn, isTable) {
       if(confirm('هل أنت متأكد من رغبتك في حذف هذا البند؟')) {
-        const target = btn.closest(isTable ? 'tr' : 'li'); const tbody = isTable ? target.closest('tbody') : null;
+        const target = btn.closest(isTable ? 'tr' : 'li');
+        const tbody = isTable ? target.closest('tbody') : null;
         target.remove(); if(isTable && tbody) updateTableNumbers(tbody);
       }
     }
@@ -453,29 +471,84 @@
       const tbody = document.getElementById('entityTableBody');
       tbody.innerHTML = entitiesList.map(e => `
         <tr><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.contact)}</td><td><span dir="ltr">${escapeHtml(e.phone)}</span></td><td>${escapeHtml(e.email)}</td>
-          <td style="text-align:center"><button class="btn-review btn-edit-mode" onclick="editEntityForm(${e.rowIndex}, '${escapeHtml(e.name)}', '${escapeHtml(e.contact)}', '${escapeHtml(e.phone)}', '${escapeHtml(e.email)}')">تعديل</button></td></tr>
+          <td style="text-align:center"><button class="btn-review btn-edit-mode" onclick="editEntityForm('${e.id}', '${escapeHtml(e.name)}', '${escapeHtml(e.contact)}', '${escapeHtml(e.phone)}', '${escapeHtml(e.email)}')">تعديل</button></td></tr>
       `).join('');
     }
-    function editEntityForm(rowIndex, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = rowIndex; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
+    function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
     function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
     
-    function saveEntity() {
-       const payload = { rowIndex: document.getElementById('ent_rowIndex').value, name: document.getElementById('ent_name').value.trim(), contact: document.getElementById('ent_contact').value.trim(), phone: document.getElementById('ent_phone').value.trim(), email: document.getElementById('ent_email').value.trim() };
-       if(!payload.name) { showToast("اسم الجهة مطلوب", "error"); return; }
+    // حفظ وإضافة الجهات المنفذة عبر سوبابيس
+    async function saveEntity() {
+       const id = document.getElementById('ent_rowIndex').value;
+       const name = document.getElementById('ent_name').value.trim();
+       const contact = document.getElementById('ent_contact').value.trim();
+       const phone = document.getElementById('ent_phone').value.trim();
+       const email = document.getElementById('ent_email').value.trim();
+       if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
        showToast("⏳ جاري الحفظ...");
-       google.script.run.withSuccessHandler(res => {
-          if(res.success) { showToast(res.message, "success"); resetEntityForm(); loadAllDataFromServer(); } else { showToast(res.message, "error"); }
-       }).saveEntityData(payload);
+       
+       const payload = { name, contact, phone, email };
+       let result;
+       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
+       else { result = await window.supabaseClient.from('entities').insert([payload]); }
+
+       if(result.error) { showToast("فشل حفظ البيانات: " + result.error.message, "error"); } 
+       else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-    function loadAllDataFromServer() {
+    // 2. جلب البيانات الشاملة من جدول المبادرات المكون من 28 عموداً في سوبابيس
+    async function loadAllDataFromServer() {
       showToast("⏳ جاري جلب البيانات السحابية...");
-      if (typeof google !== 'undefined') {
-        google.script.run.withSuccessHandler((data) => {
-            if (data.error) showToast('❌ خطأ في النظام: ' + data.error, "error");
-            else { initiatives = data.initiatives || []; entitiesList = data.entitiesList || []; renderEntityOptions(''); populateFollowUpOptions(); renderCards(); if(document.getElementById('entityModal').classList.contains('show')){ renderEntityTable(); } showToast("✅ اكتمل تحميل البيانات.", "success"); }
-          }).withFailureHandler((err) => { showToast('❌ فشل جلب البيانات.', "error"); }).loadDataFromSheet(currentUser ? currentUser.email : "");
-      }
+      try {
+        const { data: initData, error: initError } = await window.supabaseClient.from('initiatives').select('*').order('initiative_number', { ascending: true });
+        if (initError) throw initError;
+
+        const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*');
+        if (entError) {
+          const uniqueEntities = [...new Set((initData || []).map(i => i.executing_entity).filter(Boolean))];
+          entitiesList = uniqueEntities.map((name, index) => ({ id: index, name: name, contact: "—", phone: "—", email: "—" }));
+        } else { entitiesList = entData || []; }
+
+        initiatives = (initData || []).map(item => {
+          let parsedGoals = []; if(item.goals) { try { parsedGoals = JSON.parse(item.goals); } catch(e) { parsedGoals = item.goals.split('\n').filter(Boolean); } }
+          let parsedKpis = []; if(item.kpis) { try { parsedKpis = JSON.parse(item.kpis); } catch(e) { parsedKpis = item.kpis.split('\n').filter(Boolean); } }
+          let parsedPlan = []; if(item.action_plan) { try { parsedPlan = JSON.parse(item.action_plan); } catch(e) { parsedPlan = []; } }
+
+          return {
+            id: item.id,
+            initiativeNo: item.initiative_number || "—",
+            initiativeName: item.initiative_name || "—",
+            timeline: item.timeline || "—",
+            completionPercent: item.completion_percentage || 0,
+            estimatedBudget: item.estimated_budget || "—",
+            remainingAmount: item.remaining_amount || "—",
+            description: item.description || "",
+            executingEntity: item.executing_entity || "—",
+            supportingEntity: item.supporting_entity || "—",
+            responsibleDepartment: item.responsible_directorate || "—",
+            programName: item.program_name || "—",
+            startDate: item.start_date || "",
+            endDate: item.end_date || "",
+            status: item.status || "لم تبدأ",
+            followUpManager: item.follow_up_responsible || "—",
+            executivePosition: item.executive_status || "",
+            challenges: item.challenges || "",
+            lastUpdate: item.latest_update || "",
+            notes: item.notes || "",
+            executionManager: item.implementation_manager || "—",
+            phone: item.phone_number || "—",
+            email: item.email || "—",
+            isTopInitiative: item.is_key_initiative || "لا",
+            lastEditor: item.last_modified_by || "النظام",
+            lastEditDate: item.last_modified_date ? new Date(item.last_modified_date).toLocaleDateString('ar-OM') : "—",
+            goals: parsedGoals, indicators: parsedKpis, actionPlan: parsedPlan
+          };
+        });
+
+        renderEntityOptions(''); populateFollowUpOptions(); renderCards();
+        if(document.getElementById('entityModal').classList.contains('show')){ renderEntityTable(); }
+        showToast("✅ اكتمل تحميل البيانات.", "success");
+      } catch(err) { showToast('❌ فشل جلب البيانات: ' + err.message, "error"); }
     }
 
     function populateFollowUpOptions() {
@@ -495,9 +568,9 @@
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
+    // 3. بناء وحقن البطاقات ذات العرض الكامل بناءً على المعرّف الفريد للجدول (id)
     function renderCards(){
       if(isListView) { els.cards.classList.add('list-view'); } else { els.cards.classList.remove('list-view'); }
-      
       const data = getFilteredData();
       els.statInitiatives.textContent = data.length;
       els.statEntities.textContent = new Set(data.map(x => String(x.executingEntity).trim()).filter(x => x && x !== '—')).size;
@@ -507,41 +580,41 @@
       
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
-        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.rowIndex}" onclick="enableInCardEdit(${item.rowIndex})">تعديل البيانات 📝</button>` : ``;
+        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
-        const checkBoxesHeadHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_head_${item.rowIndex}', 'exec_disp_head_${item.rowIndex}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
-        const checkBoxesBodyHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_body_${item.rowIndex}', 'exec_disp_body_${item.rowIndex}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
-
-        return `<article class="card" id="card-${item.rowIndex}">
+        const checkBoxesHeadHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_head_${item.id}', 'exec_disp_head_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
+        const checkBoxesBodyHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_body_${item.id}', 'exec_disp_body_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
+        
+        return `<article class="card" id="card-${item.id}">
           <div class="card-head">
             <div class="topline">
-              <span class="badge" id="lbl_no_${item.rowIndex}">${escapeHtml(item.initiativeNo || 'بدون رقم')}</span>
-              <input type="hidden" id="f_no_${item.rowIndex}" value="${escapeHtml(item.initiativeNo)}" />
+              <span class="badge" id="lbl_no_${item.id}">${escapeHtml(item.initiativeNo || 'بدون رقم')}</span>
+              <input type="hidden" id="f_no_${item.id}" value="${escapeHtml(item.initiativeNo)}" />
               <div style="display:flex; gap:6px;">
-                <button type="button" class="btn-review" style="background:#4f46e5; color:#fff;" onclick="askSmartAdvisor(${item.rowIndex})">🤖 المستشار الذكي</button>
+                <button type="button" class="btn-review" style="background:#4f46e5; color:#fff;" onclick="askSmartAdvisor('${item.id}')">🤖 المستشار الذكي</button>
                 ${editButtonHtml}
-                <button type="button" class="btn-review btn-view-toggle" id="btnToggle-${item.rowIndex}" onclick="toggleFollowupView(${item.rowIndex})">متابعة التنفيذ 📊</button>
-                <button type="button" class="btn-review btn-save-mode hidden" id="btnSave-${item.rowIndex}" onclick="saveInCardEdit(${item.rowIndex})">حفظ 💾</button>
-                <button type="button" class="btn-review btn-cancel-mode hidden" id="btnCancel-${item.rowIndex}" onclick="renderCards()">إلغاء ❌</button>
+                <button type="button" class="btn-review btn-view-toggle" id="btnToggle-${item.id}" onclick="toggleFollowupView('${item.id}')">متابعة التنفيذ 📊</button>
+                <button type="button" class="btn-review btn-save-mode hidden" id="btnSave-${item.id}" onclick="saveInCardEdit('${item.id}')">حفظ 💾</button>
+                <button type="button" class="btn-review btn-cancel-mode hidden" id="btnCancel-${item.id}" onclick="renderCards()">إلغاء ❌</button>
               </div>
             </div>
-            <h2><textarea id="f_name_${item.rowIndex}" class="card-control text" rows="1" disabled>${escapeHtml(item.initiativeName)}</textarea></h2>
+            <h2><textarea id="f_name_${item.id}" class="card-control text" rows="1" disabled>${escapeHtml(item.initiativeName)}</textarea></h2>
             
             <div class="meta">
-              <div class="mini"><span>الخطة الزمنية</span><b><textarea id="f_time_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.timeline)}</textarea></b></div>
-              <div class="mini"><span>نسبة التنفيذ</span><b><textarea id="f_pct_${item.rowIndex}" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
-              <div class="mini"><span>الموازنة التقديرية</span><b><textarea id="f_budg_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
-              <div class="mini"><span>المبلغ المتبقي</span><b><textarea id="f_rem_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
+              <div class="mini"><span>الخطة الزمنية</span><b><textarea id="f_time_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.timeline)}</textarea></b></div>
+              <div class="mini"><span>نسبة التنفيذ</span><b><textarea id="f_pct_${item.id}" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
+              <div class="mini"><span>الموازنة التقديرية</span><b><textarea id="f_budg_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
+              <div class="mini"><span>المبلغ المتبقي</span><b><textarea id="f_rem_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
               
               <div class="mini entity-meta" style="overflow:visible; z-index:11;"><span>الجهة المنفذة</span><b>
-                <textarea id="f_exec_head_view_${item.rowIndex}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
-                <div class="multi-select-container edit-input" id="f_exec_edit_wrap_head_${item.rowIndex}">
-                  <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown_head_${item.rowIndex}')" id="exec_disp_head_${item.rowIndex}">${escapeHtml(item.executingEntity) || 'اختر الجهة...'}</div>
-                  <div class="multi-select-dropdown" id="exec_dropdown_head_${item.rowIndex}">${checkBoxesHeadHtml}</div>
+                <textarea id="f_exec_head_view_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
+                <div class="multi-select-container edit-input" id="f_exec_edit_wrap_head_${item.id}">
+                  <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown_head_${item.id}')" id="exec_disp_head_${item.id}">${escapeHtml(item.executingEntity) || 'اختر الجهة...'}</div>
+                  <div class="multi-select-dropdown" id="exec_dropdown_head_${item.id}">${checkBoxesHeadHtml}</div>
                 </div>
               </b></div>
-              <div class="mini entity-meta"><span>الجهة المساندة</span><b><textarea id="f_supp_head_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
+              <div class="mini entity-meta"><span>الجهة المساندة</span><b><textarea id="f_supp_head_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
             </div>
           </div>
 
@@ -549,47 +622,47 @@
             <div class="block-primary">
               <div class="section grid-info entity-body">
                 <div class="info" style="overflow: visible; z-index:10;"><span>الجهة المنفذة</span><b>
-                  <textarea id="f_exec_body_${item.rowIndex}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
-                  <div class="multi-select-container edit-input" id="f_exec_edit_wrap_${item.rowIndex}">
-                    <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown_body_${item.rowIndex}')" id="exec_disp_body_${item.rowIndex}">${escapeHtml(item.executingEntity) || 'اختر الجهة...'}</div>
-                    <div class="multi-select-dropdown" id="exec_dropdown_body_${item.rowIndex}">${checkBoxesBodyHtml}</div>
+                  <textarea id="f_exec_body_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
+                  <div class="multi-select-container edit-input" id="f_exec_edit_wrap_${item.id}">
+                    <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown_body_${item.id}')" id="exec_disp_body_${item.id}">${escapeHtml(item.executingEntity) || 'اختر الجهة...'}</div>
+                    <div class="multi-select-dropdown" id="exec_dropdown_body_${item.id}">${checkBoxesBodyHtml}</div>
                   </div>
                 </b></div>
-                <div class="info"><span>الجهة المساندة</span><b><textarea id="f_supp_body_${item.rowIndex}" class="card-control text" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
+                <div class="info"><span>الجهة المساندة</span><b><textarea id="f_supp_body_${item.id}" class="card-control text" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
               </div>
 
               <div class="primary-split">
                 <div class="split-right">
-                  <div class="section"><div class="section-title">وصف المبادرة</div><div class="text"><textarea id="f_desc_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.description)}</textarea></div></div>
+                  <div class="section"><div class="section-title">وصف المبادرة</div><div class="text"><textarea id="f_desc_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.description)}</textarea></div></div>
                   <div class="section grid-2col">
                     <div>
                       <div class="section-title">أهداف المبادرة</div>
-                      <ul class="list" id="goals_${item.rowIndex}">
+                      <ul class="list" id="goals_${item.id}">
                         ${item.goals.length && item.goals[0] !== '' ? item.goals.map(g=>`<li><div style="display:flex;gap:6px;"><textarea class="card-control goal-item text" rows="1" disabled>${escapeHtml(g)}</textarea><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, false)">-</button></div></li>`).join('') : ''}
                       </ul>
-                      ${(!item.goals.length || item.goals[0] === '') ? `<div class="empty" id="empty_goals_${item.rowIndex}">لم تسجل أهداف</div>` : ''}
-                      <button type="button" class="btn-circle btn-add-item" onclick="addListRow('goals_${item.rowIndex}', 'goal-item', 'empty_goals_${item.rowIndex}')">+</button>
+                      ${(!item.goals.length || item.goals[0] === '') ? `<div class="empty" id="empty_goals_${item.id}">لم تسجل أهداف</div>` : ''}
+                      <button type="button" class="btn-circle btn-add-item" onclick="addListRow('goals_${item.id}', 'goal-item', 'empty_goals_${item.id}')">+</button>
                     </div>
                     <div>
                       <div class="section-title">المؤشرات الرئيسية</div>
-                      <ul class="list" id="inds_${item.rowIndex}">
+                      <ul class="list" id="inds_${item.id}">
                         ${item.indicators.length && item.indicators[0] !== '' ? item.indicators.map(n=>`<li><div style="display:flex;gap:6px;"><textarea class="card-control ind-item text" rows="1" disabled>${escapeHtml(n)}</textarea><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, false)">-</button></div></li>`).join('') : ''}
                       </ul>
-                      ${(!item.indicators.length || item.indicators[0] === '') ? `<div class="empty" id="empty_inds_${item.rowIndex}">لم تسجل مؤشرات</div>` : ''}
-                      <button type="button" class="btn-circle btn-add-item" onclick="addListRow('inds_${item.rowIndex}', 'ind-item', 'empty_inds_${item.rowIndex}')">+</button>
+                      ${(!item.indicators.length || item.indicators[0] === '') ? `<div class="empty" id="empty_inds_${item.id}">لم تسجل مؤشرات</div>` : ''}
+                      <button type="button" class="btn-circle btn-add-item" onclick="addListRow('inds_${item.id}', 'ind-item', 'empty_inds_${item.id}')">+</button>
                     </div>
                   </div>
                 </div>
 
                 <div class="split-left">
                   <div class="section"><div class="section-title">خطة العمل / خطوات التنفيذ</div>
-                    <table id="tbl_${item.rowIndex}">
+                    <table id="tbl_${item.id}">
                       <thead><tr><th class="num">#</th><th>إجراء التنفيذ المعتمد</th><th>الموقف الحالي</th><th class="act-cell-remove">إزالة</th></tr></thead>
                       <tbody>
-                        ${item.actionPlan.length ? item.actionPlan.map(r=>`<tr class="action-row"><td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled>${escapeHtml(r.no)}</textarea></td><td><textarea class="card-control act-proc text" rows="1" disabled>${escapeHtml(r.procedure)}</textarea></td><td><textarea class="card-control act-stat text" rows="1" disabled>${escapeHtml(r.status)}</textarea></td><td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td></tr>`).join('') : `<tr id="empty_tbl_${item.rowIndex}"><td colspan="4" class="empty">لا توجد خطوات تنفيذية مدونة</td></tr>`}
+                        ${item.actionPlan.length ? item.actionPlan.map(r=>`<tr class="action-row"><td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled>${escapeHtml(r.no)}</textarea></td><td><textarea class="card-control act-proc text" rows="1" disabled>${escapeHtml(r.procedure)}</textarea></td><td><textarea class="card-control act-stat text" rows="1" disabled>${escapeHtml(r.status)}</textarea></td><td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td></tr>`).join('') : `<tr id="empty_tbl_${item.id}"><td colspan="4" class="empty">لا توجد خطوات تنفيذية مدونة</td></tr>`}
                       </tbody>
                     </table>
-                    <button type="button" class="btn-circle btn-add-item" onclick="addTableRow(${item.rowIndex}, 'empty_tbl_${item.rowIndex}')">+</button>
+                    <button type="button" class="btn-circle btn-add-item" onclick="addTableRow('${item.id}', 'empty_tbl_${item.id}')">+</button>
                   </div>
                 </div>
               </div> 
@@ -597,41 +670,41 @@
 
             <div class="block-followup">
               <div class="section grid-info">
-                <div class="info"><span>المديرية / الدائرة المسؤولة عن المبادرة</span><b><textarea id="f_dept_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.responsibleDepartment)}</textarea></b></div>
+                <div class="info"><span>المديرية / الدائرة المسؤولة عن المبادرة</span><b><textarea id="f_dept_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.responsibleDepartment)}</textarea></b></div>
                 <div class="info"><span>اسم البرنامج</span><b>
-                  <textarea id="f_prog_${item.rowIndex}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.programName)}</textarea>
-                  <select id="f_prog_edit_${item.rowIndex}" class="card-control edit-input">
+                  <textarea id="f_prog_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.programName)}</textarea>
+                  <select id="f_prog_edit_${item.id}" class="card-control edit-input">
                     <option value="">تحديد البرنامج...</option>
                     ${PROGRAM_OPTIONS.map(p => `<option value="${escapeHtml(p)}" ${item.programName === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
                   </select>
                 </b></div>
                 <div class="info"><span>تاريخ البدء</span><b>
-                  <textarea id="f_start_${item.rowIndex}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.startDate)}</textarea>
-                  <input type="date" id="f_start_edit_${item.rowIndex}" class="card-control edit-input" value="${escapeHtml(item.startDate)}" />
+                  <textarea id="f_start_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.startDate)}</textarea>
+                  <input type="date" id="f_start_edit_${item.id}" class="card-control edit-input" value="${escapeHtml(item.startDate)}" />
                 </b></div>
                 <div class="info"><span>تاريخ الانتهاء</span><b>
-                  <textarea id="f_end_${item.rowIndex}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.endDate)}</textarea>
-                  <input type="date" id="f_end_edit_${item.rowIndex}" class="card-control edit-input" value="${escapeHtml(item.endDate)}" />
+                  <textarea id="f_end_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.endDate)}</textarea>
+                  <input type="date" id="f_end_edit_${item.id}" class="card-control edit-input" value="${escapeHtml(item.endDate)}" />
                 </b></div>
                 <div class="info"><span>الحالة</span><b>
-                  <textarea id="f_status_${item.rowIndex}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.status)}</textarea>
-                  <select id="f_status_edit_${item.rowIndex}" class="card-control edit-input">
+                  <textarea id="f_status_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.status)}</textarea>
+                  <select id="f_status_edit_${item.id}" class="card-control edit-input">
                     <option value="">تحديد الحالة...</option>
                     ${STATUS_OPTIONS.map(s => `<option value="${escapeHtml(s)}" ${item.status === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
                   </select>
                 </b></div>
-                <div class="info"><span>المسؤول عن المتابعة</span><b><textarea id="f_fum_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.followUpManager)}</textarea></b></div>
+                <div class="info"><span>المسؤول عن المتابعة</span><b><textarea id="f_fum_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.followUpManager)}</textarea></b></div>
               </div>
               
-              <div class="section"><div class="section-title">الموقف التنفيذي</div><div class="text"><textarea id="f_execpos_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.executivePosition)}</textarea></div></div>
-              <div class="section"><div class="section-title" style="color:var(--brand2)">التحديات / المعوقات</div><div class="text"><textarea id="f_chal_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.challenges)}</textarea></div></div>
-              <div class="section"><div class="section-title">آخر تحديث</div><div class="text"><textarea id="f_lupd_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.lastUpdate)}</textarea></div></div>
-              <div class="section"><div class="section-title">الملاحظات</div><div class="text"><textarea id="f_note_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.notes)}</textarea></div></div>
+              <div class="section"><div class="section-title">الموقف التنفيذي</div><div class="text"><textarea id="f_execpos_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.executivePosition)}</textarea></div></div>
+              <div class="section"><div class="section-title" style="color:var(--brand2)">التحديات / المعوقات</div><div class="text"><textarea id="f_chal_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.challenges)}</textarea></div></div>
+              <div class="section"><div class="section-title">آخر تحديث</div><div class="text"><textarea id="f_lupd_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.lastUpdate)}</textarea></div></div>
+              <div class="section"><div class="section-title">الملاحظات</div><div class="text"><textarea id="f_note_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.notes)}</textarea></div></div>
               
               <div class="section grid-info">
-                <div class="info"><span>مسؤول تنفيذ المبادرة</span><b><textarea id="f_exm_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.executionManager)}</textarea></b></div>
-                <div class="info"><span>رقم الهاتف</span><b><textarea id="f_phone_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.phone)}</textarea></b></div>
-                <div class="info"><span>البريد الاليكتروني</span><b><textarea id="f_email_${item.rowIndex}" class="card-control" rows="1" disabled>${escapeHtml(item.email)}</textarea></b></div>
+                <div class="info"><span>مسؤول تنفيذ المبادرة</span><b><textarea id="f_exm_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.executionManager)}</textarea></b></div>
+                <div class="info"><span>رقم الهاتف</span><b><textarea id="f_phone_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.phone)}</textarea></b></div>
+                <div class="info"><span>البريد الاليكتروني</span><b><textarea id="f_email_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.email)}</textarea></b></div>
               </div>
              
               <div style="font-size:11px; color:var(--muted); margin-top:10px; border-top:1px dashed var(--line); padding-top:6px; display:flex; justify-content:space-between">
@@ -649,16 +722,16 @@
     function updateMultiSelectDisplay(dropdownId, dispId) { const container = document.getElementById(dropdownId); const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked'); const vals = Array.from(checkboxes).map(cb => cb.value); document.getElementById(dispId).textContent = vals.length > 0 ? vals.join('، ') : 'اختر الجهات...'; }
     document.addEventListener('click', e => { if(!e.target.closest('.multi-select-container')) { document.querySelectorAll('.multi-select-dropdown').forEach(d => d.classList.remove('show')); } });
 
-    function toggleFollowupView(rowIndex) {
-      const card = document.getElementById(`card-${rowIndex}`); const btn = document.getElementById(`btnToggle-${rowIndex}`);
+    function toggleFollowupView(id) {
+      const card = document.getElementById(`card-${id}`); const btn = document.getElementById(`btnToggle-${id}`);
       if (card.classList.contains('view-followup')) { card.classList.remove('view-followup'); btn.textContent = "متابعة التنفيذ 📊"; } 
       else { card.classList.add('view-followup'); btn.textContent = "عرض المبادرة 📄"; }
-      initAutoResize(); 
+      initAutoResize();
     }
 
-    function enableInCardEdit(rowIndex) {
-      const card = document.getElementById(`card-${rowIndex}`); card.classList.add('mode-edit'); 
-      document.getElementById(`btnEdit-${rowIndex}`).classList.add('hidden'); document.getElementById(`btnSave-${rowIndex}`).classList.remove('hidden'); document.getElementById(`btnCancel-${rowIndex}`).classList.remove('hidden');
+    function enableInCardEdit(id) {
+      const card = document.getElementById(`card-${id}`); card.classList.add('mode-edit'); 
+      document.getElementById(`btnEdit-${id}`).classList.add('hidden'); document.getElementById(`btnSave-${id}`).classList.remove('hidden'); document.getElementById(`btnCancel-${id}`).classList.remove('hidden');
       setTimeout(() => { card.querySelectorAll('.card-control').forEach(input => { if(!input.classList.contains('act-no')) { input.removeAttribute('disabled'); } autoResize(input); }); }, 10);
     }
 
@@ -668,58 +741,95 @@
       document.getElementById(containerId).appendChild(li); li.querySelector('textarea').focus();
     }
     
-    function addTableRow(rowIndex, emptyId) {
+    function addTableRow(id, emptyId) {
       const emptyEl = document.getElementById(emptyId); if(emptyEl) emptyEl.remove();
-      const tbody = document.getElementById(`tbl_${rowIndex}`).querySelector('tbody'); const tr = document.createElement('tr'); tr.className = 'action-row';
+      const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); const tr = document.createElement('tr'); tr.className = 'action-row';
       tr.innerHTML = `<td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled></textarea></td><td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)"></textarea></td><td><textarea class="card-control act-stat text" rows="1" oninput="autoResize(this)">جاري</textarea></td><td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>`;
       tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
     }
 
-    function saveInCardEdit(rowIndex) {
-      const card = document.getElementById(`card-${rowIndex}`);
-      showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${rowIndex}`).disabled = true;
+    // 4. حفظ البيانات المعدلة فوراً داخل سوبابيس (28 عموداً) وإعادة معالجة التنسيق
+    async function saveInCardEdit(id) {
+      const card = document.getElementById(`card-${id}`);
+      showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
       try {
-        const goalsArr = Array.from(card.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean); const indArr = Array.from(card.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
+        const goalsArr = Array.from(card.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean);
+        const indArr = Array.from(card.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
         const planArr = Array.from(card.querySelectorAll('.action-row')).map(tr => ({ no: tr.querySelector('.act-no').value.trim(), procedure: tr.querySelector('.act-proc').value.trim(), status: tr.querySelector('.act-stat').value.trim() })).filter(r => r.procedure !== "" || r.status !== "");
-        const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ""; }; const getEditVal = (idBase, rIndex) => { const editEl = document.getElementById(idBase + '_edit_' + rIndex); return editEl ? editEl.value : getVal(idBase + '_' + rIndex); };
+        const getVal = (fieldId) => { const el = document.getElementById(fieldId); return el ? el.value : ""; };
+        const getEditVal = (idBase, itemId) => { const editEl = document.getElementById(idBase + '_edit_' + itemId); return editEl ? editEl.value : getVal(idBase + '_' + itemId); };
 
-        const isListViewActive = els.cards.classList.contains('list-view'); let executingEntityVal = "";
-        if (isListViewActive) { const execCheckboxes = document.querySelectorAll('#exec_dropdown_head_' + rowIndex + ' input[type="checkbox"]:checked'); executingEntityVal = Array.from(execCheckboxes).map(cb => cb.value).join('، '); } 
-        else { const execCheckboxes = document.querySelectorAll('#exec_dropdown_body_' + rowIndex + ' input[type="checkbox"]:checked'); executingEntityVal = Array.from(execCheckboxes).map(cb => cb.value).join('، '); }
+        const isListViewActive = els.cards.classList.contains('list-view'); 
+        let executingEntityVal = "";
+        if (isListViewActive) { const execCheckboxes = document.querySelectorAll('#exec_dropdown_head_' + id + ' input[type="checkbox"]:checked'); executingEntityVal = Array.from(execCheckboxes).map(cb => cb.value).join('، '); } 
+        else { const execCheckboxes = document.querySelectorAll('#exec_dropdown_body_' + id + ' input[type="checkbox"]:checked'); executingEntityVal = Array.from(execCheckboxes).map(cb => cb.value).join('، '); }
         
-        const suppEntityVal = isListViewActive ? getVal(`f_supp_head_${rowIndex}`) : getVal(`f_supp_body_${rowIndex}`);
+        const suppEntityVal = isListViewActive ? getVal(`f_supp_head_${id}`) : getVal(`f_supp_body_${id}`);
+        
         const payload = {
-          rowIndex: rowIndex, initiativeNo: getVal(`f_no_${rowIndex}`), initiativeName: getVal(`f_name_${rowIndex}`), timeline: getVal(`f_time_${rowIndex}`), completionPercent: getVal(`f_pct_${rowIndex}`), estimatedBudget: getVal(`f_budg_${rowIndex}`), remainingAmount: getVal(`f_rem_${rowIndex}`), description: getVal(`f_desc_${rowIndex}`), 
-          executingEntity: executingEntityVal, supportingEntity: suppEntityVal, responsibleDepartment: getVal(`f_dept_${rowIndex}`), programName: getEditVal('f_prog', rowIndex), startDate: getEditVal('f_start', rowIndex), endDate: getEditVal('f_end', rowIndex), status: getEditVal('f_status', rowIndex),
-          followUpManager: getVal(`f_fum_${rowIndex}`), executivePosition: getVal(`f_execpos_${rowIndex}`), challenges: getVal(`f_chal_${rowIndex}`), lastUpdate: getVal(`f_lupd_${rowIndex}`), notes: getVal(`f_note_${rowIndex}`), executionManager: getVal(`f_exm_${rowIndex}`), phone: getVal(`f_phone_${rowIndex}`), email: getVal(`f_email_${rowIndex}`), currentUserEmail: currentUser.email, currentUserName: currentUser.name, goals: goalsArr, indicators: indArr, actionPlan: planArr
+          initiative_number: getVal(`f_no_${id}`),
+          initiative_name: getVal(`f_name_${id}`),
+          timeline: getVal(`f_time_${id}`),
+          completion_percentage: pctNumber(getVal(`f_pct_${id}`)),
+          estimated_budget: pctNumber(getVal(`f_budg_${id}`)),
+          remaining_amount: pctNumber(getVal(`f_rem_${id}`)),
+          description: getVal(`f_desc_${id}`),
+          executing_entity: executingEntityVal,
+          supporting_entity: suppEntityVal,
+          responsible_directorate: getVal(`f_dept_${id}`),
+          program_name: getEditVal('f_prog', id),
+          start_date: getEditVal('f_start', id) || null,
+          end_date: getEditVal('f_end', id) || null,
+          status: getEditVal('f_status', id),
+          follow_up_responsible: getVal(`f_fum_${id}`),
+          executive_status: getVal(`f_execpos_${id}`),
+          challenges: getVal(`f_chal_${id}`),
+          latest_update: getVal(`f_lupd_${id}`),
+          notes: getVal(`f_note_${id}`),
+          implementation_manager: getVal(`f_exm_${id}`),
+          phone_number: getVal(`f_phone_${id}`),
+          email: getVal(`f_email_${id}`),
+          last_modified_by: currentUser.name,
+          last_modified_date: new Date().toISOString(),
+          goals: JSON.stringify(goalsArr),
+          kpis: JSON.stringify(indArr),
+          action_plan: JSON.stringify(planArr)
         };
         
-        if (typeof google !== 'undefined') {
-          google.script.run.withSuccessHandler((msg) => { showToast("✅ تم الحفظ بنجاح!", "success"); google.script.run.withSuccessHandler((data) => { initiatives = data.initiatives || []; entitiesList = data.entitiesList || []; const wasFollowup = card.classList.contains('view-followup'); renderCards(); if(wasFollowup) toggleFollowupView(rowIndex); }).loadDataFromSheet(currentUser ? currentUser.email : ""); }).withFailureHandler(err => { showToast("❌ فشل الحفظ: " + err, "error"); document.getElementById(`btnSave-${rowIndex}`).disabled = false; }).updateInitiativeInSheet(payload);
-        }
-      } catch (e) { showToast("❌ خطأ.", "error"); document.getElementById(`btnSave-${rowIndex}`).disabled = false; }
+        const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);
+        if (error) throw error;
+
+        showToast("✅ تم الحفظ بنجاح!", "success");
+        const wasFollowup = card.classList.contains('view-followup'); 
+        await loadAllDataFromServer();
+        if(wasFollowup) toggleFollowupView(id);
+      } catch (e) { showToast("❌ فشل الحفظ: " + e.message, "error"); document.getElementById(`btnSave-${id}`).disabled = false; }
     }
 
     function renderEntityOptions(filterText){
-      const f = normalizeForCompare(filterText); const options = [''].concat(entitiesList.map(e => e.name)).filter(v => !v || !f || normalizeForCompare(v).includes(f));
+      const f = normalizeForCompare(filterText);
+      const options = [''].concat(entitiesList.map(e => e.name)).filter(v => !v || !f || normalizeForCompare(v).includes(f));
       els.entityOptions.innerHTML = options.map(v => `<div class="entity-option ${v===selectedEntity?'active':''}" data-value="${escapeHtml(v)}">${escapeHtml(v || 'كل الجهات المنفذة')}</div>`).join('');
     }
 
-    els.searchInput.addEventListener('input', renderCards); els.followUpSelect.addEventListener('change', renderCards); els.programSelect.addEventListener('change', renderCards); els.entitySearchBox.addEventListener('focus', () => els.entityOptions.classList.remove('hidden')); els.entitySearchBox.addEventListener('input', () => { selectedEntity = els.entitySearchBox.value; renderEntityOptions(selectedEntity); renderCards(); }); els.entityOptions.addEventListener('mousedown', e => { const opt = e.target.closest('.entity-option'); if(opt) { selectedEntity = opt.dataset.value; els.entitySearchBox.value = selectedEntity; els.entitySearchBox.placeholder = selectedEntity || 'كل الجهات المنفذة'; els.entityOptions.classList.add('hidden'); renderCards(); } });
+    els.searchInput.addEventListener('input', renderCards); els.followUpSelect.addEventListener('change', renderCards);
+    els.programSelect.addEventListener('change', renderCards); els.entitySearchBox.addEventListener('focus', () => els.entityOptions.classList.remove('hidden')); els.entitySearchBox.addEventListener('input', () => { selectedEntity = els.entitySearchBox.value; renderEntityOptions(selectedEntity); renderCards(); });
+    els.entityOptions.addEventListener('mousedown', e => { const opt = e.target.closest('.entity-option'); if(opt) { selectedEntity = opt.dataset.value; els.entitySearchBox.value = selectedEntity; els.entitySearchBox.placeholder = selectedEntity || 'كل الجهات المنفذة'; els.entityOptions.classList.add('hidden'); renderCards(); } });
     function toggleMenu() { document.getElementById("dropdownMenu").classList.toggle("show"); }
 
     function exportToExcel() {
-      const data = getFilteredData(); if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
+      const data = getFilteredData();
+      if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
       const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (${p.status})`).join(' \n ') : "" })));
       ws['!dir'] = 'rtl'; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "المبادرات"); XLSX.writeFile(wb, "المبادرات_الصناعية.xlsx"); showToast("✅ تم التحميل.", "success");
     }
 
     function exportToPowerPoint() {
-      const data = getFilteredData(); if (!data.length) { showToast("لا توجد بيانات", "error"); return; } showToast("⏳ جاري إنشاء البوربوينت ...", "success");
+      const data = getFilteredData();
+      if (!data.length) { showToast("لا توجد بيانات", "error"); return; } showToast("⏳ جاري إنشاء البوربوينت ...", "success");
       let pptx = new PptxGenJS(); pptx.layout = 'LAYOUT_16x9'; 
       const fixRtlText = (text) => text ? text.toString().replace(/\(/g, '&&OPEN&&').replace(/\)/g, '(').replace(/&&OPEN&&/g, ')') : "—";
       const getFontSize = (text, type) => { let len = (text || "").toString().length; if(type === 'title') return len > 60 ? 11 : (len > 40 ? 13 : 15); if(type === 'desc') return len > 350 ? 8 : (len > 250 ? 9 : (len > 150 ? 10 : 11)); if(type === 'box') return len > 250 ? 8 : (len > 150 ? 9 : (len > 80 ? 10 : 11)); if(type === 'table') return len > 80 ? 8 : (len > 120 ? 7 : 9); return 11; };
-      
       data.forEach(item => {
         let slide = pptx.addSlide(); slide.background = { color: "F8FAFC" }; const brandColor = "0B4F6C", altColor = "176B87", rtlOpts = { rtlMode: true, wrap: true, breakLine: true, isRtl: true };
         slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 10, h: 0.7, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } }); slide.addShape(pptx.ShapeType.roundRect, { x: 8.8, y: 0.1, w: 1.0, h: 0.5, fill: brandColor, rectRadius: 0.1 }); slide.addText(item.initiativeNo || "—", { x: 8.8, y: 0.1, w: 1.0, h: 0.5, color: "FFFFFF", bold: true, align: "center", valign: "middle", ...rtlOpts, fontSize: 12 });
@@ -740,21 +850,17 @@
         slide.addShape(pptx.ShapeType.rect, { x: 5.1, y: 0.85, w: 4.7, h: 1.3, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
         slide.addText("وصف المبادرة", { x: 5.1, y: 0.9, w: 4.7, h: 0.25, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
         slide.addText(fixRtlText(item.description), { x: 5.1, y: 1.2, w: 4.7, h: 0.9, color: "334155", align: "right", valign: "top", ...rtlOpts, fontSize: getFontSize(item.description, 'desc') });
-        
         let goalsArr = Array.isArray(item.goals) ? item.goals.filter(Boolean) : [item.goals].filter(Boolean);
         slide.addShape(pptx.ShapeType.rect, { x: 7.55, y: 2.25, w: 2.25, h: 2.5, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
         slide.addText("أهداف المبادرة", { x: 7.55, y: 2.3, w: 2.25, h: 0.25, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
         slide.addText(goalsArr.length > 0 ? goalsArr.map((g, i) => ({ text: ` .${i + 1} ${fixRtlText(g)}`, options: { breakLine: true, paraSpaceAfter: 6, rtlMode: true, align: "right" } })) : [{ text: "—", options: { align: "right", rtlMode: true } }], { x: 7.55, y: 2.6, w: 2.25, h: 2.1, color: "334155", valign: "top", align: "right", rtlMode: true, fontSize: getFontSize(goalsArr.map((g, i) => ` .${i + 1} ${fixRtlText(g)}`).join("\n"), 'box') });
-        
         let indsArr = Array.isArray(item.indicators) ? item.indicators.filter(Boolean) : [item.indicators].filter(Boolean);
         slide.addShape(pptx.ShapeType.rect, { x: 5.1, y: 2.25, w: 2.25, h: 2.5, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
         slide.addText("المؤشرات الرئيسية", { x: 5.1, y: 2.3, w: 2.25, h: 0.25, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
         slide.addText(indsArr.length > 0 ? indsArr.map((ind, i) => ({ text: ` .${i + 1} ${fixRtlText(ind)}`, options: { breakLine: true, paraSpaceAfter: 6, rtlMode: true, align: "right" } })) : [{ text: "—", options: { align: "right", rtlMode: true } }], { x: 5.1, y: 2.6, w: 2.25, h: 2.1, color: "334155", valign: "top", align: "right", rtlMode: true, fontSize: getFontSize(indsArr.map((ind, i) => ` .${i + 1} ${fixRtlText(ind)}`).join("\n"), 'box') });
-        
         slide.addShape(pptx.ShapeType.rect, { x: 0.2, y: 0.85, w: 4.7, h: 3.9, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
         slide.addText("خطة العمل / خطوات التنفيذ", { x: 0.2, y: 0.9, w: 4.7, h: 0.3, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
         let tblRows = [[{ text: "الحالة", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "الإجراءات المعتمدة", options: { fill: "F1F5F9", bold: true, align: "right", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "#", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }]];
-        
         if(item.actionPlan && item.actionPlan.length > 0) {
             item.actionPlan.slice(0, 8).forEach(p => {
                 let sColor = "0F172A"; if (p.status && (p.status.includes("اكتمل") || p.status.includes("منجز"))) sColor = "16A34A"; else if (p.status && (p.status.includes("متأخر") || p.status.includes("ملغى"))) sColor = "EF4444";
@@ -767,21 +873,13 @@
       pptx.writeFile({ fileName: `المبادرات_${new Date().getTime()}.pptx` }).then(() => showToast("✅ تم التصدير بنجاح", "success")).catch(err => showToast("❌ خطأ: " + err, "error"));
     }
 
-    function askSmartAdvisor(rowIndex) {
-      const item = initiatives.find(i => i.rowIndex === rowIndex);
+    // 5. استدعاء المستشار الذكي عبر وظائف سوبابيس (Supabase Edge Functions)
+    async function askSmartAdvisor(id) {
+      const item = initiatives.find(i => i.id === id);
       if(!item) return;
-
-      const modal = document.getElementById('aiModal');
-      const loading = document.getElementById('aiLoading');
-      const content = document.getElementById('aiResponseContent');
-      const btnDownloadWord = document.getElementById('btnDownloadCardWord');
-
-      modal.classList.add('show');
-      loading.style.display = 'block';
-      content.style.display = 'none';
-      content.innerHTML = '';
-      btnDownloadWord.style.display = 'none';
-
+      const modal = document.getElementById('aiModal'); const loading = document.getElementById('aiLoading'); const content = document.getElementById('aiResponseContent'); const btnDownloadWord = document.getElementById('btnDownloadCardWord');
+      modal.classList.add('show'); loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = ''; btnDownloadWord.style.display = 'none';
+      
       const payload = {
         initiativeName: item.initiativeName || "غير محدد",
         description: item.description || "لا يوجد وصف مسجل",
@@ -793,125 +891,61 @@
         executivePosition: item.executivePosition || "لم يتم تدوين الموقف التنفيذي الحالي بعد"
       };
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          loading.style.display = 'none';
-          content.style.display = 'block';
-          if(res.success) {
-            let modelBadge = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">
-                                🤖 الذكاء الاصطناعي النشط حالياً: <b style="color: var(--brand); font-family: monospace;">${res.modelUsed || 'Gemini'}</b>
-                              </div>`;
-            content.innerHTML = modelBadge + res.advice;
-            btnDownloadWord.style.display = 'inline-block';
-          } else {
-            content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ عذراً، حدث خطأ: ${res.error}</div>`;
-          }
-        })
-        .withFailureHandler(function(err) {
-          loading.style.display = 'none';
-          content.style.display = 'block';
-          content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ فشل الاتصال بالخادم: ${err}</div>`;
-        })
-        .getAIAdvice(payload);
+      // استدعاء دالة Edge Function المخصصة بدلاً من سكربت جوجل القديم
+      const { data: res, error } = await window.supabaseClient.functions.invoke('get-card-ai-advice', { body: payload });
+
+      loading.style.display = 'none'; content.style.display = 'block';
+      if(!error && res.success) {
+        let modelBadge = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">🤖 الذكاء الاصطناعي النشط: <b style="color: var(--brand); font-family: monospace;">Gemini Ultra (Supabase AI Engine)</b></div>`;
+        content.innerHTML = modelBadge + res.advice;
+        btnDownloadWord.style.display = 'inline-block';
+      } else {
+        content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ عذراً، فشل استصدار التقرير السحابي: ${error?.message || res?.error}</div>`;
+      }
     }
 
     function downloadModalAsWord(elementId, baseFilename) {
       const content = document.getElementById(elementId).innerHTML;
-      const htmlString = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-          <meta charset="utf-8">
-          <title>تقرير المبادرة - الاستراتيجية الصناعية</title>
-          <style>
-            body { font-family: 'Tahoma', 'Arial', sans-serif; direction: rtl; text-align: right; line-height: 1.6; }
-            h3 { color: #0b4f6c; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-top: 20px; font-size: 16px; }
-            ul { padding-right: 20px; }
-            li { margin-bottom: 8px; }
-            b { color: #0f172a; }
-          </style>
-        </head>
-        <body>
-          ${content}
-        </body>
-        </html>
-      `;
-      
+      const htmlString = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>تقرير المبادرة - الاستراتيجية الصناعية</title><style>body { font-family: 'Tahoma', 'Arial', sans-serif; direction: rtl; text-align: right; line-height: 1.6; } h3 { color: #0b4f6c; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-top: 20px; font-size: 16px; } ul { padding-right: 20px; } li { margin-bottom: 8px; } b { color: #0f172a; }</style></head><body>${content}</body></html>`;
       const blob = new Blob(['\ufeff' + htmlString], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
       a.download = baseFilename + '_' + new Date().toISOString().slice(0,10) + '.doc';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    // 💬 دوال التحكم في الشات العائم
-// 💬 متغير عام لتخزين سجل المحادثة
-    // 💬 متغير عام لتخزين سجل المحادثة (الذاكرة)
-    let chatHistoryLog = [];
+    function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
-    // دوال التحكم في الشات العائم
-    function toggleChat() {
-      document.getElementById('chatWindow').classList.toggle('show');
-    }
+    // 6. تشغيل نظام المحادثة التفاعلي للمستشار الذكي عبر سوبابيس
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput'); const msg = input.value.trim();
+      if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error"); return; }
 
-    function sendChatMessage() {
-      const input = document.getElementById('chatInput');
-      const msg = input.value.trim();
-      if(!msg || initiatives.length === 0) { 
-        if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error");
-        return; 
-      }
-
-      const chatBody = document.getElementById('chatBody');
-      const sendBtn = document.getElementById('chatSendBtn');
-
-      // إظهار رسالة المستخدم في الشاشة
+      const chatBody = document.getElementById('chatBody'); const sendBtn = document.getElementById('chatSendBtn');
       chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`;
-      
-      // 🧠 حفظ الرسالة في الذاكرة بتنسيق Gemini الرسمي (دور المستخدم)
       chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
-      
-      input.value = '';
-      sendBtn.disabled = true;
-      input.disabled = true;
+      input.value = ''; sendBtn.disabled = true; input.disabled = true;
       
       const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري التفكير...</div>`;
+      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري التفكير وفحص بطاقات المشاريع...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
 
       let contextData = initiatives.map(item => `رقم: ${item.initiativeNo} | المبادرة: ${item.initiativeName} | التنفيذ: ${Math.round(pctNumber(item.completionPercent))}% | الموقف: ${item.executivePosition}`).join('\n');
+      const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
-      const payload = {
-        context: contextData,
-        history: chatHistoryLog.slice(-10) // نرسل آخر 10 رسائل فقط لضمان السرعة وعدم استهلاك الحصة
-      };
+      // استدعاء دالة الشات الذكي عبر سوبابيس
+      const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          document.getElementById(loadingId).remove();
-          sendBtn.disabled = false; input.disabled = false; input.focus();
-          
-          if(res.success) {
-             chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
-             // 🧠 حفظ رد النموذج في الذاكرة بتنسيق Gemini الرسمي (دور النموذج)
-             chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
-          } else {
-             chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ خطأ: ${res.error}</div>`;
-             chatHistoryLog.pop(); // حذف رسالتك من الذاكرة إذا فشل الرد حتى لا يختل السياق
-          }
-          chatBody.scrollTop = chatBody.scrollHeight;
-        })
-        .withFailureHandler(function(err) {
-          document.getElementById(loadingId).remove();
-          sendBtn.disabled = false; input.disabled = false; input.focus();
-          chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ فشل الاتصال: ${err}</div>`;
-          chatHistoryLog.pop(); // حذف الرسالة من الذاكرة إذا انقطع الاتصال
-          chatBody.scrollTop = chatBody.scrollHeight;
-        })
-        .chatWithStrategyAI(payload);
+      document.getElementById(loadingId).remove();
+      sendBtn.disabled = false; input.disabled = false; input.focus();
+      
+      if(!error && res.success) {
+         chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
+         chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
+      } else {
+         chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ خطأ في الاتصال: ${error?.message}</div>`;
+         chatHistoryLog.pop();
+      }
+      chatBody.scrollTop = chatBody.scrollHeight;
     }
   </script>
 </body>
