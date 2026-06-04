@@ -4,9 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>بطاقات المبادرات - الاستراتيجية الصناعية 2040</title>
+  <!-- المكتبات الأساسية للتصدير والاتصال الموثق -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/libs/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <!-- مكتبة سوبابيس الرسمية للاتصال والمصادقة السحابية -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -172,6 +174,7 @@
 <body>
   <div id="toastPopup" class="toast-popup"></div>
 
+  <!-- مودال إدارة الجهات المنفذة -->
   <div class="modal-overlay" id="entityModal">
     <div class="modal-content">
       <h2 style="color:var(--brand2); margin-top:0;">إدارة الجهات المنفذة</h2>
@@ -196,6 +199,7 @@
     </div>
   </div>
 
+  <!-- شاشة الدخول الموثق عبر OTP سوبابيس -->
   <div id="loginContainer" class="login-container">
     <div class="login-box">
       <h2>الاستراتيجية الصناعية 2040</h2>
@@ -213,6 +217,7 @@
     </div>
   </div>
 
+  <!-- الهيدر العلوي للموقع -->
   <header id="appHeader" class="header-bar hidden">
     <h1>الاستراتيجية الصناعية 2040 - استعراض المبادرات</h1>
     <div class="header-user">
@@ -228,6 +233,7 @@
     </div>
   </header>
 
+  <!-- الفلاتر والبطاقات كاملة العرض أو الشبكية -->
   <main class="shell hidden" id="appContent" style="padding-top:24px;">
     <section class="panel">
       <div class="filters">
@@ -280,6 +286,7 @@
     <section id="cards" class="cards"></section>
   </main>
 
+  <!-- مودال المستشار الاستراتيجي AI -->
   <div class="modal-overlay" id="aiModal">
     <div class="modal-content" style="max-width: 850px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--soft); padding-bottom:10px; margin-bottom:15px;">
@@ -300,6 +307,7 @@
     </div>
   </div>
 
+  <!-- 💬 زر الدردشة العائم ونافذة الشات المشتركة -->
   <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
@@ -321,7 +329,7 @@
     // 1. تهيئة وربط سوبابيس العالمي من خلال كائن window لتفادي أي أخطاء تهيئة مسبقة
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
-    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);[cite: 1]
 
     let entitiesList = [];
     let initiatives = [];
@@ -495,7 +503,7 @@
        else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-    // 2. معالجة وتفكيك حقول النص التي تفصل بينها علامة الـ Pipe (|)
+    // 2. معالجة وتفكيك حقول النص التي تفصل بينها علامة الـ Pipe (|) مع ترك الموقف فارغاً إن لم يوجد
     async function loadAllDataFromServer() {
       showToast("⏳ جاري جلب البيانات السحابية...");
       try {
@@ -512,13 +520,13 @@
           // تفكيك الأهداف بناء على علامة الـ Pipe
           let parsedGoals = []; 
           if(item.goals) { 
-            parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean); 
+            parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean);
           }
           
           // تفكيك المؤشرات بناء على علامة الـ Pipe
           let parsedKpis = []; 
           if(item.kpis) { 
-            parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean); 
+            parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean);
           }
           
           // تفكيك خطة العمل وبناء المصفوفة الهيكلية للجدول برمجياً
@@ -528,7 +536,7 @@
             segments.forEach((seg, idx) => {
               let no = idx + 1;
               let procedure = seg;
-              let status = "جاري";
+              let status = ""; // الافتراضي فارغ تماماً بناءً على الشرط المعدل
               
               let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
               if (numMatch) {
@@ -599,7 +607,7 @@
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
-    // 3. بناء وحقن بطاقة العرض الكامل وزر التعديل الكلاسيكي المنسق باللون الأصفر
+    // 3. بناء وحقن بطاقة العرض الكامل وزر التعديل الكلاسيكي الأصفر المتطابق تماماً مع الملف المرفق
     function renderCards(){
       if(isListView) { els.cards.classList.add('list-view'); } else { els.cards.classList.remove('list-view'); }
       const data = getFilteredData();
@@ -612,8 +620,8 @@
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
         
-        // زر التعديل الأصلي المنسق بالكامل المتوافق مع معرّف سوبابيس
-        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;
+        // زر تعديل البيانات المعتمد والمطابق لشكل وهيئة زر الملف المرفق الأساسي
+        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;[cite: 4]
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
         const checkBoxesHeadHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_head_${item.id}', 'exec_disp_head_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
@@ -774,10 +782,11 @@
       document.getElementById(containerId).appendChild(li); li.querySelector('textarea').focus();
     }
     
+    // تعديل الدالة لترك الموقف التنفيذي المضاف فارغاً تماماً بدلاً من تدوين كلمة "جاري"
     function addTableRow(id, emptyId) {
       const emptyEl = document.getElementById(emptyId); if(emptyEl) emptyEl.remove();
       const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); const tr = document.createElement('tr'); tr.className = 'action-row';
-      tr.innerHTML = `<td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled></textarea></td><td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)"></textarea></td><td><textarea class="card-control act-stat text" rows="1" oninput="autoResize(this)">جاري</textarea></td><td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>`;
+      tr.innerHTML = `<td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled></textarea></td><td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)"></textarea></td><td><textarea class="card-control act-stat text" rows="1" oninput="autoResize(this)"></textarea></td><td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>`;
       tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
     }
 
@@ -788,6 +797,8 @@
       try {
         const goalsArr = Array.from(card.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean);
         const indArr = Array.from(card.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
+        
+        // بناء خطة العمل والتحقق من وجود موقف تنفيذي لإضافته بين قوسين، وإن لم يوجد يُحفظ النص الأساسي فقط
         const planArr = Array.from(card.querySelectorAll('.action-row')).map(tr => ({ no: tr.querySelector('.act-no').value.trim(), procedure: tr.querySelector('.act-proc').value.trim(), status: tr.querySelector('.act-stat').value.trim() })).filter(r => r.procedure !== "" || r.status !== "");
         const getVal = (fieldId) => { const el = document.getElementById(fieldId); return el ? el.value : ""; };
         const getEditVal = (idBase, itemId) => { const editEl = document.getElementById(idBase + '_edit_' + itemId); return editEl ? editEl.value : getVal(idBase + '_' + itemId); };
@@ -799,10 +810,14 @@
         
         const suppEntityVal = isListViewActive ? getVal(`f_supp_head_${id}`) : getVal(`f_supp_body_${id}`);
         
-        // تجميع السطور بربطها بـ الـ Pipe لإرجاعها لقاعدة البيانات متطابقة 1:1
+        // ربط البنود بعلامة الـ Pipe لحفظ الملف ممتداً بالكامل ومتناسقاً في السيرفر
         const goalsStringified = goalsArr.join(' | ');
         const kpisStringified = indArr.join(' | ');
-        const actionPlanStringified = planArr.map(p => `${p.no}- ${p.procedure} (${p.status})`).join(' | ');
+        
+        // تحسين طريقة التجميع البرمجي لتفادي إضافة أقواس فارغة إذا كان الموقف فارغاً
+        const actionPlanStringified = planArr.map(p => {
+          return p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`;
+        }).join(' | ');
 
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
@@ -834,7 +849,7 @@
           action_plan: actionPlanStringified
         };
         
-        const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);
+        const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);[cite: 1]
         if (error) throw error;
 
         showToast("✅ تم الحفظ بنجاح!", "success");
@@ -858,7 +873,7 @@
     function exportToExcel() {
       const data = getFilteredData();
       if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
-      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (${p.status})`).join(' \n ') : "" })));
+      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة Tقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`).join(' \n ') : "" })));
       ws['!dir'] = 'rtl'; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "المبادرات"); XLSX.writeFile(wb, "المبادرات_الصناعية.xlsx"); showToast("✅ تم التحميل.", "success");
     }
 
