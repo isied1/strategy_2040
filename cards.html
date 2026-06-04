@@ -149,24 +149,7 @@
     .modal-overlay.show { opacity: 1; pointer-events: auto; }
     .modal-content { background: #fff; border-radius: var(--radius); width: 850px; max-width: 95vw; max-height: 92vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
     .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-    .form-group label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: var(--brand2); }
-
-    /* 💬 تصميم واجهة الدردشة العائمة */
-    .chat-fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; transition: transform 0.2s; border: none; }
-    .chat-fab:hover { transform: scale(1.1); }
-    .chat-window { position: fixed; bottom: 100px; left: 30px; width: 360px; max-width: 90vw; height: 500px; max-height: 80vh; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; z-index: 9999; transform: translateY(20px); opacity: 0; pointer-events: none; transition: all 0.3s ease; border: 1px solid var(--line); overflow: hidden; }
-    .chat-window.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-    .chat-header { background: var(--brand2); color: #fff; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14.5px; }
-    .chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: var(--bg); scroll-behavior: smooth; }
-    .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; word-wrap: break-word; }
-    .chat-msg.user { align-self: flex-start; background: var(--brand); color: #fff; border-bottom-right-radius: 2px; }
-    .chat-msg.ai { align-self: flex-end; background: #fff; border: 1px solid var(--line); color: var(--ink); border-bottom-left-radius: 2px; }
-    .chat-input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid var(--line); gap: 8px; align-items: center; }
-    .chat-input-area input { flex: 1; border: 1px solid var(--line); border-radius: 20px; padding: 10px 16px; outline: none; font-family: inherit; font-size: 13px; background: #f8fafc; }
-    .chat-input-area input:focus { border-color: var(--brand); }
-    .chat-input-area button { background: var(--brand); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .chat-input-area button:disabled { background: var(--muted); cursor: not-allowed; }
-    .chat-input-area button:not(:disabled):hover { background: var(--brand2); }
+    .form-grid label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: var(--brand2); }
   </style>
 </head>
 <body>
@@ -177,10 +160,10 @@
       <h2 style="color:var(--brand2); margin-top:0;">إدارة الجهات المنفذة</h2>
       <div class="form-grid">
         <input type="hidden" id="ent_rowIndex" value="" />
-        <div class="form-group"><label>اسم الجهة</label><input type="text" id="ent_name" placeholder="الاسم الكامل للجهة"></div>
-        <div class="form-group"><label>نقطة التواصل</label><input type="text" id="ent_contact" placeholder="اسم المسؤول"></div>
-        <div class="form-group"><label>رقم الهاتف</label><input type="text" id="ent_phone" placeholder="968+"></div>
-        <div class="form-group"><label>البريد الإلكتروني</label><input type="text" id="ent_email" placeholder="email@gov.om"></div>
+        <div style="display:flex; flex-direction:column;"><label>اسم الجهة</label><input type="text" id="ent_name" placeholder="الاسم الكامل للجهة"></div>
+        <div style="display:flex; flex-direction:column;"><label>نقطة التواصل</label><input type="text" id="ent_contact" placeholder="اسم المسؤول"></div>
+        <div style="display:flex; flex-direction:column;"><label>رقم الهاتف</label><input type="text" id="ent_phone" placeholder="968+"></div>
+        <div style="display:flex; flex-direction:column;"><label>البريد الإلكتروني</label><input type="text" id="ent_email" placeholder="email@gov.om"></div>
       </div>
       <div style="margin-bottom: 24px; display:flex; gap:10px;">
         <button class="btn-primary" onclick="saveEntity()">حفظ بيانات الجهة 💾</button>
@@ -201,7 +184,7 @@
       <h2>الاستراتيجية الصناعية 2040</h2>
       <p>بوابة الدخول للمصرح لهم فقط</p>
       <div id="step1">
-        <input type="text" id="loginIdentifier" placeholder="اسم المستخدم أو البريد الإلكتروني" />
+        <input type="text" id="loginIdentifier" placeholder="أدخل البريد الإلكتروني المصرح به" />
         <button onclick="sendCode()" id="btnSendCode">إرسال رمز التحقق</button>
       </div>
       <div id="step2" class="hidden">
@@ -289,8 +272,7 @@
       </div>
       <div id="aiLoading" style="text-align:center; padding:50px 20px; color:var(--brand2); font-weight:bold; display:none;">
         <div style="font-size:40px; margin-bottom:15px; animation: pulse 1.5s infinite;">🧠</div>
-        جاري تحليل المبادرة، واستشراف الموقف التنفيذي، والبحث عن تجارب محلية ودولية مشابهة... <br>
-        <span style="font-size:12px; color:var(--muted); font-weight:normal;">(قد تستغرق العملية بضع ثوانٍ)</span>
+        جاري تحليل المبادرة، واستشراف الموقف التنفيذي...
       </div>
       <div id="aiResponseContent" style="display:none; line-height:1.8; color:var(--ink); font-size:14.5px; padding:10px;"></div>
       <div style="text-align:left; margin-top:24px; padding-top:15px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;">
@@ -300,25 +282,8 @@
     </div>
   </div>
 
-  <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
-  <div class="chat-window" id="chatWindow">
-    <div class="chat-header">
-      <div style="display:flex; align-items:center; gap:8px;"><span>🤖</span> مساعد الاستراتيجية 2040</div>
-      <button style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;" onclick="toggleChat()">✖</button>
-    </div>
-    <div class="chat-body" id="chatBody">
-      <div class="chat-msg ai">أهلاً بك! 👋 أنا المساعد الذكي للاستراتيجية الصناعية 2040. <br>يمكنك سؤالي عن نسب الإنجاز، تفاصيل المبادرات، أو التحديات الحالية. كيف أساعدك؟</div>
-    </div>
-    <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key === 'Enter') sendChatMessage()" />
-      <button id="chatSendBtn" onclick="sendChatMessage()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(180deg); margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      </button>
-    </div>
-  </div>
-
   <script>
-    // تهيئة وتثبيت اتصال سوبابيس (Supabase) لقراءة وحفظ جداول الـ 28 عموداً سحابياً
+    // 1. الاتصال الموثق المباشر بخادم سوبابيس (Supabase Cloud Client) - تأكد من ملء البيانات هنا داخل علامات السنجل كوتس ''
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -327,7 +292,6 @@
     let initiatives = [];
     let selectedEntity = '';
     let currentUser = null;
-    let currentAuthEmail = "";
     let isListView = false;
     let chatHistoryLog = [];
     
@@ -342,7 +306,6 @@
       statEntities: document.getElementById('statEntities'), statAvg: document.getElementById('statAvg')
     };
     
-    function getScriptUrl() { return document.location.href.split('?')[0]; }
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function normalizeForCompare(v){ return String(v ?? '').replace(/\s+/g,' ').trim().replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ًٌٍَُِّْـ]/g,'').toLowerCase(); }
     function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
@@ -355,74 +318,113 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    // 🔄 نسخ بيانات وربط جلسة الدخول الأصلية المعتمدة من الداشبورد (ملفات جوجل شيت)
-    window.onload = function() {
+    // 🔄 فحص ومشاركة الجلسة البرمجية الموحدة تلقائياً عبر المتصفح (Supabase Native Session)
+    window.onload = async function() {
       try {
-        const stored = localStorage.getItem('industry_user_session');
-        if (stored) {
-          const sessionData = JSON.parse(stored);
-          const now = new Date().getTime();
-          if (now - sessionData.loginTime <= 1800000) {
-            sessionData.loginTime = now;
-            localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
-            currentUser = sessionData;
-            initAppAfterLogin();
-          } else {
-            localStorage.removeItem('industry_user_session');
-          }
+        const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+        if (session && session.user) {
+          currentUser = {
+            email: session.user.email,
+            name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
+            role: String(session.user.user_metadata.role || 'viewer').toLowerCase().trim()
+          };
+          initAppAfterLogin();
+        } else {
+          // إذا لم تكن هناك جلسة نشطة، تظهر شاشة الدخول
+          document.getElementById('loginContainer').classList.remove('hidden');
         }
-      } catch(e) {}
+      } catch(e) {
+        document.getElementById('loginContainer').classList.remove('hidden');
+      }
     };
 
-    // إرسال كود الـ OTP عبر بيئة سكربت جوجل الأصلي المربوط بـ الداشبورد دون تعليق
-    function sendCode() {
+    // إرسال كود التحقق السحابي عبر سوبابيس
+    async function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
-      if(!identifier) { showToast("يرجى إدخال اسم المستخدم أو البريد.", "error"); return; }
+      if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true; btn.textContent = "جاري الإرسال...";
-      google.script.run.withSuccessHandler(res => {
-        btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
-        if(res.success) {
-          currentAuthEmail = res.email; document.getElementById('step1').classList.add('hidden'); document.getElementById('step2').classList.remove('hidden');
-          document.getElementById('otpMsg').innerText = res.message; showToast(res.message, "success");
-        } else showToast(res.message, "error");
-      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "إرسال رمز التحقق"; showToast("خطأ في الاتصال.", "error"); }).requestOTP(identifier);
+      
+      window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
+
+      const { data, error } = await window.supabaseClient.auth.signInWithOtp({
+        email: window.currentAuthEmail,
+        options: { shouldCreateUser: false }
+      });
+
+      btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
+      if(error) {
+        showToast("خطأ: " + error.message, "error");
+      } else {
+        document.getElementById('step1').classList.add('hidden'); 
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني بنجاح."; 
+        showToast("تم إرسال رمز OTP بنجاح", "success");
+      }
     }
 
-    // التحقق الفوري والدخول باستخدام نظام جوجل المتكامل
-    function verifyCode() {
+    // تأكيد كود التحقق ودخول النظام
+    async function verifyCode() {
       const code = document.getElementById('loginOtp').value.trim();
-      if(!code) { showToast("يرجى إدخال الرمز.", "error"); return; }
-      const btn = document.getElementById('btnVerifyCode'); btn.disabled = true;
-      btn.textContent = "جاري التحقق...";
-      google.script.run.withSuccessHandler(res => {
-        btn.disabled = false; btn.textContent = "تحقق ودخول";
-        if(res.success) {
-          currentUser = res;
-          res.loginTime = new Date().getTime();
-          try { localStorage.setItem('industry_user_session', JSON.stringify(res)); } catch(e){}
-          initAppAfterLogin(); showToast("تم تسجيل الدخول بنجاح!", "success");
-        } else showToast(res.message, "error");
-      }).withFailureHandler(err => { btn.disabled = false; btn.textContent = "تحقق ودخول"; showToast("خطأ في الاتصال.", "error"); }).verifyOTP(currentAuthEmail, code);
+      if(!code) { showToast("يرجى إدخال الرمز المكون من 6 أرقام.", "error"); return; }
+      const btn = document.getElementById('btnVerifyCode'); 
+      btn.disabled = true; btn.textContent = "جاري التحقق...";
+      
+      const { data, error } = await window.supabaseClient.auth.verifyOtp({
+        email: window.currentAuthEmail,
+        token: code,
+        type: 'email'
+      });
+
+      btn.disabled = false; btn.textContent = "تحقق ودخول";
+      if(error) {
+        showToast("الرمز خاطئ: " + error.message, "error");
+      } else {
+        currentUser = {
+          email: data.user.email,
+          name: data.user.user_metadata.full_name || data.user.email.split('@')[0],
+          role: String(data.user.user_metadata.role || 'viewer').toLowerCase().trim()
+        };
+        initAppAfterLogin(); 
+        showToast("تم تسجيل الدخول بنجاح!", "success");
+      }
     }
     
     function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
-    function logoutUser() { try { localStorage.removeItem('industry_user_session'); } catch(e){} currentUser = null; document.getElementById('appHeader').classList.add('hidden'); document.getElementById('appContent').classList.add('hidden'); document.getElementById('loginContainer').classList.remove('hidden'); resetLogin(); showToast("تم تسجيل الخروج.", "success"); }
+    
+    async function logoutUser() { 
+      await window.supabaseClient.auth.signOut(); 
+      currentUser = null; 
+      document.getElementById('appHeader').classList.add('hidden'); 
+      document.getElementById('appContent').classList.add('hidden'); 
+      document.getElementById('loginContainer').classList.remove('hidden'); 
+      resetLogin(); 
+      showToast("تم تسجيل الخروج.", "success"); 
+    }
+    
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
     
-    // دوال الانتقال العلوية الأصلية المتوافقة مع أمان النطاقات
-    function goToDashboard() { showToast("⏳ جاري الانتقال..."); google.script.run.withSuccessHandler(function(url) { window.open(url, "_top"); }).getScriptUrl(); }
-    function goToAdminPage() { showToast("⏳ جاري الانتقال..."); google.script.run.withSuccessHandler(function(url) { window.open(url + "?page=admin&email=" + encodeURIComponent(currentUser.email) + "&token=" + encodeURIComponent(currentUser.adminToken), "_top"); }).getScriptUrl(); }
+    // دوال الانتقال المباشرة بين صفحات سوبابيس النقية دون وسيط
+    function goToDashboard() { window.location.href = "index.html"; }
+    function goToAdminPage() { window.location.href = "admin.html"; }
 
     function initAppAfterLogin() {
-      document.getElementById('loginContainer').classList.add('hidden'); document.getElementById('appHeader').classList.remove('hidden'); document.getElementById('appContent').classList.remove('hidden');
+      document.getElementById('loginContainer').classList.add('hidden'); 
+      document.getElementById('appHeader').classList.remove('hidden'); 
+      document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
+      
       if (currentUser.role === 'admin') {
-        document.getElementById('displayUserRole').textContent = 'مدير النظام'; document.getElementById('displayUserName').style.cursor = 'pointer';
+        document.getElementById('displayUserRole').textContent = 'مدير النظام'; 
+        document.getElementById('displayUserName').style.cursor = 'pointer';
         document.getElementById('displayUserName').style.textDecoration = 'underline';
-        document.getElementById('btnAdminUsers').classList.remove('hidden'); document.getElementById('btnAdminEntities').classList.remove('hidden');
-      } else { document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
-        document.getElementById('displayUserName').style.cursor = 'default'; document.getElementById('displayUserName').style.textDecoration = 'none'; }
+        document.getElementById('btnAdminUsers').classList.remove('hidden'); 
+        document.getElementById('btnAdminEntities').classList.remove('hidden');
+      } else { 
+        document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
+        document.getElementById('displayUserName').style.cursor = 'default'; 
+        document.getElementById('displayUserName').style.textDecoration = 'none'; 
+      }
       loadAllDataFromServer();
     }
 
@@ -473,7 +475,7 @@
        else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-    // 2. سحب ومعالجة الـ 28 عموداً من سوبابيس مع الحفاظ على تفريغ خانة الموقف (فارغة بدلاً من جاري)
+    // 2. تفكيك نصوص الـ Pipe (|) مع ترك الموقف فارغاً تماماً إن لم يوجد في قاعدة البيانات
     async function loadAllDataFromServer() {
       showToast("⏳ جاري جلب البيانات السحابية...");
       try {
@@ -496,7 +498,7 @@
             segments.forEach((seg, idx) => {
               let no = idx + 1;
               let procedure = seg;
-              let status = ""; // ترك الموقف التنفيذي فارغاً تماماً كما طلبت
+              let status = ""; 
               
               let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
               if (numMatch) { no = numMatch[1]; procedure = numMatch[2]; }
@@ -561,7 +563,7 @@
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
-    // 3. بناء البطاقات وزر التعديل باللون الأصفر الكلاسيكي والتحكم الكامل المستمد من سوبابيس
+    // 3. بناء وحقن البطاقات وزر التعديل الأصفر الكلاسيكي الثابت لكل المبادرات بدون أي شروط تعوقه
     function renderCards(){
       if(isListView) { els.cards.classList.add('list-view'); } else { els.cards.classList.remove('list-view'); }
       const data = getFilteredData();
@@ -574,8 +576,8 @@
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
         
-        // تثبيت زر تعديل البيانات الأصفر المتناسق تماماً مع كودك المرفق
-        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;
+        // زر التعديل الأصفر الأصلي الكلاسيكي محقون هنا مباشرة بشكل دائم وثابت
+        const editButtonHtml = `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>`;
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
         const checkBoxesHeadHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_head_${item.id}', 'exec_disp_head_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
@@ -736,7 +738,6 @@
       document.getElementById(containerId).appendChild(li); li.querySelector('textarea').focus();
     }
     
-    // ترك خانة الموقف التنفيذي خالية تماماً عند الإضافة بناء على شرطك
     function addTableRow(id, emptyId) {
       const emptyEl = document.getElementById(emptyId); if(emptyEl) emptyEl.remove();
       const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); const tr = document.createElement('tr'); tr.className = 'action-row';
@@ -744,7 +745,7 @@
       tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
     }
 
-    // 4. تجميع البيانات بربط البنود بعلامة الـ Pipe (|) المعتمدة ورفعها لسوبابيس
+    // 4. تجميع وحفظ البيانات المعدلة في قاعدة بيانات سوبابيس (28 عموداً) بربط الـ Pipe (|)
     async function saveInCardEdit(id) {
       const card = document.getElementById(`card-${id}`);
       showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
@@ -764,11 +765,7 @@
         
         const goalsStringified = goalsArr.join(' | ');
         const kpisStringified = indArr.join(' | ');
-        
-        // التحقق وتجميع خطة العمل بدون إضافة أقواس فارغة إذا كانت الخانة خالية
-        const actionPlanStringified = planArr.map(p => {
-          return p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`;
-        }).join(' | ');
+        const actionPlanStringified = planArr.map(p => p.status ? `${p.no}- ${p.procedure} (${p.status})` : `${p.no}- ${p.procedure}`).join(' | ');
 
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
@@ -914,40 +911,6 @@
       const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
       a.download = baseFilename + '_' + new Date().toISOString().slice(0,10) + '.doc';
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    }
-
-    function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
-
-    // 6. تشغيل نظام المحادثة التفاعلي للمستشار الذكي عبر سوبابيس
-    async function sendChatMessage() {
-      const input = document.getElementById('chatInput'); const msg = input.value.trim();
-      if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error"); return; }
-
-      const chatBody = document.getElementById('chatBody'); const sendBtn = document.getElementById('chatSendBtn');
-      chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`;
-      chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
-      input.value = ''; sendBtn.disabled = true; input.disabled = true;
-      
-      const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري التفكير وفحص بطاقات المشاريع...</div>`;
-      chatBody.scrollTop = chatBody.scrollHeight;
-
-      let contextData = initiatives.map(item => `رقم: ${item.initiativeNo} | المبادرة: ${item.initiativeName} | التنفيذ: ${Math.round(pctNumber(item.completionPercent))}% | الموقف: ${item.executivePosition}`).join('\n');
-      const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
-
-      const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
-
-      document.getElementById(loadingId).remove();
-      sendBtn.disabled = false; input.disabled = false; input.focus();
-      
-      if(!error && res.success) {
-         chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
-         chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
-      } else {
-         chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ خطأ في الاتصال: ${error?.message}</div>`;
-         chatHistoryLog.pop();
-      }
-      chatBody.scrollTop = chatBody.scrollHeight;
     }
   </script>
 </body>
