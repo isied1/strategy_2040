@@ -24,6 +24,13 @@
     .btn-logout { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; }
     .btn-logout:hover { background: #dc2626; }
 
+    .login-container { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+    .login-box { background: #fff; border-radius: 20px; padding: 40px; box-shadow: var(--shadow); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--line); }
+    .login-box h2 { margin-top: 0; color: var(--brand2); margin-bottom: 10px; font-size: 24px; }
+    .login-box p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+    .login-box input { margin-bottom: 16px; padding: 12px; font-size: 14px; width: 100%; border: 1px solid var(--line); border-radius: 10px; outline: none; }
+    .login-box button { width: 100%; padding: 12px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+
     .toast-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand2); color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-size: 14.5px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10005; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
     .toast-popup.show { opacity: 1; top: 40px; }
     .toast-popup.success { background: #16a34a; }
@@ -144,7 +151,9 @@
     .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
     .form-grid label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: var(--brand2); }
 
-    /* الشات العائم */
+    /* حركات وتأثيرات الشات والدماغ */
+    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+
     .chat-fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; transition: transform 0.2s; border: none; }
     .chat-fab:hover { transform: scale(1.1); }
     .chat-window { position: fixed; bottom: 100px; left: 30px; width: 360px; max-width: 90vw; height: 500px; max-height: 80vh; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; z-index: 9999; transform: translateY(20px); opacity: 0; pointer-events: none; transition: all 0.3s ease; border: 1px solid var(--line); overflow: hidden; }
@@ -158,8 +167,6 @@
     .chat-input-area input { flex: 1; border: 1px solid var(--line); border-radius: 20px; padding: 10px 16px; outline: none; font-family: inherit; font-size: 13px; background: #f8fafc; }
     .chat-input-area input:focus { border-color: var(--brand); }
     .chat-input-area button { background: var(--brand); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
-  
   </style>
 </head>
 <body>
@@ -260,14 +267,15 @@
     <div class="modal-content" style="max-width: 850px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--soft); padding-bottom:10px; margin-bottom:15px;">
         <h2 style="margin:0; color:#4f46e5; font-size:19px; display:flex; align-items:center; gap:8px;">
-          <span>🤖</span> المستشار الاستراتيجي
+          <span>🤖</span> المستشار الاستراتيجي المدعوم بالذكاء الاصطناعي
         </h2>
       </div>
-<div id="aiLoading" style="text-align:center; padding:50px 20px; color:var(--brand2); font-weight:bold; display:none;">
+      <div id="aiLoading" style="text-align:center; padding:50px 20px; color:var(--brand2); font-weight:bold; display:none;">
         <div style="font-size:45px; margin-bottom:15px; animation: pulse 1.5s infinite;">🧠</div>
-        جاري تحليل المبادرة ... <br>
-        <span style="font-size:12px; color:var(--muted); font-weight:normal;">(يرجى الانتظار بضع دقائق)</span>
+        جاري تحليل المبادرة، واستشراف الموقف التنفيذي الحقيقي... <br>
+        <span style="font-size:12px; color:var(--muted); font-weight:normal;">(يرجى الانتظار بضع ثوانٍ)</span>
       </div>
+      <div id="aiResponseContent" style="display:none; line-height:1.8; color:var(--ink); font-size:14.5px; padding:10px;"></div>
       <div style="text-align:left; margin-top:24px; padding-top:15px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;">
          <button id="btnDownloadCardWord" class="btn-primary" style="background:#16a34a; padding:8px 24px; display:none;" onclick="downloadModalAsWord('aiResponseContent', 'تقرير_المبادرة_الذكية')">تحميل التقرير (Word) 📝</button>
          <button class="btn-primary" style="background:var(--muted); padding:8px 24px" onclick="document.getElementById('aiModal').classList.remove('show')">إغلاق التقرير</button>
@@ -293,7 +301,6 @@
   </div>
 
   <script>
-    // 1. الاتصال الموثق المباشر بخادم سوبابيس
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -373,7 +380,7 @@
     function goToAdminPage() { window.location.href = "admin.html"; }
 
     function initAppAfterLogin() {
-      document.getElementById('appHeader').classList.remove('hidden');
+      document.getElementById('appHeader').classList.remove('hidden'); 
       document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
       
@@ -498,7 +505,8 @@
             isTopInitiative: item.is_key_initiative || "لا",
             lastEditor: item.last_modified_by || "النظام",
             lastEditDate: item.last_modified_date ? new Date(item.last_modified_date).toLocaleDateString('ar-OM') : "—",
-            goals: parsedGoals, indicators: parsedKpis, actionPlan: parsedPlan
+            goals: parsedGoals, indicators: parsedKpis, actionPlan: parsedPlan,
+            plan3FeetFile: item.plan_3feet_file || "" // 🆕 مسار ملف خطة 3feet
           };
         });
 
@@ -523,6 +531,72 @@
         return (!q || normalizeForCompare(blob).includes(q)) && (!selectedEntity || normalizeForCompare(item.executingEntity).includes(normalizeForCompare(selectedEntity))) && (!fu || normalizeForCompare(item.followUpManager).includes(fu)) && (!prog || normalizeForCompare(item.programName).includes(prog));
       });
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
+    }
+
+    // 🌟 رفع ملف 3feet Plan إلى سوبابيس (Storage)
+    async function upload3FeetPlan(event, id) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // التحقق من الحجم 5 ميجا
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("حجم الملف يتجاوز 5 ميجابايت!", "error");
+        event.target.value = ''; 
+        return;
+      }
+
+      // التحقق من الصيغة (اكسل فقط)
+      const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/)) {
+         showToast("يجب أن يكون الملف بصيغة Excel فقط!", "error");
+         event.target.value = '';
+         return;
+      }
+
+      showToast("⏳ جاري رفع الملف...", "success");
+      const btn = document.getElementById(`btn3feet_${id}`);
+      btn.textContent = "جاري الرفع... ⏳";
+      btn.disabled = true;
+
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `plan_${id}_${Date.now()}.${fileExt}`;
+        
+        const { data, error } = await window.supabaseClient.storage
+          .from('3feet_plans')
+          .upload(fileName, file, { upsert: true });
+
+        if (error) throw error;
+
+        // تخزين المسار الجديد في حقل مخفي ليتم حفظه عند ضغط "حفظ"
+        document.getElementById(`f_plan_file_${id}`).value = data.path;
+        
+        showToast("✅ تم رفع الملف بنجاح! لا تنس حفظ التعديلات لتوثيق الرفع.", "success");
+        btn.textContent = "تم الرفع (تحديث مجدداً) ✅";
+        btn.style.background = "#16a34a";
+        btn.disabled = false;
+      } catch (err) {
+        showToast("❌ خطأ في الرفع: " + err.message, "error");
+        btn.textContent = "تحديث 3feet plan 📁";
+        btn.disabled = false;
+      }
+    }
+
+    // 🌟 تحميل وعرض ملف 3feet Plan
+    async function download3FeetPlan(id) {
+       const path = document.getElementById(`f_plan_file_${id}`).value;
+       if (!path || path === "—") {
+         showToast("لا يوجد ملف 3feet plan مرفق لهذه المبادرة.", "error");
+         return;
+       }
+
+       showToast("⏳ جاري جلب الرابط...");
+       const { data } = window.supabaseClient.storage.from('3feet_plans').getPublicUrl(path);
+       if (data && data.publicUrl) {
+         window.open(data.publicUrl, '_blank');
+       } else {
+         showToast("❌ تعذر الحصول على رابط الملف.", "error");
+       }
     }
 
     function renderCards(){
@@ -550,6 +624,11 @@
               <input type="hidden" id="f_no_${item.id}" value="${escapeHtml(item.initiativeNo)}" />
               <div style="display:flex; gap:6px;">
                 <button type="button" class="btn-review" style="background:#4f46e5; color:#fff;" onclick="askSmartAdvisor('${item.id}')">🤖 المستشار الذكي</button>
+                
+                <input type="hidden" id="f_plan_file_${item.id}" value="${escapeHtml(item.plan3FeetFile)}" />
+                <input type="file" id="file3feet_${item.id}" class="hidden" accept=".xlsx, .xls" onchange="upload3FeetPlan(event, '${item.id}')" />
+                <button type="button" class="btn-review" style="background:#0284c7; color:#fff;" id="btn3feet_${item.id}" onclick="download3FeetPlan('${item.id}')">3feet plan 📊</button>
+
                 ${editButtonHtml}
                 <button type="button" class="btn-review btn-view-toggle" id="btnToggle-${item.id}" onclick="toggleFollowupView('${item.id}')">متابعة التنفيذ 📊</button>
                 <button type="button" class="btn-review btn-save-mode hidden" id="btnSave-${item.id}" onclick="saveInCardEdit('${item.id}')">حفظ 💾</button>
@@ -689,6 +768,15 @@
     function enableInCardEdit(id) {
       const card = document.getElementById(`card-${id}`); card.classList.add('mode-edit'); 
       document.getElementById(`btnEdit-${id}`).classList.add('hidden'); document.getElementById(`btnSave-${id}`).classList.remove('hidden'); document.getElementById(`btnCancel-${id}`).classList.remove('hidden');
+      
+      // 🌟 تحويل زر 3feet plan إلى زر لرفع الملف
+      const btn3f = document.getElementById(`btn3feet_${id}`);
+      if (btn3f) {
+         btn3f.textContent = "تحديث 3feet plan 📁";
+         btn3f.style.background = "#0ea5e9";
+         btn3f.onclick = () => document.getElementById(`file3feet_${id}`).click();
+      }
+
       setTimeout(() => { card.querySelectorAll('.card-control').forEach(input => { if(!input.classList.contains('act-no')) { input.removeAttribute('disabled'); } autoResize(input); }); }, 10);
     }
 
@@ -756,7 +844,8 @@
           last_modified_date: new Date().toISOString(),
           goals: goalsStringified,
           kpis: kpisStringified,
-          action_plan: actionPlanStringified
+          action_plan: actionPlanStringified,
+          plan_3feet_file: getVal(`f_plan_file_${id}`) // 🆕 حفظ مسار ملف خطة 3feet
         };
         
         const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);
@@ -842,7 +931,6 @@
       const modal = document.getElementById('aiModal'); const loading = document.getElementById('aiLoading'); const content = document.getElementById('aiResponseContent'); const btnDownloadWord = document.getElementById('btnDownloadCardWord');
       modal.classList.add('show'); loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = ''; btnDownloadWord.style.display = 'none';
       
-   // معالجة المصفوفات لتصبح نصوص مقروءة للذكاء الاصطناعي
       const goalsText = Array.isArray(item.goals) ? item.goals.join(" | ") : (item.goals || "—");
       const indsText = Array.isArray(item.indicators) ? item.indicators.join(" | ") : (item.indicators || "—");
       const planText = Array.isArray(item.actionPlan) ? item.actionPlan.map(p => `${p.no}- ${p.procedure} <${p.status}>`).join(" | ") : (item.actionPlan || "—");
@@ -891,7 +979,7 @@
 
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
-async function sendChatMessage() {
+    async function sendChatMessage() {
       const input = document.getElementById('chatInput'); const msg = input.value.trim();
       if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error"); return; }
 
@@ -904,7 +992,6 @@ async function sendChatMessage() {
       chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص المستندات والبيانات التفصيلية...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
 
-      // 🌟 التحديث: تضمين كافة الحقول مع معالجة المصفوفات في البطاقات
       let contextData = initiatives.map(item => {
         const goalsText = Array.isArray(item.goals) ? item.goals.join(' | ') : (item.goals || "—");
         return `📌 [رقم المبادرة: ${item.initiativeNo || "—"}]
@@ -927,13 +1014,12 @@ async function sendChatMessage() {
       document.getElementById(loadingId).remove();
       sendBtn.disabled = false; input.disabled = false; input.focus();
       
-if(!error && res.success) {
-         // 🧹 فلتر تنظيف وتجميل النص: يحول الماركداون والنجوم إلى تصميم HTML أنيق
+      if(!error && res.success) {
          let cleanReply = res.reply
-            .replace(/\*\*(.*?)\*\*/g, '<br><b style="color: var(--brand2); font-size: 14px;">$1</b>') // تلوين وتغليظ العناوين
-            .replace(/\n\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ') // تحويل النجمة لنقطة قائمة زرقاء
-            .replace(/\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ') // تحويل النجمة لنقطة قائمة زرقاء (حالة أخرى)
-            .replace(/\n/g, '<br>'); // معالجة الأسطر الجديدة
+            .replace(/\*\*(.*?)\*\*/g, '<br><b style="color: var(--brand2); font-size: 14px;">$1</b>')
+            .replace(/\n\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ')
+            .replace(/\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ')
+            .replace(/\n/g, '<br>');
 
          chatBody.innerHTML += `<div class="chat-msg ai">${cleanReply}</div>`;
          chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
