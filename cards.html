@@ -24,13 +24,6 @@
     .btn-logout { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; }
     .btn-logout:hover { background: #dc2626; }
 
-    .login-container { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; }
-    .login-box { background: #fff; border-radius: 20px; padding: 40px; box-shadow: var(--shadow); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--line); }
-    .login-box h2 { margin-top: 0; color: var(--brand2); margin-bottom: 10px; font-size: 24px; }
-    .login-box p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-    .login-box input { margin-bottom: 16px; padding: 12px; font-size: 14px; width: 100%; border: 1px solid var(--line); border-radius: 10px; outline: none; }
-    .login-box button { width: 100%; padding: 12px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
-
     .toast-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand2); color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-size: 14.5px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10005; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
     .toast-popup.show { opacity: 1; top: 40px; }
     .toast-popup.success { background: #16a34a; }
@@ -119,7 +112,7 @@
     .multi-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--brand); border-radius: 8px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 5px; }
     .multi-select-dropdown.show { display: block; }
     .multi-select-item { display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; font-size: 12.5px; border-radius: 6px; transition: 0.2s; }
-    .multi-select-item:hover { background: var(--soft); color: var(--brand2); font-weight: bold }
+    .multi-select-item:hover { background: var(--soft); color: var(--brand2); font-weight: bold; }
     .multi-select-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin:0; }
 
     .btn-circle { width: 22px; height: 22px; border-radius: 50%; border: none; color: white; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -165,8 +158,6 @@
     .chat-input-area input { flex: 1; border: 1px solid var(--line); border-radius: 20px; padding: 10px 16px; outline: none; font-family: inherit; font-size: 13px; background: #f8fafc; }
     .chat-input-area input:focus { border-color: var(--brand); }
     .chat-input-area button { background: var(--brand); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .chat-input-area button:disabled { background: var(--muted); cursor: not-allowed; }
-    .chat-input-area button:not(:disabled):hover { background: var(--brand2); }
   </style>
 </head>
 <body>
@@ -192,23 +183,6 @@
       </table>
       <div style="text-align:left; margin-top:20px; padding-top:15px; border-top:1px solid var(--line);">
         <button class="btn-review btn-cancel-mode" style="padding:8px 24px" onclick="closeEntityModal()">إغلاق النافذة</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="loginContainer" class="login-container">
-    <div class="login-box">
-      <h2>الاستراتيجية الصناعية 2040</h2>
-      <p>بوابة الدخول للمصرح لهم فقط</p>
-      <div id="step1">
-        <input type="text" id="loginIdentifier" placeholder="أدخل البريد الإلكتروني المصرح به" />
-        <button onclick="sendCode()" id="btnSendCode">إرسال رمز التحقق</button>
-      </div>
-      <div id="step2" class="hidden">
-        <p style="font-size:13px;color:#16a34a;margin-bottom:10px;font-weight:bold;" id="otpMsg">✅ تم إرسال رمز التحقق إلى بريدك.</p>
-        <input type="text" id="loginOtp" placeholder="أدخل الرمز المكون من 6 أرقام" />
-        <button onclick="verifyCode()" id="btnVerifyCode">تحقق ودخول</button>
-        <button onclick="resetLogin()" style="background:transparent; color:var(--muted); margin-top:10px; box-shadow:none;">رجوع</button>
       </div>
     </div>
   </div>
@@ -317,6 +291,7 @@
   </div>
 
   <script>
+    // 1. الاتصال الموثق المباشر بخادم سوبابيس
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -327,6 +302,21 @@
     let currentUser = null;
     let isListView = false;
     let chatHistoryLog = [];
+
+    // ----- 🛡️ نظام إدارة الجلسة والنشاط (الخروج التلقائي بعد 30 دقيقة) -----
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; 
+    
+    function resetActivityTimer() { localStorage.setItem('last_activity_time', Date.now()); }
+    function checkInactivity() {
+      const lastActive = localStorage.getItem('last_activity_time');
+      if (lastActive && (Date.now() - parseInt(lastActive) > INACTIVITY_LIMIT)) {
+        logoutUser("انتهت جلسة العمل بسبب عدم النشاط لمدة 30 دقيقة للحماية. يرجى تسجيل الدخول مجدداً.");
+      }
+    }
+    ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, resetActivityTimer, { passive: true });
+    });
+    setInterval(checkInactivity, 60000); 
     
     const PROGRAM_OPTIONS = ['ابتكار صناعات جديدة وذات تكنولوجيا متقدمة','ريادة الاعمال والابتكار','التطوير والتحديث','الحوكمة وإدارة التنمية الصناعية'];
     const STATUS_OPTIONS = ['لم تبدأ', 'قيد التنفيذ', 'مكتملة'];
@@ -351,23 +341,10 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    // 🌟 جلب الصلاحيات من جدول profiles
     async function fetchUserProfile(email) {
-      const { data, error } = await window.supabaseClient
-        .from('profiles')
-        .select('email, role, name, allowed_initiatives')
-        .eq('email', email)
-        .single();
-
-      if (error || !data) {
-        return { email: email, name: email.split('@')[0], role: 'viewer', allowed_initiatives: '' };
-      }
-      return {
-        email: data.email,
-        name: data.name || email.split('@')[0],
-        role: String(data.role || 'viewer').toLowerCase().trim(),
-        allowed_initiatives: data.allowed_initiatives || ''
-      };
+      const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
+      if (error || !data) return { email: email, name: email.split('@')[0], role: 'viewer', allowed_initiatives: '' };
+      return { email: data.email, name: data.name || email.split('@')[0], role: String(data.role || 'viewer').toLowerCase().trim(), allowed_initiatives: data.allowed_initiatives || '' };
     }
 
     window.onload = async function() {
@@ -375,75 +352,18 @@
         const { data: { session }, error } = await window.supabaseClient.auth.getSession();
         if (session && session.user) {
           currentUser = await fetchUserProfile(session.user.email);
+          resetActivityTimer(); 
           initAppAfterLogin();
-        } else {
-          document.getElementById('loginContainer').classList.remove('hidden');
-        }
-      } catch(e) {
-        document.getElementById('loginContainer').classList.remove('hidden');
-      }
+        } else { window.location.href = 'login.html'; } 
+      } catch(e) { window.location.href = 'login.html'; }
     };
 
-    async function sendCode() {
-      const identifier = document.getElementById('loginIdentifier').value.trim();
-      if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
-      
-      const btn = document.getElementById('btnSendCode');
-      btn.disabled = true; btn.textContent = "جاري الإرسال...";
-      
-      window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
-
-      const { data, error } = await window.supabaseClient.auth.signInWithOtp({
-        email: window.currentAuthEmail,
-        options: { shouldCreateUser: false }
-      });
-
-      btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
-
-      if (error) {
-        showToast("فشل إرسال الرمز: " + error.message, "error");
-      } else {
-        document.getElementById('step1').classList.add('hidden'); 
-        document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني بنجاح."; 
-        showToast("تم إرسال رمز OTP بنجاح", "success");
-      }
-    }
-
-    async function verifyCode() {
-      const code = document.getElementById('loginOtp').value.trim();
-      if(!code) { showToast("يرجى إدخال الرمز المكون من 6 أرقام.", "error"); return; }
-      
-      const btn = document.getElementById('btnVerifyCode'); 
-      btn.disabled = true; btn.textContent = "جاري التحقق...";
-
-      const { data, error } = await window.supabaseClient.auth.verifyOtp({
-        email: window.currentAuthEmail,
-        token: code,
-        type: 'email'
-      });
-
-      btn.disabled = false; btn.textContent = "تحقق ودخول";
-
-      if (error) {
-        showToast("الرمز خاطئ: " + error.message, "error");
-      } else {
-        currentUser = await fetchUserProfile(data.user.email);
-        initAppAfterLogin(); 
-        showToast("تم تسجيل الدخول بنجاح!", "success");
-      }
-    }
-    
-    function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
-    
-    async function logoutUser() { 
-      await window.supabaseClient.auth.signOut(); 
+    async function logoutUser(msg = "تم تسجيل الخروج بنجاح.") { 
+      await window.supabaseClient.auth.signOut();
+      localStorage.removeItem('last_activity_time');
       currentUser = null; 
-      document.getElementById('appHeader').classList.add('hidden'); 
-      document.getElementById('appContent').classList.add('hidden'); 
-      document.getElementById('loginContainer').classList.remove('hidden'); 
-      resetLogin(); 
-      showToast("تم تسجيل الخروج.", "success"); 
+      alert(msg);
+      window.location.href = 'login.html'; 
     }
     
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
@@ -451,8 +371,7 @@
     function goToAdminPage() { window.location.href = "admin.html"; }
 
     function initAppAfterLogin() {
-      document.getElementById('loginContainer').classList.add('hidden'); 
-      document.getElementById('appHeader').classList.remove('hidden'); 
+      document.getElementById('appHeader').classList.remove('hidden');
       document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
       
@@ -544,7 +463,6 @@
               let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
               if (numMatch) { no = numMatch[1]; procedure = numMatch[2]; }
               
-              // سحب الحالة التي بداخل علامات <>
               let statMatch = procedure.match(/^(.*)\s*<([^>]+)>\s*$/);
               if (statMatch) { procedure = statMatch[1].trim(); status = statMatch[2].trim(); }
               parsedPlan.push({ no: no, procedure: procedure, status: status });
@@ -617,7 +535,6 @@
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
         
-        // زر التعديل ثابت ويظهر للمشرفين والمدراء
         const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
@@ -806,7 +723,9 @@
         const goalsStringified = goalsArr.join(' | ');
         const kpisStringified = indArr.join(' | ');
         
-        const actionPlanStringified = planArr.map(p => p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`).join(' | ');
+        const actionPlanStringified = planArr.map(p => {
+          return p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`;
+        }).join(' | ');
 
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
