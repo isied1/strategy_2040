@@ -27,7 +27,7 @@
     .btn-logout:hover { background: #dc2626; }
 
     .login-container { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; }
-    .login-box { background: #fff; border-radius: 20px; padding: 40px; box-shadow: var(--shadow); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--line); border-radius: 10px; outline: none; }
+    .login-box { background: #fff; border-radius: 20px; padding: 40px; box-shadow: var(--shadow); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--line); }
     .login-box h2 { margin-top: 0; color: var(--brand2); margin-bottom: 10px; font-size: 24px; }
     .login-box p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
     .login-box input { margin-bottom: 16px; padding: 12px; font-size: 14px; width: 100%; border: 1px solid var(--line); border-radius: 10px; outline: none; }
@@ -121,7 +121,7 @@
     .multi-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--brand); border-radius: 8px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 5px; }
     .multi-select-dropdown.show { display: block; }
     .multi-select-item { display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; font-size: 12.5px; border-radius: 6px; transition: 0.2s; }
-    .multi-select-item:hover { background: var(--soft); color: var(--brand2); }
+    .multi-select-item:hover { background: var(--soft); color: var(--brand2); font-weight: bold; }
     .multi-select-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin:0; }
 
     .btn-circle { width: 22px; height: 22px; border-radius: 50%; border: none; color: white; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -219,7 +219,7 @@
 
   <!-- الهيدر العلوي للموقع -->
   <header id="appHeader" class="header-bar hidden">
-    <h1>الاستراض المبادرات - الاستراتيجية الصناعية 2040</h1>
+    <h1>الاستراتيجية الصناعية 2040 - استعراض المبادرات</h1>
     <div class="header-user">
       <div class="dropdown" style="position: relative; display: inline-block;">
         <span id="displayUserName" onclick="toggleUserDropdown()" style="padding: 4px 8px; border-radius: 8px;"></span>
@@ -328,7 +328,7 @@
     // 1. الاتصال الموثق المباشر بخادم سوبابيس (Supabase Cloud Client) - ضع روابط مشروعك هنا
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
-    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);[cite: 1]
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let entitiesList = [];
     let initiatives = [];
@@ -363,7 +363,7 @@
     // 🔄 فحص ومشاركة الجلسة البرمجية الموحدة تلقائياً عبر المتصفح من سوبابيس
     window.onload = async function() {
       try {
-        const { data: { session }, error } = await window.supabaseClient.auth.getSession();[cite: 5]
+        const { data: { session }, error } = await window.supabaseClient.auth.getSession();
         if (session && session.user) {
           currentUser = {
             email: session.user.email,
@@ -616,8 +616,7 @@
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
         
-        // زر التعديل المعتمد والأصفر الكلاسيكي المنسق بالكامل ومحقون دائم وثابت لكل البطاقات[cite: 5]
-        const editButtonHtml = `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>`;[cite: 5]
+        const editButtonHtml = (currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin')) ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit-${item.id}" onclick="enableInCardEdit('${item.id}')">تعديل البيانات 📝</button>` : ``;
         const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
         
         const checkBoxesHeadHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_head_${item.id}', 'exec_disp_head_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
@@ -785,7 +784,7 @@
       tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
     }
 
-    // 4. تجميع السلاسل النصية وضغطها بالعلامات المحدثة <> قبل التصدير لقاعدة البيانات سوبابيس
+    // 4. تجميع البيانات وحفظها بربط علامات الـ Pipe ومغشاة الموقف بالعلامات السحابية الجديدة <>
     async function saveInCardEdit(id) {
       const card = document.getElementById(`card-${id}`);
       showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
@@ -807,7 +806,9 @@
         const kpisStringified = indArr.join(' | ');
         
         // 🛠️ الحفظ السحابي الآمن: تغليف الموقف بـ <> لحماية مدخلات ومخططات المستخدم من التضارب
-        const actionPlanStringified = planArr.map(p => p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`).join(' | ');
+        const actionPlanStringified = planArr.map(p => {
+          return p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`;
+        }).join(' | ');
 
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
@@ -839,7 +840,7 @@
           action_plan: actionPlanStringified
         };
         
-        const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);[cite: 1]
+        const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);
         if (error) throw error;
 
         showToast("✅ تم الحفظ بنجاح!", "success");
@@ -955,7 +956,7 @@
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    // 💬 تشغيل والتحكم في نافذة الشات العائمة (Strategy Chat AI) المتطابقة تماماً مع الداشبورد
+    // 💬 تشغيل والتحكم في نافذة الشات العائمة (Strategy Chat AI)
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
     async function sendChatMessage() {
@@ -971,7 +972,6 @@
       chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص بطاقات المشاريع والمستندات السحابية...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
 
-      // تجميع السياق الشامل والمتكامل للمستشار الذكي بناء على الهيكلة الـ 28 عموداً
       let contextData = initiatives.map(item => {
         return `📌 [مبادرة رقم: ${item.initiativeNo || "—"}]
       - الاسم: ${item.initiativeName}
@@ -986,8 +986,7 @@
 
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
-      // استدعاء مستشار سوبابيس السحابي الموحد للمشروعين
-      const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });[cite: 1]
+      const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
 
       document.getElementById(loadingId).remove();
       sendBtn.disabled = false; input.disabled = false; input.focus();
