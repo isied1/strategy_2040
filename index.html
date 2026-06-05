@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>الاستراتيجية الصناعية 2040 - لوحة التحكم</title>
-  <!-- مكتبة سوبابيس الرسمية -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -115,7 +114,7 @@
       <h2>الاستراتيجية الصناعية 2040</h2>
       <p>بوابة الدخول للمصرح لهم فقط</p>
       <div id="step1">
-        <input type="text" id="loginIdentifier" placeholder="اسم المستخدم أو البريد الإلكتروني" />
+        <input type="text" id="loginIdentifier" placeholder="البريد الإلكتروني المصرح به" />
         <button onclick="sendCode()" id="btnSendCode">إرسال رمز التحقق</button>
       </div>
       <div id="step2" class="hidden">
@@ -198,7 +197,6 @@
     </div>
   </div>
 
-  <!-- مودال تفاصيل المبادرة الشامل -->
   <div class="modal-overlay" id="topInitModal">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid var(--soft); padding-bottom:10px;">
@@ -229,7 +227,6 @@
     </div>
   </div>
 
-  <!-- مودال المبادرات المتأخرة -->
   <div class="modal-overlay" id="delayedModal">
     <div class="modal-content" style="max-width: 650px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid var(--soft); padding-bottom:10px;">
@@ -242,7 +239,6 @@
     </div>
   </div>
 
-  <!-- مودال تقرير الذكاء الاصطناعي الاستشرافي -->
   <div class="modal-overlay" id="aiDashboardModal">
     <div class="modal-content" style="max-width: 900px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--soft); padding-bottom:10px; margin-bottom:15px;">
@@ -264,9 +260,7 @@
     </div>
   </div>
 
-  <!-- 💬 زر الدردشة العائم ونافذة الشات -->
   <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
-  
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
       <div style="display:flex; align-items:center; gap:8px;"><span>🤖</span> مساعد الاستراتيجية 2040</div>
@@ -284,13 +278,14 @@
   </div>
 
   <script>
-    // 1. ربط وإعدادات سوبابيس (Supabase Client Configuration)
+    // 1. الاتصال الموثق المباشر بخادم سوبابيس (ضع الروابط هنا)
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let initiatives = [];
     let currentUser = null;
+    let currentAuthEmail = "";
     window.currentTopInits = []; 
     window.currentDelayedInits = []; 
     let chatHistoryLog = [];
@@ -305,26 +300,42 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    // إدارة الجلسة تلقائياً عبر سوبابيس
+    // 🌟 دالة جلب الصلاحيات من جدول profiles
+    async function fetchUserProfile(email) {
+      const { data, error } = await window.supabaseClient
+        .from('profiles')
+        .select('email, role, name, allowed_initiatives')
+        .eq('email', email)
+        .single();
+
+      if (error || !data) {
+        console.warn("Profile not found in 'profiles' table, defaulting to viewer.");
+        return { email: email, name: email.split('@')[0], role: 'viewer', allowed_initiatives: '' };
+      }
+      return {
+        email: data.email,
+        name: data.name || email.split('@')[0],
+        role: String(data.role || 'viewer').toLowerCase().trim(),
+        allowed_initiatives: data.allowed_initiatives || ''
+      };
+    }
+
+    // فحص الجلسة عند التحميل
     window.onload = async function() {
       try {
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const { data: { session }, error } = await window.supabaseClient.auth.getSession();
         if (session && session.user) {
-          currentUser = {
-            email: session.user.email,
-            name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
-            role: String(session.user.user_metadata.role || 'viewer').toLowerCase().trim()
-          };
+          currentUser = await fetchUserProfile(session.user.email);
           initAppAfterLogin();
         } else {
           document.getElementById('loginContainer').classList.remove('hidden');
         }
       } catch(e) {
-          document.getElementById('loginContainer').classList.remove('hidden');
+        document.getElementById('loginContainer').classList.remove('hidden');
       }
     };
 
-    // 2. نظام مصادقة سوبابيس بإرسال رمز OTP للمصرح لهم
+    // إرسال كود OTP
     async function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
       if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
@@ -332,10 +343,10 @@
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true; btn.textContent = "جاري الإرسال...";
       
-      window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
+      currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
 
       const { data, error } = await window.supabaseClient.auth.signInWithOtp({
-        email: window.currentAuthEmail,
+        email: currentAuthEmail,
         options: { shouldCreateUser: false } 
       });
 
@@ -351,7 +362,7 @@
       }
     }
 
-    // التحقق من صحة الرمز المدخل ودخول النظام
+    // التحقق والدخول ثم جلب الصلاحيات من profiles
     async function verifyCode() {
       const code = document.getElementById('loginOtp').value.trim();
       if(!code) { showToast("يرجى إدخال الرمز السري.", "error"); return; }
@@ -360,7 +371,7 @@
       btn.disabled = true; btn.textContent = "جاري التحقق...";
 
       const { data, error } = await window.supabaseClient.auth.verifyOtp({
-        email: window.currentAuthEmail,
+        email: currentAuthEmail,
         token: code,
         type: 'email'
       });
@@ -370,11 +381,8 @@
       if (error) {
         showToast("الرمز المدخل غير صحيح: " + error.message, "error");
       } else {
-        currentUser = {
-          email: data.user.email,
-          name: data.user.user_metadata.full_name || data.user.email.split('@')[0],
-          role: String(data.user.user_metadata.role || 'viewer').toLowerCase().trim()
-        };
+        // جلب البيانات من جدول profiles مباشرة
+        currentUser = await fetchUserProfile(data.user.email);
         initAppAfterLogin(); 
         showToast("تم تسجيل الدخول بنجاح!", "success");
       }
@@ -402,21 +410,20 @@
       document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
       
-      const userRole = currentUser.role;
-      if (userRole === 'admin') {
+      if (currentUser.role === 'admin') {
         document.getElementById('displayUserRole').textContent = 'مدير النظام'; 
         document.getElementById('displayUserName').style.cursor = 'pointer';
         document.getElementById('displayUserName').style.textDecoration = 'underline';
         if(document.getElementById('btnAdminUsers')) document.getElementById('btnAdminUsers').classList.remove('hidden');
       } else { 
-        document.getElementById('displayUserRole').textContent = userRole === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
+        document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
         document.getElementById('displayUserName').style.cursor = 'default'; 
         document.getElementById('displayUserName').style.textDecoration = 'none'; 
       }
       fetchCloudData();
     }
 
-    // 3. جلب البيانات من جدول سوبابيس (28 عموداً)
+    // جلب البيانات وبناء الداشبورد
     async function fetchCloudData() {
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
@@ -443,7 +450,6 @@
       'الحوكمة وإدارة التنمية الصناعية': 'البرنامج الرابع: الحوكمة وإدارة التنمية الصناعية'
     };
 
-    // 4. معالجة وحساب المؤشرات
     function calculateAndRenderDashboard() {
       if (initiatives.length === 0) return;
       const total = initiatives.length;
@@ -543,7 +549,6 @@
       document.getElementById('delayedModal').classList.add('show');
     }
 
-    // 5. استدعاء التقرير الاستشرافي عبر وظائف سوبابيس (Supabase Edge Functions)
     async function analyzeDashboardAI() {
       if (initiatives.length === 0) { showToast("لا توجد بيانات لتحليلها.", "error"); return; }
       const modal = document.getElementById('aiDashboardModal'); 
@@ -602,7 +607,6 @@
 
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
-    // 6. تشغيل نظام المحادثة التفاعلي للمستشار الذكي (Chat With Strategy AI) عبر سوبابيس
     async function sendChatMessage() {
       const input = document.getElementById('chatInput'); const msg = input.value.trim();
       if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل المؤشرات الحية أولاً", "error"); return; }
