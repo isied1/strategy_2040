@@ -594,7 +594,7 @@
          return;
        }
 
-       showToast("⏳ جاري تحميل الملف مباشرة...");
+       showToast("⏳ جاري تحميل الملف ...");
        
        // استخدام دالة download لسحب الملف كبيانات مباشرة بدلاً من فتح رابط
        const { data, error } = await window.supabaseClient.storage.from('3feet_plans').download(path);
@@ -614,6 +614,7 @@
        a.click();
        document.body.removeChild(a);
        URL.revokeObjectURL(url); // تنظيف الذاكرة
+       showToast("✅ تم تحميل الملف بنجاح!", "success");
     }
 
     function renderCards(){
