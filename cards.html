@@ -533,19 +533,17 @@
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
-    // 🌟 رفع ملف 3feet Plan إلى سوبابيس (Storage)
+// 🌟 رفع ملف 3feet Plan مع حذف الملف القديم إن وجد
     async function upload3FeetPlan(event, id) {
       const file = event.target.files[0];
       if (!file) return;
 
-      // التحقق من الحجم 5 ميجا
       if (file.size > 5 * 1024 * 1024) {
         showToast("حجم الملف يتجاوز 5 ميجابايت!", "error");
         event.target.value = ''; 
         return;
       }
 
-      // التحقق من الصيغة (اكسل فقط)
       const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
       if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/)) {
          showToast("يجب أن يكون الملف بصيغة Excel فقط!", "error");
@@ -553,12 +551,19 @@
          return;
       }
 
-      showToast("⏳ جاري رفع الملف...", "success");
+      showToast("⏳ جاري رفع الملف الجديد...", "success");
       const btn = document.getElementById(`btn3feet_${id}`);
       btn.textContent = "جاري الرفع... ⏳";
       btn.disabled = true;
 
       try {
+        // 1. فحص وجود ملف قديم وحذفه من سوبابيس لتوفير المساحة
+        const oldPath = document.getElementById(`f_plan_file_${id}`).value;
+        if (oldPath && oldPath !== "—" && oldPath.trim() !== "") {
+           await window.supabaseClient.storage.from('3feet_plans').remove([oldPath]);
+        }
+
+        // 2. رفع الملف الجديد باسم فريد
         const fileExt = file.name.split('.').pop();
         const fileName = `plan_${id}_${Date.now()}.${fileExt}`;
         
@@ -568,10 +573,9 @@
 
         if (error) throw error;
 
-        // تخزين المسار الجديد في حقل مخفي ليتم حفظه عند ضغط "حفظ"
         document.getElementById(`f_plan_file_${id}`).value = data.path;
         
-        showToast("✅ تم رفع الملف بنجاح! لا تنس حفظ التعديلات لتوثيق الرفع.", "success");
+        showToast("✅ تم رفع الملف واستبدال القديم! اضغط حفظ التعديلات.", "success");
         btn.textContent = "تم الرفع (تحديث مجدداً) ✅";
         btn.style.background = "#16a34a";
         btn.disabled = false;
@@ -582,21 +586,34 @@
       }
     }
 
-    // 🌟 تحميل وعرض ملف 3feet Plan
+    // 🌟 التحميل المباشر والإجباري لملف 3feet Plan
     async function download3FeetPlan(id) {
        const path = document.getElementById(`f_plan_file_${id}`).value;
-       if (!path || path === "—") {
+       if (!path || path === "—" || path.trim() === "") {
          showToast("لا يوجد ملف 3feet plan مرفق لهذه المبادرة.", "error");
          return;
        }
 
-       showToast("⏳ جاري جلب الرابط...");
-       const { data } = window.supabaseClient.storage.from('3feet_plans').getPublicUrl(path);
-       if (data && data.publicUrl) {
-         window.open(data.publicUrl, '_blank');
-       } else {
-         showToast("❌ تعذر الحصول على رابط الملف.", "error");
+       showToast("⏳ جاري تحميل الملف مباشرة...");
+       
+       // استخدام دالة download لسحب الملف كبيانات مباشرة بدلاً من فتح رابط
+       const { data, error } = await window.supabaseClient.storage.from('3feet_plans').download(path);
+       
+       if (error || !data) {
+         showToast("❌ تعذر تحميل الملف.", "error");
+         return;
        }
+
+       // إنشاء رابط وهمي وإجبار المتصفح على تنزيله فوراً
+       const url = URL.createObjectURL(data);
+       const a = document.createElement('a');
+       a.href = url;
+       // استخراج اسم الملف الأصلي بصيغته
+       a.download = path.split('/').pop() || `3feet_plan_${id}.xlsx`; 
+       document.body.appendChild(a);
+       a.click();
+       document.body.removeChild(a);
+       URL.revokeObjectURL(url); // تنظيف الذاكرة
     }
 
     function renderCards(){
