@@ -465,8 +465,15 @@ async function sendChatMessage() {
       document.getElementById(loadingId).remove();
       sendBtn.disabled = false; input.disabled = false; input.focus();
       
-      if(!error && res.success) {
-         chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
+if(!error && res.success) {
+         // 🧹 فلتر تنظيف وتجميل النص: يحول الماركداون والنجوم إلى تصميم HTML أنيق
+         let cleanReply = res.reply
+            .replace(/\*\*(.*?)\*\*/g, '<br><b style="color: var(--brand2); font-size: 14px;">$1</b>') // تلوين وتغليظ العناوين
+            .replace(/\n\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ') // تحويل النجمة لنقطة قائمة زرقاء
+            .replace(/\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ') // تحويل النجمة لنقطة قائمة زرقاء (حالة أخرى)
+            .replace(/\n/g, '<br>'); // معالجة الأسطر الجديدة
+
+         chatBody.innerHTML += `<div class="chat-msg ai">${cleanReply}</div>`;
          chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
       } else {
          chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ انقطع الاتصال بالمستشار: ${error?.message || res?.error}</div>`;
