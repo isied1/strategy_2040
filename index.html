@@ -28,13 +28,6 @@
     .dropdown-content button { width: 100%; text-align: right; padding: 14px 16px; border: none; background: transparent; font-family: inherit; font-size: 13.5px; cursor: pointer; color: var(--ink); border-bottom: 1px solid var(--line); }
     .dropdown-content button:hover { background-color: var(--soft); color: var(--brand2); font-weight: bold; }
 
-    .login-container { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; }
-    .login-box { background: #fff; border-radius: 20px; padding: 40px; box-shadow: var(--shadow); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--line); }
-    .login-box h2 { margin-top: 0; color: var(--brand2); margin-bottom: 10px; font-size: 24px; }
-    .login-box p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-    .login-box input { margin-bottom: 16px; padding: 12px; font-size: 14px; width: 100%; border: 1px solid var(--line); border-radius: 10px; outline: none; }
-    .login-box button { width: 100%; padding: 12px; background: var(--brand); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
-    
     .toast-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--brand2); color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-size: 14.5px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10005; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
     .toast-popup.show { opacity: 1; top: 40px; }
     .toast-popup.success { background: #16a34a; }
@@ -82,7 +75,6 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.25s ease; }
     .modal-overlay.show { opacity: 1; pointer-events: auto; }
     .modal-content { background: #fff; border-radius: var(--radius); width: 750px; max-width: 95vw; max-height: 92vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
-
     .loading-overlay { text-align: center; padding: 60px; font-size: 16px; color: var(--muted); font-weight: bold; }
     .hidden { display: none !important; }
     
@@ -102,29 +94,10 @@
     .chat-input-area input { flex: 1; border: 1px solid var(--line); border-radius: 20px; padding: 10px 16px; outline: none; font-family: inherit; font-size: 13px; background: #f8fafc; }
     .chat-input-area input:focus { border-color: var(--brand); }
     .chat-input-area button { background: var(--brand); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .chat-input-area button:disabled { background: var(--muted); cursor: not-allowed; }
-    .chat-input-area button:not(:disabled):hover { background: var(--brand2); }
   </style>
 </head>
 <body>
   <div id="toastPopup" class="toast-popup"></div>
-
-  <div id="loginContainer" class="login-container">
-    <div class="login-box">
-      <h2>الاستراتيجية الصناعية 2040</h2>
-      <p>بوابة الدخول للمصرح لهم فقط</p>
-      <div id="step1">
-        <input type="text" id="loginIdentifier" placeholder="البريد الإلكتروني المصرح به" />
-        <button onclick="sendCode()" id="btnSendCode">إرسال رمز التحقق</button>
-      </div>
-      <div id="step2" class="hidden">
-        <p style="font-size:13px;color:#16a34a;margin-bottom:10px;font-weight:bold;" id="otpMsg">✅ تم إرسال رمز التحقق إلى بريدك.</p>
-        <input type="text" id="loginOtp" placeholder="أدخل الرمز المكون من 6 أرقام" />
-        <button onclick="verifyCode()" id="btnVerifyCode">تحقق ودخول</button>
-        <button onclick="resetLogin()" style="background:transparent; color:var(--muted); margin-top:10px; box-shadow:none;">رجوع</button>
-      </div>
-    </div>
-  </div>
 
   <header id="appHeader" class="header-bar hidden">
     <h1>الاستراتيجية الصناعية 2040 - لوحة التحكم</h1>
@@ -248,7 +221,7 @@
       </div>
       <div id="aiDashLoading" style="text-align:center; padding:50px 20px; color:var(--brand2); font-weight:bold; display:none;">
         <div style="font-size:45px; margin-bottom:15px; animation: pulse 1.5s infinite;">📊</div>
-        جاري تحليل بيانات الداشبورد، واستشراف المخاطر، وصياغة تقرير استراتيجي للقيادة العليا... <br>
+        جاري تحليل بيانات الداشبورد، واستشراف المخاطر... <br>
         <span style="font-size:12px; color:var(--muted); font-weight:normal;">(يرجى الانتظار بضع ثوانٍ)</span>
       </div>
       <div id="aiDashResponseContent" style="display:none; line-height:1.8; color:var(--ink); font-size:14.5px; padding:10px; background:#f8fafc; border-radius:12px; border:1px solid var(--line);">
@@ -278,17 +251,32 @@
   </div>
 
   <script>
-    // 1. الاتصال الموثق المباشر بخادم سوبابيس (ضع الروابط هنا)
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let initiatives = [];
     let currentUser = null;
-    let currentAuthEmail = "";
     window.currentTopInits = []; 
     window.currentDelayedInits = []; 
     let chatHistoryLog = [];
+
+    // ----- 🛡️ نظام إدارة الجلسة والنشاط (الخروج التلقائي بعد 30 دقيقة) -----
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 دقيقة بالملي ثانية
+    
+    function resetActivityTimer() { localStorage.setItem('last_activity_time', Date.now()); }
+    function checkInactivity() {
+      const lastActive = localStorage.getItem('last_activity_time');
+      if (lastActive && (Date.now() - parseInt(lastActive) > INACTIVITY_LIMIT)) {
+        logoutUser("انتهت جلسة العمل بسبب عدم النشاط لمدة 30 دقيقة للحماية. يرجى تسجيل الدخول مجدداً.");
+      }
+    }
+    // تحديث النشاط عند أي حركة أو ضغطة زر
+    ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, resetActivityTimer, { passive: true });
+    });
+    // فحص النشاط كل 60 ثانية
+    setInterval(checkInactivity, 60000); 
 
     function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function pctNumber(v) { const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
@@ -300,104 +288,30 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    // 🌟 دالة جلب الصلاحيات من جدول profiles
+    // جلب الصلاحيات من جدول profiles
     async function fetchUserProfile(email) {
-      const { data, error } = await window.supabaseClient
-        .from('profiles')
-        .select('email, role, name, allowed_initiatives')
-        .eq('email', email)
-        .single();
-
-      if (error || !data) {
-        console.warn("Profile not found in 'profiles' table, defaulting to viewer.");
-        return { email: email, name: email.split('@')[0], role: 'viewer', allowed_initiatives: '' };
-      }
-      return {
-        email: data.email,
-        name: data.name || email.split('@')[0],
-        role: String(data.role || 'viewer').toLowerCase().trim(),
-        allowed_initiatives: data.allowed_initiatives || ''
-      };
+      const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
+      if (error || !data) return { email: email, name: email.split('@')[0], role: 'viewer', allowed_initiatives: '' };
+      return { email: data.email, name: data.name || email.split('@')[0], role: String(data.role || 'viewer').toLowerCase().trim(), allowed_initiatives: data.allowed_initiatives || '' };
     }
 
-    // فحص الجلسة عند التحميل
     window.onload = async function() {
       try {
         const { data: { session }, error } = await window.supabaseClient.auth.getSession();
         if (session && session.user) {
           currentUser = await fetchUserProfile(session.user.email);
+          resetActivityTimer(); // بدء العداد عند التحميل
           initAppAfterLogin();
-        } else {
-          document.getElementById('loginContainer').classList.remove('hidden');
-        }
-      } catch(e) {
-        document.getElementById('loginContainer').classList.remove('hidden');
-      }
+        } else { window.location.href = 'login.html'; } // طرد لصفحة الدخول إذا لم تكن هناك جلسة
+      } catch(e) { window.location.href = 'login.html'; }
     };
 
-    // إرسال كود OTP
-    async function sendCode() {
-      const identifier = document.getElementById('loginIdentifier').value.trim();
-      if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
-      
-      const btn = document.getElementById('btnSendCode');
-      btn.disabled = true; btn.textContent = "جاري الإرسال...";
-      
-      currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
-
-      const { data, error } = await window.supabaseClient.auth.signInWithOtp({
-        email: currentAuthEmail,
-        options: { shouldCreateUser: false } 
-      });
-
-      btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
-
-      if (error) {
-        showToast("فشل إرسال الرمز: " + error.message, "error");
-      } else {
-        document.getElementById('step1').classList.add('hidden'); 
-        document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني بنجاح."; 
-        showToast("تم إرسال رمز OTP بنجاح", "success");
-      }
-    }
-
-    // التحقق والدخول ثم جلب الصلاحيات من profiles
-    async function verifyCode() {
-      const code = document.getElementById('loginOtp').value.trim();
-      if(!code) { showToast("يرجى إدخال الرمز السري.", "error"); return; }
-      
-      const btn = document.getElementById('btnVerifyCode'); 
-      btn.disabled = true; btn.textContent = "جاري التحقق...";
-
-      const { data, error } = await window.supabaseClient.auth.verifyOtp({
-        email: currentAuthEmail,
-        token: code,
-        type: 'email'
-      });
-
-      btn.disabled = false; btn.textContent = "تحقق ودخول";
-
-      if (error) {
-        showToast("الرمز المدخل غير صحيح: " + error.message, "error");
-      } else {
-        // جلب البيانات من جدول profiles مباشرة
-        currentUser = await fetchUserProfile(data.user.email);
-        initAppAfterLogin(); 
-        showToast("تم تسجيل الدخول بنجاح!", "success");
-      }
-    }
-    
-    function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
-    
-    async function logoutUser() { 
+    async function logoutUser(msg = "تم تسجيل الخروج بنجاح.") { 
       await window.supabaseClient.auth.signOut();
+      localStorage.removeItem('last_activity_time');
       currentUser = null; 
-      document.getElementById('appHeader').classList.add('hidden'); 
-      document.getElementById('appContent').classList.add('hidden'); 
-      document.getElementById('loginContainer').classList.remove('hidden'); 
-      resetLogin();
-      showToast("تم تسجيل الخروج.", "success"); 
+      alert(msg);
+      window.location.href = 'login.html'; // توجيه لصفحة الدخول المستقلة
     }
     
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
@@ -405,7 +319,6 @@
     function goToAdminPage() { window.location.href = "admin.html"; }
 
     function initAppAfterLogin() {
-      document.getElementById('loginContainer').classList.add('hidden');
       document.getElementById('appHeader').classList.remove('hidden');
       document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
@@ -423,32 +336,15 @@
       fetchCloudData();
     }
 
-    // جلب البيانات وبناء الداشبورد
     async function fetchCloudData() {
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
-      
-      const { data, error } = await window.supabaseClient
-        .from('initiatives')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        showToast("فشل جلب البيانات الحية: " + error.message, "error");
-      } else {
-        document.getElementById('loading').classList.add('hidden'); 
-        document.getElementById('dashboardContent').classList.remove('hidden');
-        initiatives = data || []; 
-        calculateAndRenderDashboard();
-      }
+      const { data, error } = await window.supabaseClient.from('initiatives').select('*').order('created_at', { ascending: true });
+      if (error) { showToast("فشل جلب البيانات: " + error.message, "error"); } 
+      else { document.getElementById('loading').classList.add('hidden'); document.getElementById('dashboardContent').classList.remove('hidden'); initiatives = data || []; calculateAndRenderDashboard(); }
     }
 
-    const programTitles = {
-      'ابتكار صناعات جديدة وذات تكنولوجيا متقدمة': 'البرنامج الأول: ابتكار صناعات جديدة وذات تكنولوجيا متقدمة',
-      'ريادة الاعمال والابتكار': 'البرنامج الثاني: ريادة الأعمال والابتكار',
-      'التطوير والتحديث': 'البرنامج الثالث: التطوير والتحديث',
-      'الحوكمة وإدارة التنمية الصناعية': 'البرنامج الرابع: الحوكمة وإدارة التنمية الصناعية'
-    };
+    const programTitles = { 'ابتكار صناعات جديدة وذات تكنولوجيا متقدمة': 'البرنامج الأول: ابتكار صناعات جديدة وذات تكنولوجيا متقدمة', 'ريادة الاعمال والابتكار': 'البرنامج الثاني: ريادة الأعمال والابتكار', 'التطوير والتحديث': 'البرنامج الثالث: التطوير والتحديث', 'الحوكمة وإدارة التنمية الصناعية': 'البرنامج الرابع: الحوكمة وإدارة التنمية الصناعية' };
 
     function calculateAndRenderDashboard() {
       if (initiatives.length === 0) return;
@@ -458,29 +354,13 @@
       const entities = {}; window.currentTopInits = []; window.currentDelayedInits = []; const today = new Date(); today.setHours(0,0,0,0);
 
       initiatives.forEach(item => {
-        const status = (item.status || "").trim(); 
-        const pct = pctNumber(item.completion_percentage);
-        
+        const status = (item.status || "").trim(); const pct = pctNumber(item.completion_percentage);
         if (status === "مكتملة" || pct === 100) completedCount++; else if (status === "قيد التنفيذ") inProgressCount++; else notStartedCount++;
-        
-        if (status !== "مكتملة" && item.end_date) { 
-          const end = new Date(item.end_date); 
-          if (!isNaN(end) && end < today) { 
-            delayedCount++; 
-            item.delayedDays = Math.floor((today - end) / (1000 * 60 * 60 * 24));
-            window.currentDelayedInits.push(item);
-          } 
-        }
-        
+        if (status !== "مكتملة" && item.end_date) { const end = new Date(item.end_date); if (!isNaN(end) && end < today) { delayedCount++; item.delayedDays = Math.floor((today - end) / (1000 * 60 * 60 * 24)); window.currentDelayedInits.push(item); } }
         const progName = (item.program_name || "").trim();
         if (programs[progName] !== undefined) { programs[progName].count++; programs[progName].totalPct += pct; }
-        
         const entityField = (item.executing_entity || "").trim();
-        if (entityField && entityField !== "—") {
-          const parts = entityField.split(/[،,]/).map(p => p.trim()).filter(Boolean);
-          parts.forEach(ent => { if (!entities[ent]) entities[ent] = { count: 0, totalPct: 0 }; entities[ent].count++; entities[ent].totalPct += pct; });
-        }
-        
+        if (entityField && entityField !== "—") { const parts = entityField.split(/[،,]/).map(p => p.trim()).filter(Boolean); parts.forEach(ent => { if (!entities[ent]) entities[ent] = { count: 0, totalPct: 0 }; entities[ent].count++; entities[ent].totalPct += pct; }); }
         if (item.is_key_initiative && String(item.is_key_initiative).trim() === "نعم") { window.currentTopInits.push(item); }
       });
 
@@ -500,108 +380,53 @@
       const entList = document.getElementById('entitiesList'); entList.innerHTML = '';
       const sortedEntities = Object.entries(entities).sort((a,b) => b[1].count - a[1].count);
       if(sortedEntities.length === 0) { entList.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px;">لا يوجد بيانات.</div>'; } 
-      else {
-        sortedEntities.forEach(([name, data]) => {
-          const avg = Math.round(data.totalPct / data.count);
-          entList.innerHTML += `<div class="entity-item"><div class="entity-info"><span>${escapeHtml(name)}</span><span style="color:var(--brand)">${avg}% (${data.count} مبادرة)</span></div><div class="entity-bar-bg"><div class="entity-bar-fill" style="width: ${avg}%"></div></div></div>`;
-        });
-      }
+      else { sortedEntities.forEach(([name, data]) => { const avg = Math.round(data.totalPct / data.count); entList.innerHTML += `<div class="entity-item"><div class="entity-info"><span>${escapeHtml(name)}</span><span style="color:var(--brand)">${avg}% (${data.count} مبادرة)</span></div><div class="entity-bar-bg"><div class="entity-bar-fill" style="width: ${avg}%"></div></div></div>`; }); }
 
       const topList = document.getElementById('topInitiativesList'); topList.innerHTML = '';
       if(window.currentTopInits.length === 0) { topList.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px; line-height:1.6">لا توجد مبادرات مميزة محددة حالياً.</div>'; } 
-      else {
-        window.currentTopInits.forEach(item => {
-          topList.innerHTML += `<div class="top-init-item" onclick="openInitModal('${item.id}')"><h4>${escapeHtml(item.initiative_name)}</h4><div class="top-init-flex"><span>الجهة المنفذة: <b>${escapeHtml(item.executing_entity || 'غير محددة')}</b></span><span class="top-init-pct">${Math.round(pctNumber(item.completion_percentage))}%</span></div></div>`;
-        });
-      }
+      else { window.currentTopInits.forEach(item => { topList.innerHTML += `<div class="top-init-item" onclick="openInitModal('${item.id}')"><h4>${escapeHtml(item.initiative_name)}</h4><div class="top-init-flex"><span>الجهة المنفذة: <b>${escapeHtml(item.executing_entity || 'غير محددة')}</b></span><span class="top-init-pct">${Math.round(pctNumber(item.completion_percentage))}%</span></div></div>`; }); }
     }
 
     function openInitModal(id) {
-      const item = window.currentTopInits.find(i => i.id === id);
-      if(!item) return;
-      document.getElementById('modal_no').innerText = item.initiative_number || "—";
-      document.getElementById('modal_name').innerText = item.initiative_name || "—";
-      document.getElementById('modal_desc').innerText = item.description || "لا يوجد وصف";
-      
+      const item = window.currentTopInits.find(i => i.id === id); if(!item) return;
+      document.getElementById('modal_no').innerText = item.initiative_number || "—"; document.getElementById('modal_name').innerText = item.initiative_name || "—"; document.getElementById('modal_desc').innerText = item.description || "لا يوجد وصف";
       const gList = document.getElementById('modal_goals'); gList.innerHTML = '';
-      if(item.goals) { 
-        const goalsArr = item.goals.split(/[\n|]/).filter(Boolean);
-        goalsArr.forEach(g => gList.innerHTML += `<li>${escapeHtml(g)}</li>`);
-      } else { gList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل أهداف</div>'; }
-      
+      if(item.goals) { const goalsArr = item.goals.split(/[\n|]/).filter(Boolean); goalsArr.forEach(g => gList.innerHTML += `<li>${escapeHtml(g)}</li>`); } else { gList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل أهداف</div>'; }
       const iList = document.getElementById('modal_inds'); iList.innerHTML = '';
-      if(item.kpis) { 
-        const kpiArr = item.kpis.split(/[\n|]/).filter(Boolean);
-        kpiArr.forEach(ind => iList.innerHTML += `<li>${escapeHtml(ind)}</li>`);
-      } else { iList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل مؤشرات</div>'; }
-      
+      if(item.kpis) { const kpiArr = item.kpis.split(/[\n|]/).filter(Boolean); kpiArr.forEach(ind => iList.innerHTML += `<li>${escapeHtml(ind)}</li>`); } else { iList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل مؤشرات</div>'; }
       document.getElementById('topInitModal').classList.add('show');
     }
 
     function openDelayedModal() {
       const list = document.getElementById('delayedList'); list.innerHTML = '';
       if(window.currentDelayedInits.length === 0) { list.innerHTML = '<div style="color:var(--muted); text-align:center; padding:30px; font-weight:bold;">ممتاز! لا توجد مبادرات متأخرة زمنياً في النظام.</div>'; } 
-      else {
-        window.currentDelayedInits.sort((a,b) => b.delayedDays - a.delayedDays).forEach(item => {
-          list.innerHTML += `<div class="top-init-item" style="cursor:default; border-right-color:#ef4444;"><h4 style="color:#b91c1c;">${escapeHtml(item.initiative_name)}</h4><div class="top-init-flex"><span style="color:#dc2626; font-weight:bold;">تأخير: ${item.delayedDays} يوم</span><span class="top-init-pct" style="color:#16a34a; border-color:#bbf7d0;">إنجاز: ${Math.round(pctNumber(item.completion_percentage))}%</span></div></div>`;
-        });
-      }
+      else { window.currentDelayedInits.sort((a,b) => b.delayedDays - a.delayedDays).forEach(item => { list.innerHTML += `<div class="top-init-item" style="cursor:default; border-right-color:#ef4444;"><h4 style="color:#b91c1c;">${escapeHtml(item.initiative_name)}</h4><div class="top-init-flex"><span style="color:#dc2626; font-weight:bold;">تأخير: ${item.delayedDays} يوم</span><span class="top-init-pct" style="color:#16a34a; border-color:#bbf7d0;">إنجاز: ${Math.round(pctNumber(item.completion_percentage))}%</span></div></div>`; }); }
       document.getElementById('delayedModal').classList.add('show');
     }
 
     async function analyzeDashboardAI() {
       if (initiatives.length === 0) { showToast("لا توجد بيانات لتحليلها.", "error"); return; }
-      const modal = document.getElementById('aiDashboardModal'); 
-      const loading = document.getElementById('aiDashLoading'); 
-      const content = document.getElementById('aiDashResponseContent');
-      const btnDownloadWord = document.getElementById('btnDownloadDashWord');
-      
+      const modal = document.getElementById('aiDashboardModal'); const loading = document.getElementById('aiDashLoading'); const content = document.getElementById('aiDashResponseContent'); const btnDownloadWord = document.getElementById('btnDownloadDashWord');
       modal.classList.add('show'); loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = ''; btnDownloadWord.style.display = 'none';
-      
-      let comp = 0, prog = 0, not = 0, dlyCount = 0;
-      let sumPct = 0; let delayedNamesArr = []; let initsDetailsArr = []; 
-      const today = new Date(); today.setHours(0,0,0,0);
-
+      let comp = 0, prog = 0, not = 0, dlyCount = 0; let sumPct = 0; let delayedNamesArr = []; let initsDetailsArr = []; const today = new Date(); today.setHours(0,0,0,0);
       initiatives.forEach(item => {
         const status = (item.status || "").trim(); const pct = pctNumber(item.completion_percentage); sumPct += pct;
         if (status === "مكتملة" || pct === 100) comp++; else if (status === "قيد التنفيذ") prog++; else not++;
         if (status !== "مكتملة" && item.end_date) { const end = new Date(item.end_date); if (!isNaN(end) && end < today) { dlyCount++; delayedNamesArr.push(item.initiative_name); } }
-        
-        initsDetailsArr.push(
-          `📌 المبادرة: ${item.initiative_name || "بدون اسم"}\n` +
-          ` 📄 الوصف: ${item.description || "لا يوجد وصف"}\n` +
-          ` 🎯 الأهداف: ${item.goals || "لا يوجد"}\n` +
-          ` 📊 مستوى الإنجاز: ${Math.round(pct)}%\n` +
-          ` 📅 المدى الزمني: من [${item.start_date || "غير محدد"}] إلى [${item.end_date || "غير محدد"}]\n` +
-          ` ⚙️ الموقف التنفيذي الحالي: ${item.executive_status || "لم يحدد"}\n` +
-          ` ⚠️ التحديات والمعوقات: ${item.challenges || "لا يوجد"}\n` +
-          `--------------------------------------------------`
-        );
+        initsDetailsArr.push(`📌 المبادرة: ${item.initiative_name || "بدون اسم"}\n 📄 الوصف: ${item.description || "لا يوجد وصف"}\n 🎯 الأهداف: ${item.goals || "لا يوجد"}\n 📊 مستوى الإنجاز: ${Math.round(pct)}%\n 📅 المدى الزمني: من [${item.start_date || "غير محدد"}] إلى [${item.end_date || "غير محدد"}]\n ⚙️ الموقف التنفيذي الحالي: ${item.executive_status || "لم يحدد"}\n ⚠️ التحديات والمعوقات: ${item.challenges || "لا يوجد"}\n--------------------------------------------------`);
       });
-
-      const payload = { 
-        total: initiatives.length, completed: comp, inProgress: prog, notStarted: not, delayed: dlyCount, 
-        avgCompletion: Math.round(sumPct / initiatives.length), 
-        delayedNames: delayedNamesArr.slice(0, 5).join("، "), initiativesDetails: initsDetailsArr.join("\n") 
-      };
-
+      const payload = { total: initiatives.length, completed: comp, inProgress: prog, notStarted: not, delayed: dlyCount, avgCompletion: Math.round(sumPct / initiatives.length), delayedNames: delayedNamesArr.slice(0, 5).join("، "), initiativesDetails: initsDetailsArr.join("\n") };
       const { data: res, error } = await window.supabaseClient.functions.invoke('analyze-dashboard', { body: payload });
-
       loading.style.display = 'none'; content.style.display = 'block';
-      if (!error && res.success) {
-        content.innerHTML = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">🤖 المحلل الاستراتيجي النشط: <b style="color: var(--brand); font-family: monospace;">Gemini Ultra (Supabase AI Engine)</b></div>` + res.advice;
-        btnDownloadWord.style.display = 'inline-block';
-      } else {
-        content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ خطأ في إصدار التقرير: ${error?.message || res?.error}</div>`;
-      }
+      if (!error && res.success) { content.innerHTML = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">🤖 المحلل الاستراتيجي النشط: <b style="color: var(--brand); font-family: monospace;">Gemini Ultra</b></div>` + res.advice; btnDownloadWord.style.display = 'inline-block'; } 
+      else { content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ خطأ في إصدار التقرير</div>`; }
     }
 
     function downloadModalAsWord(elementId, baseFilename) {
       const content = document.getElementById(elementId).innerHTML;
-      const htmlString = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>تقرير الاستراتيجية الصناعية 2040</title><style>body { font-family: 'Tahoma', 'Arial', sans-serif; direction: rtl; text-align: right; line-height: 1.6; } h3 { color: #0b4f6c; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-top: 20px; font-size: 16px; } ul { padding-right: 20px; } li { margin-bottom: 8px; } b { color: #0f172a; }</style></head><body>${content}</body></html>`;
+      const htmlString = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>تقرير الاستراتيجية الصناعية</title><style>body { font-family: 'Tahoma', 'Arial', sans-serif; direction: rtl; text-align: right; line-height: 1.6; } h3 { color: #0b4f6c; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-top: 20px; font-size: 16px; }</style></head><body>${content}</body></html>`;
       const blob = new Blob(['\ufeff' + htmlString], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
-      a.download = baseFilename + '_' + new Date().toISOString().slice(0,10) + '.doc';
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = baseFilename + '_' + new Date().toISOString().slice(0,10) + '.doc';
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
@@ -609,41 +434,18 @@
 
     async function sendChatMessage() {
       const input = document.getElementById('chatInput'); const msg = input.value.trim();
-      if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل المؤشرات الحية أولاً", "error"); return; }
-
+      if(!msg || initiatives.length === 0) return;
       const chatBody = document.getElementById('chatBody'); const sendBtn = document.getElementById('chatSendBtn');
-      chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`;
-      chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
+      chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`; chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
       input.value = ''; sendBtn.disabled = true; input.disabled = true;
-      
       const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص المستندات والمبادرات...</div>`;
-      chatBody.scrollTop = chatBody.scrollHeight;
-
-      let contextData = initiatives.map(item => {
-        return `📌 [مبادرة رقم: ${item.initiative_number || "—"}]
-      - الاسم: ${item.initiative_name}
-      - البرنامج الاستراتيجي: ${item.program_name}
-      - نسبة التنفيذ: ${Math.round(pctNumber(item.completion_percentage))}% | الحالة: ${item.status}
-      - الموقف والمشاكل: ${item.executive_status} | التحديات: ${item.challenges}
-      - الجهة والمتابعة: ${item.executing_entity} | المشرف: ${item.follow_up_responsible}
-      --------------------------------------------------`;
-      }).join('\n');
-
+      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص البيانات...</div>`; chatBody.scrollTop = chatBody.scrollHeight;
+      let contextData = initiatives.map(item => `رقم: ${item.initiative_number} | المبادرة: ${item.initiative_name} | التنفيذ: ${Math.round(pctNumber(item.completion_percentage))}% | الموقف: ${item.executive_status}`).join('\n');
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
-
       const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
-
-      document.getElementById(loadingId).remove();
-      sendBtn.disabled = false; input.disabled = false; input.focus();
-      
-      if(!error && res.success) {
-         chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
-         chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
-      } else {
-         chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ انقطع الاتصال بالمستشار: ${error?.message}</div>`;
-         chatHistoryLog.pop();
-      }
+      document.getElementById(loadingId).remove(); sendBtn.disabled = false; input.disabled = false; input.focus();
+      if(!error && res.success) { chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`; chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] }); } 
+      else { chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ انقطع الاتصال بالمستشار</div>`; chatHistoryLog.pop(); }
       chatBody.scrollTop = chatBody.scrollHeight;
     }
   </script>
