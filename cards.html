@@ -874,7 +874,7 @@
 
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
-    async function sendChatMessage() {
+async function sendChatMessage() {
       const input = document.getElementById('chatInput'); const msg = input.value.trim();
       if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error"); return; }
 
@@ -884,10 +884,25 @@
       input.value = ''; sendBtn.disabled = true; input.disabled = true;
       
       const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص المستندات والمشاريع...</div>`;
+      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص المستندات والبيانات التفصيلية...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
 
-      let contextData = initiatives.map(item => `رقم: ${item.initiativeNo} | المبادرة: ${item.initiativeName} | التنفيذ: ${Math.round(pctNumber(item.completionPercent))}% | الموقف: ${item.executivePosition}`).join('\n');
+      // 🌟 التحديث: تضمين كافة الحقول مع معالجة المصفوفات في البطاقات
+      let contextData = initiatives.map(item => {
+        const goalsText = Array.isArray(item.goals) ? item.goals.join(' | ') : (item.goals || "—");
+        return `📌 [رقم المبادرة: ${item.initiativeNo || "—"}]
+- اسم المبادرة: ${item.initiativeName || "—"}
+- وصف المبادرة: ${item.description || "—"}
+- أهداف المبادرة: ${goalsText}
+- نسبة التنفيذ: ${Math.round(pctNumber(item.completionPercent))}%
+- الجهة المنفذة: ${item.executingEntity || "—"}
+- الخطة الزمنية: ${item.timeline || "—"}
+- اسم البرنامج: ${item.programName || "—"}
+- تاريخ البدء: ${item.startDate || "—"} | تاريخ الانتهاء: ${item.endDate || "—"}
+- الحالة: ${item.status || "—"}
+--------------------------------------------------`;
+      }).join('\n');
+
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
       const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
@@ -899,7 +914,7 @@
          chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
          chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
       } else {
-         chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ خطأ في الاتصال: ${error?.message}</div>`;
+         chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ انقطع الاتصال بالمستشار: ${error?.message || res?.error}</div>`;
          chatHistoryLog.pop();
       }
       chatBody.scrollTop = chatBody.scrollHeight;
