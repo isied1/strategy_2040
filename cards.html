@@ -840,15 +840,30 @@
       const modal = document.getElementById('aiModal'); const loading = document.getElementById('aiLoading'); const content = document.getElementById('aiResponseContent'); const btnDownloadWord = document.getElementById('btnDownloadCardWord');
       modal.classList.add('show'); loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = ''; btnDownloadWord.style.display = 'none';
       
+   // معالجة المصفوفات لتصبح نصوص مقروءة للذكاء الاصطناعي
+      const goalsText = Array.isArray(item.goals) ? item.goals.join(" | ") : (item.goals || "—");
+      const indsText = Array.isArray(item.indicators) ? item.indicators.join(" | ") : (item.indicators || "—");
+      const planText = Array.isArray(item.actionPlan) ? item.actionPlan.map(p => `${p.no}- ${p.procedure} <${p.status}>`).join(" | ") : (item.actionPlan || "—");
+
       const payload = {
-        initiativeName: item.initiativeName || "غير محدد",
-        description: item.description || "لا يوجد وصف مسجل",
+        initiativeNo: item.initiativeNo || "—",
+        initiativeName: item.initiativeName || "—",
+        description: item.description || "—",
+        goals: goalsText,
+        indicators: indsText,
+        actionPlan: planText,
         completionPercent: item.completionPercent || "0%",
-        startDate: item.startDate || "غير محدد",
-        endDate: item.endDate || "غير محدد",
-        challenges: item.challenges || "لا توجد تحديات أو معوقات مسجلة حالياً",
-        goals: (item.goals && item.goals.length > 0 && item.goals[0] !== '') ? item.goals.join(" | ") : "لا توجد أهداف مسجلة لهذه المبادرة",
-        executivePosition: item.executivePosition || "لم يتم تدوين الموقف التنفيذي الحالي بعد"
+        estimatedBudget: item.estimatedBudget || "—",
+        executingEntity: item.executingEntity || "—",
+        timeline: item.timeline || "—",
+        programName: item.programName || "—",
+        startDate: item.startDate || "—",
+        endDate: item.endDate || "—",
+        status: item.status || "—",
+        executivePosition: item.executivePosition || "—",
+        challenges: item.challenges || "—",
+        notes: item.notes || "—",
+        lastUpdate: item.lastUpdate || "—"
       };
 
       const { data: res, error } = await window.supabaseClient.functions.invoke('get-card-ai-advice', { body: payload });
