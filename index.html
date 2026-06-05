@@ -432,20 +432,46 @@
 
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
-    async function sendChatMessage() {
+async function sendChatMessage() {
       const input = document.getElementById('chatInput'); const msg = input.value.trim();
-      if(!msg || initiatives.length === 0) return;
+      if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error"); return; }
+
       const chatBody = document.getElementById('chatBody'); const sendBtn = document.getElementById('chatSendBtn');
-      chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`; chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
+      chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`;
+      chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
       input.value = ''; sendBtn.disabled = true; input.disabled = true;
+      
       const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص البيانات...</div>`; chatBody.scrollTop = chatBody.scrollHeight;
-      let contextData = initiatives.map(item => `رقم: ${item.initiative_number} | المبادرة: ${item.initiative_name} | التنفيذ: ${Math.round(pctNumber(item.completion_percentage))}% | الموقف: ${item.executive_status}`).join('\n');
+      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص المستندات والبيانات التفصيلية...</div>`;
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      // 🌟 التحديث: تضمين كافة الحقول المطلوبة لتغذية الذكاء الاصطناعي
+      let contextData = initiatives.map(item => `📌 [رقم المبادرة: ${item.initiative_number || "—"}]
+- اسم المبادرة: ${item.initiative_name || "—"}
+- وصف المبادرة: ${item.description || "—"}
+- أهداف المبادرة: ${item.goals || "—"}
+- نسبة التنفيذ: ${Math.round(pctNumber(item.completion_percentage))}%
+- الجهة المنفذة: ${item.executing_entity || "—"}
+- الخطة الزمنية: ${item.timeline || "—"}
+- اسم البرنامج: ${item.program_name || "—"}
+- تاريخ البدء: ${item.start_date || "—"} | تاريخ الانتهاء: ${item.end_date || "—"}
+- الحالة: ${item.status || "—"}
+--------------------------------------------------`).join('\n');
+
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
+
       const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
-      document.getElementById(loadingId).remove(); sendBtn.disabled = false; input.disabled = false; input.focus();
-      if(!error && res.success) { chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`; chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] }); } 
-      else { chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ انقطع الاتصال بالمستشار</div>`; chatHistoryLog.pop(); }
+
+      document.getElementById(loadingId).remove();
+      sendBtn.disabled = false; input.disabled = false; input.focus();
+      
+      if(!error && res.success) {
+         chatBody.innerHTML += `<div class="chat-msg ai">${res.reply}</div>`;
+         chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
+      } else {
+         chatBody.innerHTML += `<div class="chat-msg ai" style="color:#ef4444; font-weight:bold;">❌ انقطع الاتصال بالمستشار: ${error?.message || res?.error}</div>`;
+         chatHistoryLog.pop();
+      }
       chatBody.scrollTop = chatBody.scrollHeight;
     }
   </script>
