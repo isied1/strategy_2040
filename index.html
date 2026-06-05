@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>الاستراتيجية الصناعية 2040 - لوحة التحكم</title>
+  <!-- مكتبة سوبابيس الرسمية -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -197,6 +198,7 @@
     </div>
   </div>
 
+  <!-- مودال تفاصيل المبادرة الشامل -->
   <div class="modal-overlay" id="topInitModal">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid var(--soft); padding-bottom:10px;">
@@ -227,6 +229,7 @@
     </div>
   </div>
 
+  <!-- مودال المبادرات المتأخرة -->
   <div class="modal-overlay" id="delayedModal">
     <div class="modal-content" style="max-width: 650px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid var(--soft); padding-bottom:10px;">
@@ -239,6 +242,7 @@
     </div>
   </div>
 
+  <!-- مودال تقرير الذكاء الاصطناعي الاستشرافي -->
   <div class="modal-overlay" id="aiDashboardModal">
     <div class="modal-content" style="max-width: 900px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--soft); padding-bottom:10px; margin-bottom:15px;">
@@ -260,6 +264,7 @@
     </div>
   </div>
 
+  <!-- 💬 زر الدردشة العائم ونافذة الشات -->
   <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
   
   <div class="chat-window" id="chatWindow">
@@ -278,12 +283,10 @@
     </div>
   </div>
 
- <script>
-    // 1. ربط وإعدادات سوبابيس (استخدام اسم فريدsupabaseClient لمنع التعارض مع الـ CDN)
+  <script>
+    // 1. ربط وإعدادات سوبابيس (Supabase Client Configuration)
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
-    
-    // هنا نستخدم المكتبة القادمة من الـ CDN لتوليد العميل الخاص بنا
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let initiatives = [];
@@ -302,36 +305,26 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    // إدارة الجلسة تلقائياً عند تحميل الصفحة
+    // إدارة الجلسة تلقائياً عبر سوبابيس
     window.onload = async function() {
       try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (session && session.user) {
           currentUser = {
             email: session.user.email,
             name: session.user.user_metadata.full_name || session.user.email.split('@')[0],
-            role: session.user.user_metadata.role || 'viewer'
+            role: String(session.user.user_metadata.role || 'viewer').toLowerCase().trim()
           };
           initAppAfterLogin();
         } else {
-          const stored = localStorage.getItem('industry_user_session');
-          if (stored) {
-            const sessionData = JSON.parse(stored);
-            const now = new Date().getTime();
-            if (now - sessionData.loginTime <= 1800000) {
-              sessionData.loginTime = now;
-              localStorage.setItem('industry_user_session', JSON.stringify(sessionData));
-              currentUser = sessionData;
-              initAppAfterLogin();
-            } else {
-              localStorage.removeItem('industry_user_session');
-            }
-          }
+          document.getElementById('loginContainer').classList.remove('hidden');
         }
-      } catch(e) {}
+      } catch(e) {
+          document.getElementById('loginContainer').classList.remove('hidden');
+      }
     };
 
-// 2. نظام مصادقة سوبابيس بإرسال رمز OTP للمصرح لهم
+    // 2. نظام مصادقة سوبابيس بإرسال رمز OTP للمصرح لهم
     async function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
       if(!identifier) { showToast("يرجى إدخال البريد الإلكتروني المصرح به.", "error"); return; }
@@ -341,10 +334,9 @@
       
       window.currentAuthEmail = identifier.includes('@') ? identifier : `${identifier}@domain.com`;
 
-      // الاستدعاء من الـ window مباشرة لفك الحظر البرمجي
       const { data, error } = await window.supabaseClient.auth.signInWithOtp({
         email: window.currentAuthEmail,
-        options: { shouldCreateUser: false }
+        options: { shouldCreateUser: false } 
       });
 
       btn.disabled = false; btn.textContent = "إرسال رمز التحقق";
@@ -354,7 +346,7 @@
       } else {
         document.getElementById('step1').classList.add('hidden'); 
         document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني كترونياً."; 
+        document.getElementById('otpMsg').innerText = "✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني بنجاح."; 
         showToast("تم إرسال رمز OTP بنجاح", "success");
       }
     }
@@ -381,10 +373,8 @@
         currentUser = {
           email: data.user.email,
           name: data.user.user_metadata.full_name || data.user.email.split('@')[0],
-          role: data.user.user_metadata.role || 'viewer',
-          loginTime: new Date().getTime()
+          role: String(data.user.user_metadata.role || 'viewer').toLowerCase().trim()
         };
-        try { localStorage.setItem('industry_user_session', JSON.stringify(currentUser)); } catch(e){}
         initAppAfterLogin(); 
         showToast("تم تسجيل الدخول بنجاح!", "success");
       }
@@ -393,8 +383,7 @@
     function resetLogin() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); document.getElementById('loginOtp').value = ""; }
     
     async function logoutUser() { 
-      await supabaseClient.auth.signOut();
-      try { localStorage.removeItem('industry_user_session'); } catch(e){} 
+      await window.supabaseClient.auth.signOut();
       currentUser = null; 
       document.getElementById('appHeader').classList.add('hidden'); 
       document.getElementById('appContent').classList.add('hidden'); 
@@ -412,28 +401,33 @@
       document.getElementById('appHeader').classList.remove('hidden');
       document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
-      if (currentUser.role === 'admin') {
-        document.getElementById('displayUserRole').textContent = 'مدير النظام'; document.getElementById('displayUserName').style.cursor = 'pointer';
+      
+      const userRole = currentUser.role;
+      if (userRole === 'admin') {
+        document.getElementById('displayUserRole').textContent = 'مدير النظام'; 
+        document.getElementById('displayUserName').style.cursor = 'pointer';
         document.getElementById('displayUserName').style.textDecoration = 'underline';
         if(document.getElementById('btnAdminUsers')) document.getElementById('btnAdminUsers').classList.remove('hidden');
-      } else { document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
-        document.getElementById('displayUserName').style.cursor = 'default'; document.getElementById('displayUserName').style.textDecoration = 'none'; }
+      } else { 
+        document.getElementById('displayUserRole').textContent = userRole === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
+        document.getElementById('displayUserName').style.cursor = 'default'; 
+        document.getElementById('displayUserName').style.textDecoration = 'none'; 
+      }
       fetchCloudData();
     }
 
-// 3. جلب البيانات من جدول سوبابيس (28 عموداً)
+    // 3. جلب البيانات من جدول سوبابيس (28 عموداً)
     async function fetchCloudData() {
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
       
-      // القراءة الآمنة من الـ window
       const { data, error } = await window.supabaseClient
         .from('initiatives')
         .select('*')
         .order('created_at', { ascending: true });
 
       if (error) {
-        alert("فشل جلب البيانات الحية: " + error.message);
+        showToast("فشل جلب البيانات الحية: " + error.message, "error");
       } else {
         document.getElementById('loading').classList.add('hidden'); 
         document.getElementById('dashboardContent').classList.remove('hidden');
@@ -525,13 +519,13 @@
       
       const gList = document.getElementById('modal_goals'); gList.innerHTML = '';
       if(item.goals) { 
-        const goalsArr = item.goals.split(/[\n،,]/).filter(Boolean);
+        const goalsArr = item.goals.split(/[\n|]/).filter(Boolean);
         goalsArr.forEach(g => gList.innerHTML += `<li>${escapeHtml(g)}</li>`);
       } else { gList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل أهداف</div>'; }
       
       const iList = document.getElementById('modal_inds'); iList.innerHTML = '';
       if(item.kpis) { 
-        const kpiArr = item.kpis.split(/[\n،,]/).filter(Boolean);
+        const kpiArr = item.kpis.split(/[\n|]/).filter(Boolean);
         kpiArr.forEach(ind => iList.innerHTML += `<li>${escapeHtml(ind)}</li>`);
       } else { iList.innerHTML = '<div style="color:var(--muted); font-size:12px;">لم تسجل مؤشرات</div>'; }
       
@@ -586,7 +580,7 @@
         delayedNames: delayedNamesArr.slice(0, 5).join("، "), initiativesDetails: initsDetailsArr.join("\n") 
       };
 
-      const { data: res, error } = await supabaseClient.functions.invoke('analyze-dashboard', { body: payload });
+      const { data: res, error } = await window.supabaseClient.functions.invoke('analyze-dashboard', { body: payload });
 
       loading.style.display = 'none'; content.style.display = 'block';
       if (!error && res.success) {
@@ -608,7 +602,7 @@
 
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
-    // 6. تشغيل نظام المحادثة التفاعلي للمستشار الذكي (Chat With Strategy AI)
+    // 6. تشغيل نظام المحادثة التفاعلي للمستشار الذكي (Chat With Strategy AI) عبر سوبابيس
     async function sendChatMessage() {
       const input = document.getElementById('chatInput'); const msg = input.value.trim();
       if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل المؤشرات الحية أولاً", "error"); return; }
@@ -627,8 +621,6 @@
       - الاسم: ${item.initiative_name}
       - البرنامج الاستراتيجي: ${item.program_name}
       - نسبة التنفيذ: ${Math.round(pctNumber(item.completion_percentage))}% | الحالة: ${item.status}
-      - النطاق الزمني: ${item.start_date} إلى ${item.end_date}
-      - الموازنة: ${item.estimated_budget} ر.ع | المتبقي: ${item.remaining_amount} ر.ع
       - الموقف والمشاكل: ${item.executive_status} | التحديات: ${item.challenges}
       - الجهة والمتابعة: ${item.executing_entity} | المشرف: ${item.follow_up_responsible}
       --------------------------------------------------`;
@@ -636,7 +628,7 @@
 
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
-      const { data: res, error } = await supabaseClient.functions.invoke('strategy-chat', { body: payload });
+      const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
 
       document.getElementById(loadingId).remove();
       sendBtn.disabled = false; input.disabled = false; input.focus();
