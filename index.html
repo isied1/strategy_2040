@@ -413,7 +413,26 @@
         const status = (item.status || "").trim(); const pct = pctNumber(item.completion_percentage); sumPct += pct;
         if (status === "مكتملة" || pct === 100) comp++; else if (status === "قيد التنفيذ") prog++; else not++;
         if (status !== "مكتملة" && item.end_date) { const end = new Date(item.end_date); if (!isNaN(end) && end < today) { dlyCount++; delayedNamesArr.push(item.initiative_name); } }
-        initsDetailsArr.push(`📌 المبادرة: ${item.initiative_name || "بدون اسم"}\n 📄 الوصف: ${item.description || "لا يوجد وصف"}\n 🎯 الأهداف: ${item.goals || "لا يوجد"}\n 📊 مستوى الإنجاز: ${Math.round(pct)}%\n 📅 المدى الزمني: من [${item.start_date || "غير محدد"}] إلى [${item.end_date || "غير محدد"}]\n ⚙️ الموقف التنفيذي الحالي: ${item.executive_status || "لم يحدد"}\n ⚠️ التحديات والمعوقات: ${item.challenges || "لا يوجد"}\n--------------------------------------------------`);
+initsDetailsArr.push(
+          `📌 [رقم المبادرة: ${item.initiative_number || "—"}]\n` +
+          `- اسم المبادرة: ${item.initiative_name || "—"}\n` +
+          `- وصف المبادرة: ${item.description || "—"}\n` +
+          `- أهداف المبادرة: ${item.goals || "—"}\n` +
+          `- المؤشرات الرئيسية: ${item.kpis || "—"}\n` +
+          `- خطة العمل: ${item.action_plan || "—"}\n` +
+          `- نسبة التنفيذ: ${Math.round(pct)}%\n` +
+          `- الموازنة التقديرية: ${item.estimated_budget || "—"}\n` +
+          `- الجهة المنفذة: ${item.executing_entity || "—"}\n` +
+          `- الخطة الزمنية: ${item.timeline || "—"}\n` +
+          `- اسم البرنامج: ${item.program_name || "—"}\n` +
+          `- تاريخ البدء: ${item.start_date || "—"} | تاريخ الانتهاء: ${item.end_date || "—"}\n` +
+          `- الحالة: ${item.status || "—"}\n` +
+          `- الموقف التنفيذي: ${item.executive_status || "—"}\n` +
+          `- التحديات: ${item.challenges || "—"}\n` +
+          `- الملاحظات: ${item.notes || "—"}\n` +
+          `- آخر تحديث: ${item.latest_update || "—"}\n` +
+          `--------------------------------------------------`
+        );
       });
       const payload = { total: initiatives.length, completed: comp, inProgress: prog, notStarted: not, delayed: dlyCount, avgCompletion: Math.round(sumPct / initiatives.length), delayedNames: delayedNamesArr.slice(0, 5).join("، "), initiativesDetails: initsDetailsArr.join("\n") };
       const { data: res, error } = await window.supabaseClient.functions.invoke('analyze-dashboard', { body: payload });
