@@ -30,7 +30,7 @@
     <p>بوابة الدخول للمصرح لهم فقط</p>
     
     <div id="step1">
-      <input type="text" id="loginIdentifier" placeholder="اسم المستخدم أو البريد الإلكتروني" onkeypress="if(event.key === 'Enter') sendCode()" />
+      <input type="text" id="loginIdentifier" placeholder="البريد الإلكتروني" onkeypress="if(event.key === 'Enter') sendCode()" />
       <button onclick="sendCode()" id="btnSendCode">إرسال رمز التحقق</button>
     </div>
     
@@ -50,7 +50,7 @@
     let currentAuthEmail = "";
     
     // الدومين الافتراضي لشركتك (لتفعيل تسجيل الدخول باسم المستخدم فقط)
-    const DEFAULT_DOMAIN = '@oman2040.om'; 
+    const DEFAULT_DOMAIN = '@tejarah.gov.om'; 
 
     let toastTimeout;
     function showToast(msg, type = "") {
@@ -66,7 +66,7 @@
 
     async function sendCode() {
       const identifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
-      if(!identifier) { showToast("يرجى إدخال اسم المستخدم أو الإيميل.", "error"); return; }
+      if(!identifier) { showToast("يرجى إدخال البريد الالكتروني", "error"); return; }
       
       const btn = document.getElementById('btnSendCode');
       btn.disabled = true; btn.textContent = "جاري الإرسال...";
