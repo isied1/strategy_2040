@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>الاستراتيجية الصناعية 2040 - المستخدمين والصلاحيات</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <style>
     :root {
       --bg: #f8fafc; --card: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0;
@@ -96,7 +98,7 @@
           </tr>
         </thead>
         <tbody id="usersBody">
-          <tr><td colspan="5" class="loading-div">⏳ جاري الاتصال بخادم السحابة وجلب سجل الصلاحيات الحالي...</td></tr>
+          <tr><td colspan="5" class="loading-div">⏳ جاري الاتصال بخادم سوبابيس وجلب سجل الصلاحيات الحالي...</td></tr>
         </tbody>
       </table>
     </div>
@@ -108,7 +110,7 @@
       
       <div class="form-grid">
         <div class="form-group"><label>الاسم الكامل للمستخدم</label><input type="text" id="u_name" placeholder="أدخل الاسم الثلاثي المعتمد" /></div>
-        <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="u_email" placeholder="username@industry.om" /></div>
+        <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="u_email" placeholder="username@domain.com" /></div>
         <div class="form-group"><label>الرتبة الممنوحة (الدور)</label>
           <select id="u_role">
             <option value="viewer">مشاهدة واطلاع فقط (Viewer)</option>
@@ -137,37 +139,77 @@
   </div>
 
   <script>
-    let globalEntities = {}; let allUsers = [];
+    // 1. الاتصال المباشر بسوبابيس
+    const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    window.addEventListener('DOMContentLoaded', () => {
+    let globalEntities = {}; 
+    let allUsers = [];
+
+    // التحقق من الجلسة والصلاحيات عند فتح الصفحة
+    window.onload = async function() {
       try {
-         const stored = localStorage.getItem('industry_user_session');
-         if(stored) {
-             const sessionUser = JSON.parse(stored);
-             document.getElementById('displayUserName').innerText = sessionUser.name;
-         }
-      } catch(e) {}
-    });
+        const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
+        if (!session) { window.location.href = 'login.html'; return; }
 
-    window.onload = function() {
-      google.script.run
-        .withSuccessHandler(function(data) {
-          globalEntities = data.entities; allUsers = data.users; renderUsersTable();
-        })
-        .withFailureHandler(function(err){ alert("فشل جلب البيانات السحابية: " + err); })
-        .getAdminDashboardData();
+        // التحقق من أن المستخدم لديه صلاحية "admin"
+        const { data: profile } = await window.supabaseClient.from('profiles').select('*').eq('email', session.user.email).single();
+        if (!profile || String(profile.role).toLowerCase().trim() !== 'admin') {
+          alert('عذراً، هذه الصفحة مخصصة لمدراء النظام فقط.');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        document.getElementById('displayUserName').innerText = profile.name || session.user.email;
+        fetchAdminData();
+      } catch(e) {
+        window.location.href = 'login.html';
+      }
     };
 
-    function goToDashboard() { google.script.run.withSuccessHandler(function(url) { window.open(url, "_top"); }).getScriptUrl(); }
-    function logoutUser() { localStorage.removeItem('industry_user_session'); goToDashboard(); }
+    function goToDashboard() { window.location.href = 'index.html'; }
+    async function logoutUser() { 
+      await window.supabaseClient.auth.signOut();
+      localStorage.removeItem('last_activity_time');
+      window.location.href = 'login.html'; 
+    }
 
     function showToast(msg) { const t = document.getElementById("toast"); t.innerText = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 3000); }
+    function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
+
+    // جلب البيانات من الجداول
+    async function fetchAdminData() {
+      document.getElementById("usersBody").innerHTML = '<tr><td colspan="5" class="loading-div">⏳ جاري الاتصال بخادم سوبابيس وجلب سجل الصلاحيات الحالي...</td></tr>';
+      
+      // جلب جميع المستخدمين من جدول profiles
+      const { data: usersData, error: usersError } = await window.supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+      if (usersError) { alert("خطأ في جلب بيانات المستخدمين: " + usersError.message); return; }
+      allUsers = usersData || [];
+
+      // جلب المبادرات والجهات لتجميع القوائم
+      const { data: initData, error: initError } = await window.supabaseClient.from('initiatives').select('initiative_number, initiative_name, executing_entity');
+      if (initError) { alert("خطأ في جلب المبادرات: " + initError.message); return; }
+
+      globalEntities = {};
+      (initData || []).forEach(item => {
+         const entity = item.executing_entity || 'جهة غير محددة';
+         if (!globalEntities[entity]) globalEntities[entity] = [];
+         if (item.initiative_number && item.initiative_name) {
+             globalEntities[entity].push({ no: item.initiative_number, name: item.initiative_name });
+         }
+      });
+
+      renderUsersTable();
+    }
 
     function renderUsersTable() {
       const tbody = document.getElementById("usersBody"); tbody.innerHTML = "";
       if(allUsers.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted)">لا يوجد أي مستخدمين مسجلين حالياً.</td></tr>'; return; }
+      
       allUsers.forEach((u, index) => {
-        let allowedDisplay = u.allowedInitiatives ? u.allowedInitiatives : "وصول كامل لكافة المبادرات بالنظام";
+        // مطابقة الحقول مع جدول profiles الجديد (allowed_initiatives بدلا من allowedInitiatives)
+        let allowedDisplay = u.allowed_initiatives ? u.allowed_initiatives : "وصول كامل لكافة المبادرات بالنظام";
         if(allowedDisplay.length > 55) allowedDisplay = allowedDisplay.substring(0, 55) + "...";
         let roleClass = u.role === 'admin' ? 'admin' : (u.role === 'editor' ? 'editor' : 'viewer');
         let roleText = u.role === 'admin' ? 'مدير نظام' : (u.role === 'editor' ? 'صلاحية تعديل' : 'صلاحية مشاهدة');
@@ -182,8 +224,6 @@
       });
     }
 
-    function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
-
     function openModal() {
       document.getElementById("u_name").value = ""; document.getElementById("u_email").value = ""; document.getElementById("u_role").value = "viewer";
       document.getElementById("u_email").disabled = false; document.getElementById("u_email").dataset.oldEmail = ""; document.getElementById("modalTitle").innerText = "إضافة مستخدم جديد";
@@ -191,9 +231,16 @@
     }
 
     function editUser(index) {
-      const u = allUsers[index]; document.getElementById("u_name").value = u.name; document.getElementById("u_email").value = u.email; document.getElementById("u_role").value = u.role;
-      document.getElementById("u_email").disabled = false; document.getElementById("u_email").dataset.oldEmail = u.email; document.getElementById("modalTitle").innerText = "إدارة الصلاحيات";
-      let assignedArr = u.allowedInitiatives ? u.allowedInitiatives.split(",").map(s => s.trim()) : []; buildDualLists(assignedArr); document.getElementById("userModal").classList.add("show");
+      const u = allUsers[index]; 
+      document.getElementById("u_name").value = u.name; 
+      document.getElementById("u_email").value = u.email; 
+      document.getElementById("u_role").value = u.role;
+      // منع تغيير الإيميل عند التعديل لأنه المعرف الرئيسي (Primary Key)
+      document.getElementById("u_email").disabled = true; 
+      document.getElementById("modalTitle").innerText = "إدارة الصلاحيات";
+      let assignedArr = u.allowed_initiatives ? u.allowed_initiatives.split(",").map(s => s.trim()) : []; 
+      buildDualLists(assignedArr); 
+      document.getElementById("userModal").classList.add("show");
     }
 
     function closeModal() { document.getElementById("userModal").classList.remove("show"); }
@@ -204,8 +251,12 @@
       for (const [entityName, initiatives] of Object.entries(globalEntities)) {
         let optGroup = document.createElement("optgroup"); optGroup.label = entityName; let groupHasOptions = false;
         initiatives.forEach(init => {
-          if (!assignedIdsArray.includes(init.no)) { let opt = document.createElement("option"); opt.value = init.no; opt.text = `مبادرة رقم ${init.no} - ${init.name}`; optGroup.appendChild(opt); groupHasOptions = true; } 
-          else { let opt = document.createElement("option"); opt.value = init.no; opt.text = `[${entityName}] رقم ${init.no} - ${init.name}`; assignedSel.appendChild(opt); }
+          if (!assignedIdsArray.includes(init.no.toString())) { 
+            let opt = document.createElement("option"); opt.value = init.no; opt.text = `مبادرة رقم ${init.no} - ${init.name}`; optGroup.appendChild(opt); groupHasOptions = true; 
+          } 
+          else { 
+            let opt = document.createElement("option"); opt.value = init.no; opt.text = `[${entityName}] رقم ${init.no} - ${init.name}`; assignedSel.appendChild(opt); 
+          }
         });
         if (groupHasOptions) availableSel.appendChild(optGroup);
       }
@@ -220,21 +271,42 @@
     }
 
     function moveAllItems(direction) {
-      if (direction === 'to-left') { let allIds = []; for (const initiatives of Object.values(globalEntities)) { initiatives.forEach(init => allIds.push(init.no)); } buildDualLists(allIds); } 
+      if (direction === 'to-left') { let allIds = []; for (const initiatives of Object.values(globalEntities)) { initiatives.forEach(init => allIds.push(init.no.toString())); } buildDualLists(allIds); } 
       else if (direction === 'to-right') { buildDualLists([]); }
     }
 
-    function saveUser() {
-      const btn = document.getElementById("btnSave"); const email = document.getElementById("u_email").value.trim(); const oldEmail = document.getElementById("u_email").dataset.oldEmail; const name = document.getElementById("u_name").value.trim(); const role = document.getElementById("u_role").value;
+    async function saveUser() {
+      const btn = document.getElementById("btnSave"); 
+      const email = document.getElementById("u_email").value.trim().toLowerCase(); 
+      const name = document.getElementById("u_name").value.trim(); 
+      const role = document.getElementById("u_role").value;
+      
       if(!email || !name) { alert("يرجى ملء جميع الحقول."); return; }
-      const assignedOptions = document.getElementById("assigned-list").options; let allowedInitiativesIds = Array.from(assignedOptions).map(o => o.value).join(",");
-      const payload = { originalEmail: oldEmail || email, email: email, name: name, role: role, allowedInitiatives: allowedInitiativesIds };
-      btn.disabled = true; btn.innerText = "جاري الاتصال بقاعدة البيانات وحفظ البيانات...";
-      google.script.run.withSuccessHandler(function(res) {
-          btn.disabled = false; btn.innerText = "حفظ وتطبيق الصلاحيات 💾";
-          if(res.success) { showToast(res.message); closeModal(); google.script.run.withSuccessHandler(function(data) { globalEntities = data.entities; allUsers = data.users; renderUsersTable(); }).getAdminDashboardData(); } 
-          else { alert("حدث خطأ من جهة الخادم: " + res.message); }
-      }).withFailureHandler(function(err){ btn.disabled = false; btn.innerText = "حفظ وتطبيق الصلاحيات 💾"; alert("فشل الاتصال البرمجي: " + err); }).saveUserAccessData(payload);
+      
+      const assignedOptions = document.getElementById("assigned-list").options; 
+      let allowedInitiativesIds = Array.from(assignedOptions).map(o => o.value).join(",");
+      
+      btn.disabled = true; btn.innerText = "جاري الحفظ بالسحابة...";
+      
+      const payload = { 
+        email: email, 
+        name: name, 
+        role: role, 
+        allowed_initiatives: allowedInitiativesIds 
+      };
+
+      // استخدام upsert لإضافة مستخدم جديد أو تحديث الحالي (بناءً على الإيميل)
+      const { data, error } = await window.supabaseClient.from('profiles').upsert(payload, { onConflict: 'email' });
+
+      btn.disabled = false; btn.innerText = "حفظ وتطبيق الصلاحيات 💾";
+
+      if (error) {
+        alert("حدث خطأ في الحفظ: " + error.message);
+      } else {
+        showToast("✅ تم حفظ المستخدم والصلاحيات بنجاح!");
+        closeModal();
+        fetchAdminData();
+      }
     }
   </script>
 </body>
