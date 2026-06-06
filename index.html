@@ -349,12 +349,29 @@ async function fetchUserProfile(email) {
       fetchCloudData();
     }
 
-    async function fetchCloudData() {
+async function fetchCloudData() {
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
+      
       const { data, error } = await window.supabaseClient.from('initiatives').select('*').order('created_at', { ascending: true });
-      if (error) { showToast("فشل جلب البيانات: " + error.message, "error"); } 
-      else { document.getElementById('loading').classList.add('hidden'); document.getElementById('dashboardContent').classList.remove('hidden'); initiatives = data || []; calculateAndRenderDashboard(); }
+      
+      if (error) { 
+        showToast("فشل جلب البيانات: " + error.message, "error"); 
+      } else { 
+        document.getElementById('loading').classList.add('hidden'); 
+        document.getElementById('dashboardContent').classList.remove('hidden'); 
+        
+        let rawInitiatives = data || [];
+
+        // 🌟 فلتر الصلاحيات: حجب المبادرات غير المصرح بها
+        if (currentUser.role !== 'admin' && currentUser.allowed_initiatives && currentUser.allowed_initiatives.trim() !== '') {
+           const allowedIds = currentUser.allowed_initiatives.split(',').map(s => s.trim());
+           rawInitiatives = rawInitiatives.filter(item => allowedIds.includes(String(item.initiative_number).trim()));
+        }
+
+        initiatives = rawInitiatives; 
+        calculateAndRenderDashboard(); 
+      }
     }
 
     const programTitles = { 'ابتكار صناعات جديدة وذات تكنولوجيا متقدمة': 'البرنامج الأول: ابتكار صناعات جديدة وذات تكنولوجيا متقدمة', 'ريادة الاعمال والابتكار': 'البرنامج الثاني: ريادة الأعمال والابتكار', 'التطوير والتحديث': 'البرنامج الثالث: التطوير والتحديث', 'الحوكمة وإدارة التنمية الصناعية': 'البرنامج الرابع: الحوكمة وإدارة التنمية الصناعية' };
