@@ -457,7 +457,7 @@ async function fetchUserProfile(email) {
        else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-    async function loadAllDataFromServer() {
+async function loadAllDataFromServer() {
       showToast("⏳ جاري جلب البيانات السحابية...");
       try {
         const { data: initData, error: initError } = await window.supabaseClient.from('initiatives').select('*').order('initiative_number', { ascending: true });
@@ -469,7 +469,15 @@ async function fetchUserProfile(email) {
           entitiesList = uniqueEntities.map((name, index) => ({ id: index, name: name, contact: "—", phone: "—", email: "—" }));
         } else { entitiesList = entData || []; }
 
-        initiatives = (initData || []).map(item => {
+        let rawInitiatives = initData || [];
+
+        // 🌟 فلتر الصلاحيات: تصفية المبادرات قبل تحويلها لبطاقات
+        if (currentUser.role !== 'admin' && currentUser.allowed_initiatives && currentUser.allowed_initiatives.trim() !== '') {
+           const allowedIds = currentUser.allowed_initiatives.split(',').map(s => s.trim());
+           rawInitiatives = rawInitiatives.filter(item => allowedIds.includes(String(item.initiative_number).trim()));
+        }
+
+        initiatives = rawInitiatives.map(item => {
           let parsedGoals = []; if(item.goals) { parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean); }
           let parsedKpis = []; if(item.kpis) { parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean); }
           
@@ -518,7 +526,7 @@ async function fetchUserProfile(email) {
             lastEditor: item.last_modified_by || "النظام",
             lastEditDate: item.last_modified_date ? new Date(item.last_modified_date).toLocaleDateString('ar-OM') : "—",
             goals: parsedGoals, indicators: parsedKpis, actionPlan: parsedPlan,
-            plan3FeetFile: item.plan_3feet_file || "" // 🆕 مسار ملف خطة 3feet
+            plan3FeetFile: item.plan_3feet_file || "" 
           };
         });
 
