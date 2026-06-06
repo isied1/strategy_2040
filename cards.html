@@ -350,12 +350,24 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    async function fetchUserProfile(email) {
+async function fetchUserProfile(email) {
       const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
-      if (error || !data) return { email: email, name: email.split('@')[0], role: 'viewer', allowed_initiatives: '' };
-      return { email: data.email, name: data.name || email.split('@')[0], role: String(data.role || 'viewer').toLowerCase().trim(), allowed_initiatives: data.allowed_initiatives || '' };
+      
+      // 🌟 التحديث الأمني: الطرد الفوري لأي شخص يتسلل بدون أن تضيفه الإدارة
+      if (error || !data) {
+         alert("عذراً، حسابك غير مسجل في قائمة الصلاحيات. سيتم إنهاء الجلسة.");
+         await window.supabaseClient.auth.signOut();
+         window.location.href = 'login.html';
+         return null;
+      }
+      
+      return { 
+        email: data.email, 
+        name: data.name || email.split('@')[0], 
+        role: String(data.role || 'viewer').toLowerCase().trim(), 
+        allowed_initiatives: data.allowed_initiatives || '' 
+      };
     }
-
     window.onload = async function() {
       try {
         const { data: { session }, error } = await window.supabaseClient.auth.getSession();
