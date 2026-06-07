@@ -1047,7 +1047,7 @@ async function loadAllDataFromServer() {
 
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
-      const { data: res, error } = await window.supabaseClient.functions.invoke('strategy-chat', { body: payload });
+      const { data: res, error } = await window.supabaseClient.functions.invoke('chat-bot', { body: payload });
 
       document.getElementById(loadingId).remove();
       sendBtn.disabled = false; input.disabled = false; input.focus();
