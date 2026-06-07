@@ -458,7 +458,7 @@ async function fetchUserProfile(email) {
     }
 
 async function loadAllDataFromServer() {
-      showToast("⏳ جاري جلب البيانات السحابية...");
+      showToast("⏳ جاري الاتصال بالخادم ...");
       try {
         const { data: initData, error: initError } = await window.supabaseClient.from('initiatives').select('*').order('initiative_number', { ascending: true });
         if (initError) throw initError;
