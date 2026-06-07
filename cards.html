@@ -267,17 +267,17 @@
     <div class="modal-content" style="max-width: 850px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--soft); padding-bottom:10px; margin-bottom:15px;">
         <h2 style="margin:0; color:#4f46e5; font-size:19px; display:flex; align-items:center; gap:8px;">
-          <span>🤖</span> المستشار الاستراتيجي المدعوم بالذكاء الاصطناعي
+          <span>🤖</span> المستشار الاستراتيجي
         </h2>
       </div>
       <div id="aiLoading" style="text-align:center; padding:50px 20px; color:var(--brand2); font-weight:bold; display:none;">
         <div style="font-size:45px; margin-bottom:15px; animation: pulse 1.5s infinite;">🧠</div>
-        جاري تحليل المبادرة، واستشراف الموقف التنفيذي الحقيقي... <br>
-        <span style="font-size:12px; color:var(--muted); font-weight:normal;">(يرجى الانتظار بضع ثوانٍ)</span>
+        جاري تحليل المبادرة... <br>
+        <span style="font-size:12px; color:var(--muted); font-weight:normal;">(يرجى الانتظار بضع دقائق)</span>
       </div>
       <div id="aiResponseContent" style="display:none; line-height:1.8; color:var(--ink); font-size:14.5px; padding:10px;"></div>
       <div style="text-align:left; margin-top:24px; padding-top:15px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;">
-         <button id="btnDownloadCardWord" class="btn-primary" style="background:#16a34a; padding:8px 24px; display:none;" onclick="downloadModalAsWord('aiResponseContent', 'تقرير_المبادرة_الذكية')">تحميل التقرير (Word) 📝</button>
+         <button id="btnDownloadCardWord" class="btn-primary" style="background:#16a34a; padding:8px 24px; display:none;" onclick="downloadModalAsWord('aiResponseContent', 'تقرير_تحليل_المبادرة')">تحميل التقرير (Word) 📝</button>
          <button class="btn-primary" style="background:var(--muted); padding:8px 24px" onclick="document.getElementById('aiModal').classList.remove('show')">إغلاق التقرير</button>
       </div>
     </div>
@@ -998,11 +998,11 @@ async function loadAllDataFromServer() {
 
       loading.style.display = 'none'; content.style.display = 'block';
       if(!error && res.success) {
-        let modelBadge = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">🤖 الذكاء الاصطناعي النشط: <b style="color: var(--brand); font-family: monospace;">Gemini Ultra (Supabase AI Engine)</b></div>`;
+        let modelBadge = `<div style="font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line);">تم انشاء هذا التقرير بواسطة الذكاء الاصطناعي ** <b style="color: var(--brand); font-family: monospace </b></div>`;
         content.innerHTML = modelBadge + res.advice;
         btnDownloadWord.style.display = 'inline-block';
       } else {
-        content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ عذراً، فشل استصدار التقرير السحابي: ${error?.message || res?.error}</div>`;
+        content.innerHTML = `<div style="color:#ef4444; font-weight:bold; text-align:center; padding:20px;">❌ عذراً، فشل استصدار التقرير: ${error?.message || res?.error}</div>`;
       }
     }
 
@@ -1027,7 +1027,7 @@ async function loadAllDataFromServer() {
       input.value = ''; sendBtn.disabled = true; input.disabled = true;
       
       const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص المستندات والبيانات التفصيلية...</div>`;
+      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري الرد...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
 
       let contextData = initiatives.map(item => {
