@@ -114,7 +114,7 @@
   </header>
 
   <div class="shell hidden" id="appContent">
-    <div id="loading" class="panel loading-overlay">⏳ جاري الاتصال بالخادم وجلب أحدث الإحصائيات الحية...</div>
+    <div id="loading" class="panel loading-overlay">⏳ جاري الاتصال بالخادم ...</div>
 
     <div id="dashboardContent" class="hidden" style="display: flex; flex-direction: column; gap: 24px;">
       
@@ -491,7 +491,7 @@ async function sendChatMessage() {
       input.value = ''; sendBtn.disabled = true; input.disabled = true;
       
       const loadingId = 'loading-' + Date.now();
-      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري فحص المستندات والبيانات التفصيلية...</div>`;
+      chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري الرد ...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
 
       // 🌟 التحديث: تضمين كافة الحقول المطلوبة لتغذية الذكاء الاصطناعي
