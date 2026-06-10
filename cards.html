@@ -480,22 +480,24 @@ async function loadAllDataFromServer() {
         initiatives = rawInitiatives.map(item => {
           let parsedGoals = []; if(item.goals) { parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean); }
           let parsedKpis = []; if(item.kpis) { parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean); }
-          
+
           let parsedPlan = []; 
           if(item.action_plan) { 
-            let segments = item.action_plan.split('|').map(s => s.trim()).filter(Boolean);
-            segments.forEach((seg, idx) => {
-              let no = idx + 1;
-              let procedure = seg;
-              let status = ""; 
-              
-              let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
-              if (numMatch) { no = numMatch[1]; procedure = numMatch[2]; }
-              
-              let statMatch = procedure.match(/^(.*)\s*<([^>]+)>\s*$/);
-              if (statMatch) { procedure = statMatch[1].trim(); status = statMatch[2].trim(); }
-              parsedPlan.push({ no: no, procedure: procedure, status: status });
-            });
+            try {
+              // محاولة قراءة البيانات بصيغة JSON (للتوافق مع النظام الجديد)
+              parsedPlan = JSON.parse(item.action_plan);
+            } catch(e) {
+              // دعم الإصدار القديم في حال وجود بيانات سابقة
+              let segments = item.action_plan.split('|').map(s => s.trim()).filter(Boolean);
+              segments.forEach((seg, idx) => {
+                let no = idx + 1; let procedure = seg; let status = "لم تبدأ";
+                let numMatch = seg.match(/^(\d+)\s*-\s*(.*)$/);
+                if (numMatch) { no = numMatch[1]; procedure = numMatch[2]; }
+                let statMatch = procedure.match(/^(.*)\s*<([^>]+)>\s*$/);
+                if (statMatch) { procedure = statMatch[1].trim(); status = statMatch[2].trim(); }
+                parsedPlan.push({ no: no, procedure: procedure, startDate: "", endDate: "", weight: 0, status: status, docPath: "" });
+              });
+            }
           }
 
           return {
@@ -503,6 +505,8 @@ async function loadAllDataFromServer() {
             initiativeNo: item.initiative_number || "—",
             initiativeName: item.initiative_name || "—",
             timeline: item.timeline || "—",
+            fiveYearPrograms: item.five_year_programs || "",
+            fiveYearIndicators: item.five_year_indicators || "",
             completionPercent: item.completion_percentage || 0,
             estimatedBudget: item.estimated_budget || "—",
             remainingAmount: item.remaining_amount || "—",
@@ -728,30 +732,75 @@ async function loadAllDataFromServer() {
                   </div>
                 </div>
 
-                <div class="split-left">
-                  <div class="section"><div class="section-title">خطة العمل / خطوات التنفيذ</div>
-                    <table id="tbl_${item.id}">
-                      <thead><tr><th class="num">#</th><th>إجراء التنفيذ المعتمد</th><th>الموقف الحالي</th><th class="act-cell-remove">إزالة</th></tr></thead>
-                      <tbody>
-                        ${item.actionPlan.length ? item.actionPlan.map(r=>`<tr class="action-row"><td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled>${escapeHtml(r.no)}</textarea></td><td><textarea class="card-control act-proc text" rows="1" disabled>${escapeHtml(r.procedure)}</textarea></td><td><textarea class="card-control act-stat text" rows="1" disabled>${escapeHtml(r.status)}</textarea></td><td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td></tr>`).join('') : `<tr id="empty_tbl_${item.id}"><td colspan="4" class="empty">لا توجد خطوات تنفيذية مدونة</td></tr>`}
-                      </tbody>
-                    </table>
-                    <button type="button" class="btn-circle btn-add-item" onclick="addTableRow('${item.id}', 'empty_tbl_${item.id}')">+</button>
-                  </div>
-                </div>
+<div class="split-left">
+  <div class="section"><div class="section-title">خطة العمل / خطوات التنفيذ</div>
+    <table id="tbl_${item.id}" style="font-size:11px;">
+      <thead>
+        <tr>
+          <th class="num">#</th>
+          <th>الإجراء المعتمد</th>
+          <th style="width:90px;">تاريخ البدء</th>
+          <th style="width:90px;">تاريخ الانتهاء</th>
+          <th style="width:60px;">الوزن %</th>
+          <th style="width:100px;">الموقف الحالي</th>
+          <th style="width:40px;">مستند</th>
+          <th class="act-cell-remove">إزالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${item.actionPlan.length ? item.actionPlan.map((r, idx) => `
+        <tr class="action-row">
+          <td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled>${escapeHtml(r.no)}</textarea></td>
+          <td><textarea class="card-control act-proc text" rows="1" disabled>${escapeHtml(r.procedure)}</textarea></td>
+          <td>
+            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.startDate)}</textarea>
+            <input type="date" class="card-control act-start edit-input" value="${escapeHtml(r.startDate)}" />
+          </td>
+          <td>
+            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.endDate)}</textarea>
+            <input type="date" class="card-control act-end edit-input" value="${escapeHtml(r.endDate)}" />
+          </td>
+          <td><input type="number" min="0" max="100" class="card-control act-weight" value="${r.weight || 0}" disabled style="text-align:center;" /></td>
+          <td>
+            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.status)}</textarea>
+            <select class="card-control act-stat edit-input">
+              <option value="لم تبدأ" ${r.status === 'لم تبدأ' ? 'selected' : ''}>لم تبدأ</option>
+              <option value="قيد التنفيذ" ${r.status === 'قيد التنفيذ' ? 'selected' : ''}>قيد التنفيذ</option>
+              <option value="مكتملة" ${r.status === 'مكتملة' ? 'selected' : ''}>مكتملة</option>
+            </select>
+          </td>
+          <td style="text-align:center; vertical-align:middle;">
+            <input type="hidden" class="step-doc-path" value="${escapeHtml(r.docPath || '')}" id="doc_path_${item.id}_${idx}" />
+            <button type="button" class="btn-review step-doc-btn" style="background:${r.docPath ? '#16a34a' : 'transparent'}; border:1px solid var(--line); color:${r.docPath ? '#fff' : 'var(--muted)'}; padding:4px 6px;" onclick="document.getElementById('file_step_${item.id}_${idx}').click()" title="${r.docPath ? 'مستند مرفق' : 'إرفاق مستند'}">📄</button>
+            <input type="file" id="file_step_${item.id}_${idx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${item.id}', '${idx}')" />
+          </td>
+          <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
+        </tr>`).join('') : `<tr id="empty_tbl_${item.id}"><td colspan="8" class="empty">لا توجد خطوات تنفيذية مدونة</td></tr>`}
+      </tbody>
+    </table>
+    <button type="button" class="btn-circle btn-add-item" onclick="addTableRow('${item.id}', 'empty_tbl_${item.id}')">+</button>
+  </div>
+</div>
               </div> 
             </div>
 
             <div class="block-followup">
               <div class="section grid-info">
                 <div class="info"><span>المديرية / الدائرة المسؤولة عن المبادرة</span><b><textarea id="f_dept_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.responsibleDepartment)}</textarea></b></div>
-                <div class="info"><span>اسم البرنامج</span><b>
-                  <textarea id="f_prog_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.programName)}</textarea>
-                  <select id="f_prog_edit_${item.id}" class="card-control edit-input">
-                    <option value="">تحديد البرنامج...</option>
-                    ${PROGRAM_OPTIONS.map(p => `<option value="${escapeHtml(p)}" ${item.programName === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
-                  </select>
-                </b></div>
+<div class="info"><span>برنامج الاستراتيجية الصناعية 2040</span><b>
+  <textarea id="f_prog_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.programName)}</textarea>
+  <select id="f_prog_edit_${item.id}" class="card-control edit-input">
+    <option value="">تحديد البرنامج...</option>
+    ${PROGRAM_OPTIONS.map(p => `<option value="${escapeHtml(p)}" ${item.programName === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
+  </select>
+</b></div>
+
+<div class="info"><span>ارتباط المبادرة ببرامج الخطة الخمسية</span><b>
+  <textarea id="f_fyp_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.fiveYearPrograms)}</textarea>
+</b></div>
+<div class="info"><span>ارتباط المبادرة بمؤشرات الخطة الخمسية</span><b>
+  <textarea id="f_fyi_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.fiveYearIndicators)}</textarea>
+</b></div>
                 <div class="info"><span>تاريخ البدء</span><b>
                   <textarea id="f_start_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.startDate)}</textarea>
                   <input type="date" id="f_start_edit_${item.id}" class="card-control edit-input" value="${escapeHtml(item.startDate)}" />
@@ -824,17 +873,117 @@ async function loadAllDataFromServer() {
       document.getElementById(containerId).appendChild(li); li.querySelector('textarea').focus();
     }
     
-    function addTableRow(id, emptyId) {
-      const emptyEl = document.getElementById(emptyId); if(emptyEl) emptyEl.remove();
-      const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); const tr = document.createElement('tr'); tr.className = 'action-row';
-      tr.innerHTML = `<td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled></textarea></td><td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)"></textarea></td><td><textarea class="card-control act-stat text" rows="1" oninput="autoResize(this)"></textarea></td><td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>`;
-      tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
-    }
+function addTableRow(id, emptyId) {
+  const emptyEl = document.getElementById(emptyId);
+  if(emptyEl) emptyEl.remove();
+  const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); 
+  const tr = document.createElement('tr'); tr.className = 'action-row';
+  const newIdx = Date.now(); // لإنشاء معرف فريد للملف
+  tr.innerHTML = `
+    <td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled></textarea></td>
+    <td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)"></textarea></td>
+    <td><input type="date" class="card-control act-start edit-input" style="display:block" /></td>
+    <td><input type="date" class="card-control act-end edit-input" style="display:block" /></td>
+    <td><input type="number" min="0" max="100" class="card-control act-weight" style="text-align:center;" value="0" /></td>
+    <td>
+      <select class="card-control act-stat edit-input" style="display:block">
+        <option value="لم تبدأ" selected>لم تبدأ</option>
+        <option value="قيد التنفيذ">قيد التنفيذ</option>
+        <option value="مكتملة">مكتملة</option>
+      </select>
+    </td>
+    <td style="text-align:center; vertical-align:middle;">
+      <input type="hidden" class="step-doc-path" id="doc_path_${id}_${newIdx}" value="" />
+      <button type="button" class="btn-review step-doc-btn" style="background:transparent; border:1px solid var(--line); color:var(--muted); padding:4px 6px;" onclick="document.getElementById('file_step_${id}_${newIdx}').click()" title="إرفاق مستند">📄</button>
+      <input type="file" id="file_step_${id}_${newIdx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${id}', '${newIdx}')" />
+    </td>
+    <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
+  `;
+  tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
+}
 
+    async function uploadStepDoc(event, initiativeId, rowIndexId) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    showToast("حجم الملف يتجاوز 5 ميجابايت!", "error");
+    event.target.value = ''; 
+    return;
+  }
+
+  showToast("⏳ جاري رفع المستند الداعم...", "success");
+  
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `step_doc_${initiativeId}_${Date.now()}.${fileExt}`;
+    
+    // تأكد من إنشاء Bucket في Supabase باسم 'step_documents'
+    const { data, error } = await window.supabaseClient.storage
+      .from('step_documents')
+      .upload(fileName, file, { upsert: true });
+      
+    if (error) throw error;
+
+    // تحديث الحقل المخفي ولون الزر بعد نجاح الرفع
+    document.getElementById(`doc_path_${initiativeId}_${rowIndexId}`).value = data.path;
+    const btn = event.target.previousElementSibling;
+    btn.style.background = "#16a34a";
+    btn.style.color = "#fff";
+    btn.title = "تم إرفاق المستند بنجاح";
+    
+    showToast("✅ تم رفع المستند بنجاح!", "success");
+  } catch (err) {
+    showToast("❌ خطأ في رفع المستند: " + err.message, "error");
+  }
+}
     async function saveInCardEdit(id) {
       const card = document.getElementById(`card-${id}`);
       showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
       try {
+        let planArr = [];
+        let totalWeight = 0;
+        let completedWeight = 0;
+        let hasValidationError = false;
+
+        const rows = card.querySelectorAll('.action-row');
+        rows.forEach((tr, index) => {
+          let no = tr.querySelector('.act-no').value.trim();
+          let procedure = tr.querySelector('.act-proc').value.trim();
+          let startDate = tr.querySelector('.act-start').value;
+          let endDate = tr.querySelector('.act-end').value;
+          let weight = parseFloat(tr.querySelector('.act-weight').value) || 0;
+          let status = tr.querySelector('.act-stat').value;
+          let docPath = tr.querySelector('.step-doc-path').value;
+
+          if (procedure !== "" || status !== "") {
+            totalWeight += weight;
+            if (status === 'مكتملة') {
+              if (!docPath) {
+                alert(`الخطوة الإجرائية رقم (${no || index + 1}) تم تعيينها كـ "مكتملة". يرجى إرفاق المستند الداعم لها أولاً بالضغط على زر المستند.`);
+                hasValidationError = true;
+              }
+              completedWeight += weight;
+            }
+            planArr.push({ no, procedure, startDate, endDate, weight, status, docPath });
+          }
+        });
+
+        if (hasValidationError) {
+          document.getElementById(`btnSave-${id}`).disabled = false;
+          return;
+        }
+
+        if (planArr.length > 0 && totalWeight !== 100) {
+          alert(`تحذير: مجموع أوزان خطوات العمل يجب أن يساوي 100% بالضبط. (المجموع الحالي: ${totalWeight}%)`);
+          document.getElementById(`btnSave-${id}`).disabled = false;
+          return;
+        }
+
+        // احتساب نسبة الإنجاز للمبادرة آلياً بناءً على أوزان الخطوات المكتملة
+        let autoCalculatedPct = planArr.length > 0 ? completedWeight : pctNumber(getVal(`f_pct_${id}`));
+
+        // ... (تكملة الكود لتجميع باقي المتغيرات - payload)
         const goalsArr = Array.from(card.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean);
         const indArr = Array.from(card.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
         const planArr = Array.from(card.querySelectorAll('.action-row')).map(tr => ({ no: tr.querySelector('.act-no').value.trim(), procedure: tr.querySelector('.act-proc').value.trim(), status: tr.querySelector('.act-stat').value.trim() })).filter(r => r.procedure !== "" || r.status !== "");
@@ -857,6 +1006,11 @@ async function loadAllDataFromServer() {
 
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
+          // داخل كائن الـ payload
+          completion_percentage: autoCalculatedPct, // القيمة المحسوبة آلياً
+          action_plan: JSON.stringify(planArr),     // حفظ كـ JSON بدلاً من نص مدمج
+          five_year_programs: getVal(`f_fyp_${id}`),
+          five_year_indicators: getVal(`f_fyi_${id}`),
           initiative_name: getVal(`f_name_${id}`),
           timeline: getVal(`f_time_${id}`),
           completion_percentage: pctNumber(getVal(`f_pct_${id}`)),
