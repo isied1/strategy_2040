@@ -97,10 +97,10 @@
     .info b{font-size:12px;color:#1e293b}
     .grid-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     
-    table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;font-size:12px}
-    th,td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+    table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;font-size:11px}
+    th,td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
     th{background:#f1f5f9;color:#475569;text-align:right;font-weight:bold}
-    .num{width:35px;text-align:center;color:var(--brand2);font-weight:bold}
+    .num{width:30px;text-align:center;color:var(--brand2);font-weight:bold}
     .empty{color:var(--muted);background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:10px;text-align:center;font-size:12px}
     .hidden{display:none!important}
 
@@ -111,7 +111,7 @@
     .edit-input { display: none; }
     .card.mode-edit .text-view.togglable { display: none !important; }
     .card.mode-edit .edit-input:not(.multi-select-container) { display: block; border: 1px dashed var(--brand); background: #f8fafc; padding: 6px; border-radius: 6px; width: 100%; font-family: inherit; font-size: 13px; color: var(--ink); }
-    .card.mode-edit input[type="date"].edit-input { height: 35px; }
+    .card.mode-edit input[type="date"].edit-input, .card.mode-edit select.edit-input, .card.mode-edit input[type="number"].edit-input { height: 35px; padding:4px;}
     
     .card.mode-edit .multi-select-container.edit-input { display: block; border: none; padding: 0; background: transparent; overflow: visible; }
     .multi-select-container { position: relative; width: 100%; overflow: visible; }
@@ -151,7 +151,6 @@
     .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
     .form-grid label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: var(--brand2); }
 
-    /* حركات وتأثيرات الشات والدماغ */
     @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
 
     .chat-fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; transition: transform 0.2s; border: none; }
@@ -221,7 +220,7 @@
         </div>
         <div class="search-select">
           <select id="programSelect" class="search-select-input">
-            <option value="">كل البرامج</option>
+            <option value="">برنامج الاستراتيجية الصناعية 2040 (الكل)</option>
             <option value="ابتكار صناعات جديدة وذات تكنولوجيا متقدمة">ابتكار صناعات جديدة وذات تكنولوجيا متقدمة</option>
             <option value="ريادة الاعمال والابتكار">ريادة الاعمال والابتكار</option>
             <option value="التطوير والتحديث">التطوير والتحديث</option>
@@ -240,7 +239,7 @@
           </button>
           
           <button onclick="goToDashboard()" class="btn-menu" title="الصفحة الرئيسية (لوحة المؤشرات)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           </button>
           
           <div class="dropdown">
@@ -312,7 +311,6 @@
     let isListView = false;
     let chatHistoryLog = [];
 
-    // ----- 🛡️ نظام إدارة الجلسة والنشاط (الخروج التلقائي بعد 30 دقيقة) -----
     const INACTIVITY_LIMIT = 30 * 60 * 1000; 
     
     function resetActivityTimer() { localStorage.setItem('last_activity_time', Date.now()); }
@@ -337,7 +335,7 @@
       viewToggleBtn: document.getElementById('viewToggleBtn'), statInitiatives: document.getElementById('statInitiatives'),
       statEntities: document.getElementById('statEntities'), statAvg: document.getElementById('statAvg')
     };
-    
+
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function normalizeForCompare(v){ return String(v ?? '').replace(/\s+/g,' ').trim().replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ًٌٍَُِّْـ]/g,'').toLowerCase(); }
     function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
@@ -350,17 +348,14 @@
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-async function fetchUserProfile(email) {
+    async function fetchUserProfile(email) {
       const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
-      
-      // 🌟 التحديث الأمني: الطرد الفوري لأي شخص يتسلل بدون أن تضيفه الإدارة
       if (error || !data) {
          alert("عذراً، حسابك غير مسجل في قائمة الصلاحيات. سيتم إنهاء الجلسة.");
          await window.supabaseClient.auth.signOut();
          window.location.href = 'login.html';
          return null;
       }
-      
       return { 
         email: data.email, 
         name: data.name || email.split('@')[0], 
@@ -368,6 +363,7 @@ async function fetchUserProfile(email) {
         allowed_initiatives: data.allowed_initiatives || '' 
       };
     }
+
     window.onload = async function() {
       try {
         const { data: { session }, error } = await window.supabaseClient.auth.getSession();
@@ -395,7 +391,6 @@ async function fetchUserProfile(email) {
       document.getElementById('appHeader').classList.remove('hidden'); 
       document.getElementById('appContent').classList.remove('hidden');
       document.getElementById('displayUserName').textContent = currentUser.name;
-      
       if (currentUser.role === 'admin') {
         document.getElementById('displayUserRole').textContent = 'مدير النظام'; 
         document.getElementById('displayUserName').style.cursor = 'pointer';
@@ -447,7 +442,6 @@ async function fetchUserProfile(email) {
        const email = document.getElementById('ent_email').value.trim();
        if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
        showToast("⏳ جاري الحفظ...");
-       
        const payload = { name, contact, phone, email };
        let result;
        if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
@@ -457,7 +451,7 @@ async function fetchUserProfile(email) {
        else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
     }
 
-async function loadAllDataFromServer() {
+    async function loadAllDataFromServer() {
       showToast("⏳ جاري الاتصال بالخادم ...");
       try {
         const { data: initData, error: initError } = await window.supabaseClient.from('initiatives').select('*').order('initiative_number', { ascending: true });
@@ -471,7 +465,6 @@ async function loadAllDataFromServer() {
 
         let rawInitiatives = initData || [];
 
-        // 🌟 فلتر الصلاحيات: تصفية المبادرات قبل تحويلها لبطاقات
         if (currentUser.role !== 'admin' && currentUser.allowed_initiatives && currentUser.allowed_initiatives.trim() !== '') {
            const allowedIds = currentUser.allowed_initiatives.split(',').map(s => s.trim());
            rawInitiatives = rawInitiatives.filter(item => allowedIds.includes(String(item.initiative_number).trim()));
@@ -480,14 +473,12 @@ async function loadAllDataFromServer() {
         initiatives = rawInitiatives.map(item => {
           let parsedGoals = []; if(item.goals) { parsedGoals = item.goals.split('|').map(g => g.trim()).filter(Boolean); }
           let parsedKpis = []; if(item.kpis) { parsedKpis = item.kpis.split('|').map(k => k.trim()).filter(Boolean); }
-
+          
           let parsedPlan = []; 
           if(item.action_plan) { 
             try {
-              // محاولة قراءة البيانات بصيغة JSON (للتوافق مع النظام الجديد)
               parsedPlan = JSON.parse(item.action_plan);
             } catch(e) {
-              // دعم الإصدار القديم في حال وجود بيانات سابقة
               let segments = item.action_plan.split('|').map(s => s.trim()).filter(Boolean);
               segments.forEach((seg, idx) => {
                 let no = idx + 1; let procedure = seg; let status = "لم تبدأ";
@@ -505,8 +496,6 @@ async function loadAllDataFromServer() {
             initiativeNo: item.initiative_number || "—",
             initiativeName: item.initiative_name || "—",
             timeline: item.timeline || "—",
-            fiveYearPrograms: item.five_year_programs || "",
-            fiveYearIndicators: item.five_year_indicators || "",
             completionPercent: item.completion_percentage || 0,
             estimatedBudget: item.estimated_budget || "—",
             remainingAmount: item.remaining_amount || "—",
@@ -515,6 +504,8 @@ async function loadAllDataFromServer() {
             supportingEntity: item.supporting_entity || "—",
             responsibleDepartment: item.responsible_directorate || "—",
             programName: item.program_name || "—",
+            fiveYearPrograms: item.five_year_programs || "",
+            fiveYearIndicators: item.five_year_indicators || "",
             startDate: item.start_date || "",
             endDate: item.end_date || "",
             status: item.status || "لم تبدأ",
@@ -557,7 +548,43 @@ async function loadAllDataFromServer() {
       return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
     }
 
-// 🌟 رفع ملف 3feet Plan مع حذف الملف القديم إن وجد
+    async function uploadStepDoc(event, initiativeId, rowIndexId) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("حجم الملف يتجاوز 5 ميجابايت!", "error");
+        event.target.value = '';
+        return;
+      }
+
+      showToast("⏳ جاري رفع المستند الداعم...", "success");
+      const btn = event.target.previousElementSibling;
+      const oldColor = btn.style.color;
+      btn.style.color = "orange";
+
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `step_doc_${initiativeId}_${Date.now()}.${fileExt}`;
+
+        const { data, error } = await window.supabaseClient.storage
+          .from('step_documents')
+          .upload(fileName, file, { upsert: true });
+
+        if (error) throw error;
+
+        document.getElementById(`doc_path_${initiativeId}_${rowIndexId}`).value = data.path;
+        btn.style.background = "#16a34a";
+        btn.style.color = "#fff";
+        btn.title = "تم إرفاق المستند بنجاح";
+
+        showToast("✅ تم رفع المستند بنجاح!", "success");
+      } catch (err) {
+        btn.style.color = oldColor;
+        showToast("❌ خطأ في رفع المستند: " + err.message, "error");
+      }
+    }
+
     async function upload3FeetPlan(event, id) {
       const file = event.target.files[0];
       if (!file) return;
@@ -581,24 +608,20 @@ async function loadAllDataFromServer() {
       btn.disabled = true;
 
       try {
-        // 1. فحص وجود ملف قديم وحذفه من سوبابيس لتوفير المساحة
         const oldPath = document.getElementById(`f_plan_file_${id}`).value;
         if (oldPath && oldPath !== "—" && oldPath.trim() !== "") {
            await window.supabaseClient.storage.from('3feet_plans').remove([oldPath]);
         }
 
-        // 2. رفع الملف الجديد باسم فريد
         const fileExt = file.name.split('.').pop();
         const fileName = `plan_${id}_${Date.now()}.${fileExt}`;
         
         const { data, error } = await window.supabaseClient.storage
           .from('3feet_plans')
           .upload(fileName, file, { upsert: true });
-
         if (error) throw error;
 
         document.getElementById(`f_plan_file_${id}`).value = data.path;
-        
         showToast("✅ تم رفع الملف واستبدال القديم! اضغط حفظ التعديلات.", "success");
         btn.textContent = "تم الرفع (تحديث مجدداً) ✅";
         btn.style.background = "#16a34a";
@@ -610,7 +633,6 @@ async function loadAllDataFromServer() {
       }
     }
 
-    // 🌟 التحميل المباشر والإجباري لملف 3feet Plan
     async function download3FeetPlan(id) {
        const path = document.getElementById(`f_plan_file_${id}`).value;
        if (!path || path === "—" || path.trim() === "") {
@@ -619,25 +641,20 @@ async function loadAllDataFromServer() {
        }
 
        showToast("⏳ جاري تحميل الملف ...");
-       
-       // استخدام دالة download لسحب الملف كبيانات مباشرة بدلاً من فتح رابط
        const { data, error } = await window.supabaseClient.storage.from('3feet_plans').download(path);
-       
        if (error || !data) {
          showToast("❌ تعذر تحميل الملف.", "error");
          return;
        }
 
-       // إنشاء رابط وهمي وإجبار المتصفح على تنزيله فوراً
        const url = URL.createObjectURL(data);
        const a = document.createElement('a');
        a.href = url;
-       // استخراج اسم الملف الأصلي بصيغته
        a.download = path.split('/').pop() || `3feet_plan_${id}.xlsx`; 
        document.body.appendChild(a);
        a.click();
        document.body.removeChild(a);
-       URL.revokeObjectURL(url); // تنظيف الذاكرة
+       URL.revokeObjectURL(url);
        showToast("✅ تم تحميل الملف بنجاح!", "success");
     }
 
@@ -658,7 +675,6 @@ async function loadAllDataFromServer() {
         
         const checkBoxesHeadHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_head_${item.id}', 'exec_disp_head_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
         const checkBoxesBodyHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown_body_${item.id}', 'exec_disp_body_${item.id}')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
-        
         return `<article class="card" id="card-${item.id}">
           <div class="card-head">
             <div class="topline">
@@ -681,7 +697,7 @@ async function loadAllDataFromServer() {
             
             <div class="meta">
               <div class="mini"><span>الخطة الزمنية</span><b><textarea id="f_time_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.timeline)}</textarea></b></div>
-              <div class="mini"><span>نسبة التنفيذ</span><b><textarea id="f_pct_${item.id}" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
+              <div class="mini"><span>نسبة التنفيذ (محسوبة آلياً)</span><b><textarea id="f_pct_${item.id}" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
               <div class="mini"><span>الموازنة التقديرية</span><b><textarea id="f_budg_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
               <div class="mini"><span>المبلغ المتبقي</span><b><textarea id="f_rem_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
               
@@ -732,75 +748,79 @@ async function loadAllDataFromServer() {
                   </div>
                 </div>
 
-<div class="split-left">
-  <div class="section"><div class="section-title">خطة العمل / خطوات التنفيذ</div>
-    <table id="tbl_${item.id}" style="font-size:11px;">
-      <thead>
-        <tr>
-          <th class="num">#</th>
-          <th>الإجراء المعتمد</th>
-          <th style="width:90px;">تاريخ البدء</th>
-          <th style="width:90px;">تاريخ الانتهاء</th>
-          <th style="width:60px;">الوزن %</th>
-          <th style="width:100px;">الموقف الحالي</th>
-          <th style="width:40px;">مستند</th>
-          <th class="act-cell-remove">إزالة</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${item.actionPlan.length ? item.actionPlan.map((r, idx) => `
-        <tr class="action-row">
-          <td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled>${escapeHtml(r.no)}</textarea></td>
-          <td><textarea class="card-control act-proc text" rows="1" disabled>${escapeHtml(r.procedure)}</textarea></td>
-          <td>
-            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.startDate)}</textarea>
-            <input type="date" class="card-control act-start edit-input" value="${escapeHtml(r.startDate)}" />
-          </td>
-          <td>
-            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.endDate)}</textarea>
-            <input type="date" class="card-control act-end edit-input" value="${escapeHtml(r.endDate)}" />
-          </td>
-          <td><input type="number" min="0" max="100" class="card-control act-weight" value="${r.weight || 0}" disabled style="text-align:center;" /></td>
-          <td>
-            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.status)}</textarea>
-            <select class="card-control act-stat edit-input">
-              <option value="لم تبدأ" ${r.status === 'لم تبدأ' ? 'selected' : ''}>لم تبدأ</option>
-              <option value="قيد التنفيذ" ${r.status === 'قيد التنفيذ' ? 'selected' : ''}>قيد التنفيذ</option>
-              <option value="مكتملة" ${r.status === 'مكتملة' ? 'selected' : ''}>مكتملة</option>
-            </select>
-          </td>
-          <td style="text-align:center; vertical-align:middle;">
-            <input type="hidden" class="step-doc-path" value="${escapeHtml(r.docPath || '')}" id="doc_path_${item.id}_${idx}" />
-            <button type="button" class="btn-review step-doc-btn" style="background:${r.docPath ? '#16a34a' : 'transparent'}; border:1px solid var(--line); color:${r.docPath ? '#fff' : 'var(--muted)'}; padding:4px 6px;" onclick="document.getElementById('file_step_${item.id}_${idx}').click()" title="${r.docPath ? 'مستند مرفق' : 'إرفاق مستند'}">📄</button>
-            <input type="file" id="file_step_${item.id}_${idx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${item.id}', '${idx}')" />
-          </td>
-          <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
-        </tr>`).join('') : `<tr id="empty_tbl_${item.id}"><td colspan="8" class="empty">لا توجد خطوات تنفيذية مدونة</td></tr>`}
-      </tbody>
-    </table>
-    <button type="button" class="btn-circle btn-add-item" onclick="addTableRow('${item.id}', 'empty_tbl_${item.id}')">+</button>
-  </div>
-</div>
+                <div class="split-left">
+                  <div class="section"><div class="section-title">خطة العمل / خطوات التنفيذ</div>
+                    <table id="tbl_${item.id}">
+                      <thead>
+                        <tr>
+                          <th class="num">#</th>
+                          <th>الإجراء المعتمد</th>
+                          <th style="width:90px;">تاريخ البدء</th>
+                          <th style="width:90px;">تاريخ الانتهاء</th>
+                          <th style="width:60px;">الوزن %</th>
+                          <th style="width:95px;">الموقف الحالي</th>
+                          <th style="width:40px; text-align:center;">مستند</th>
+                          <th class="act-cell-remove">إزالة</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${item.actionPlan.length ? item.actionPlan.map((r, idx) => `
+                        <tr class="action-row">
+                          <td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled>${escapeHtml(r.no)}</textarea></td>
+                          <td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)" disabled>${escapeHtml(r.procedure)}</textarea></td>
+                          <td>
+                            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.startDate)}</textarea>
+                            <input type="date" class="card-control act-start edit-input" value="${escapeHtml(r.startDate)}" />
+                          </td>
+                          <td>
+                            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.endDate)}</textarea>
+                            <input type="date" class="card-control act-end edit-input" value="${escapeHtml(r.endDate)}" />
+                          </td>
+                          <td>
+                            <textarea class="card-control text-view togglable" rows="1" style="text-align:center;" disabled>${escapeHtml(r.weight)}</textarea>
+                            <input type="number" min="0" max="100" class="card-control act-weight edit-input" value="${r.weight || 0}" style="text-align:center;" />
+                          </td>
+                          <td>
+                            <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.status)}</textarea>
+                            <select class="card-control act-stat edit-input">
+                              <option value="لم تبدأ" ${r.status === 'لم تبدأ' ? 'selected' : ''}>لم تبدأ</option>
+                              <option value="قيد التنفيذ" ${r.status === 'قيد التنفيذ' ? 'selected' : ''}>قيد التنفيذ</option>
+                              <option value="مكتملة" ${r.status === 'مكتملة' ? 'selected' : ''}>مكتملة</option>
+                            </select>
+                          </td>
+                          <td style="text-align:center; vertical-align:middle;">
+                            <input type="hidden" class="step-doc-path" value="${escapeHtml(r.docPath || '')}" id="doc_path_${item.id}_${idx}" />
+                            <a class="text-view togglable" href="${r.docPath ? 'https://ictyhtprnmfewjrlrctg.supabase.co/storage/v1/object/public/step_documents/' + r.docPath : '#'}" target="_blank" style="text-decoration:none; display:${r.docPath ? 'inline-block' : 'none'}; font-size:16px;" title="عرض المستند">📄</a>
+                            <button type="button" class="btn-review step-doc-btn edit-input" style="background:${r.docPath ? '#16a34a' : 'transparent'}; border:1px solid var(--line); color:${r.docPath ? '#fff' : 'var(--muted)'}; padding:4px 6px; font-size:14px; margin: 0 auto;" onclick="document.getElementById('file_step_${item.id}_${idx}').click()" title="${r.docPath ? 'استبدال المستند' : 'إرفاق مستند'}">📄</button>
+                            <input type="file" id="file_step_${item.id}_${idx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${item.id}', '${idx}')" />
+                          </td>
+                          <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
+                        </tr>`).join('') : `<tr id="empty_tbl_${item.id}"><td colspan="8" class="empty">لا توجد خطوات تنفيذية مدونة</td></tr>`}
+                      </tbody>
+                    </table>
+                    <button type="button" class="btn-circle btn-add-item" onclick="addTableRow('${item.id}', 'empty_tbl_${item.id}')">+</button>
+                  </div>
+                </div>
               </div> 
             </div>
 
             <div class="block-followup">
               <div class="section grid-info">
                 <div class="info"><span>المديرية / الدائرة المسؤولة عن المبادرة</span><b><textarea id="f_dept_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.responsibleDepartment)}</textarea></b></div>
-<div class="info"><span>برنامج الاستراتيجية الصناعية 2040</span><b>
-  <textarea id="f_prog_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.programName)}</textarea>
-  <select id="f_prog_edit_${item.id}" class="card-control edit-input">
-    <option value="">تحديد البرنامج...</option>
-    ${PROGRAM_OPTIONS.map(p => `<option value="${escapeHtml(p)}" ${item.programName === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
-  </select>
-</b></div>
+                <div class="info"><span>برنامج الاستراتيجية الصناعية 2040</span><b>
+                  <textarea id="f_prog_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.programName)}</textarea>
+                  <select id="f_prog_edit_${item.id}" class="card-control edit-input">
+                    <option value="">تحديد البرنامج...</option>
+                    ${PROGRAM_OPTIONS.map(p => `<option value="${escapeHtml(p)}" ${item.programName === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
+                  </select>
+                </b></div>
+                <div class="info"><span>ارتباط المبادرة ببرامج الخطة الخمسية</span><b>
+                  <textarea id="f_fyp_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.fiveYearPrograms)}</textarea>
+                </b></div>
+                <div class="info"><span>ارتباط المبادرة بمؤشرات الخطة الخمسية</span><b>
+                  <textarea id="f_fyi_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.fiveYearIndicators)}</textarea>
+                </b></div>
 
-<div class="info"><span>ارتباط المبادرة ببرامج الخطة الخمسية</span><b>
-  <textarea id="f_fyp_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.fiveYearPrograms)}</textarea>
-</b></div>
-<div class="info"><span>ارتباط المبادرة بمؤشرات الخطة الخمسية</span><b>
-  <textarea id="f_fyi_${item.id}" class="card-control" rows="1" disabled>${escapeHtml(item.fiveYearIndicators)}</textarea>
-</b></div>
                 <div class="info"><span>تاريخ البدء</span><b>
                   <textarea id="f_start_${item.id}" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.startDate)}</textarea>
                   <input type="date" id="f_start_edit_${item.id}" class="card-control edit-input" value="${escapeHtml(item.startDate)}" />
@@ -855,8 +875,6 @@ async function loadAllDataFromServer() {
     function enableInCardEdit(id) {
       const card = document.getElementById(`card-${id}`); card.classList.add('mode-edit'); 
       document.getElementById(`btnEdit-${id}`).classList.add('hidden'); document.getElementById(`btnSave-${id}`).classList.remove('hidden'); document.getElementById(`btnCancel-${id}`).classList.remove('hidden');
-      
-      // 🌟 تحويل زر 3feet plan إلى زر لرفع الملف
       const btn3f = document.getElementById(`btn3feet_${id}`);
       if (btn3f) {
          btn3f.textContent = "تحديث 3feet plan 📁";
@@ -873,81 +891,57 @@ async function loadAllDataFromServer() {
       document.getElementById(containerId).appendChild(li); li.querySelector('textarea').focus();
     }
     
-function addTableRow(id, emptyId) {
-  const emptyEl = document.getElementById(emptyId);
-  if(emptyEl) emptyEl.remove();
-  const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); 
-  const tr = document.createElement('tr'); tr.className = 'action-row';
-  const newIdx = Date.now(); // لإنشاء معرف فريد للملف
-  tr.innerHTML = `
-    <td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled></textarea></td>
-    <td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)"></textarea></td>
-    <td><input type="date" class="card-control act-start edit-input" style="display:block" /></td>
-    <td><input type="date" class="card-control act-end edit-input" style="display:block" /></td>
-    <td><input type="number" min="0" max="100" class="card-control act-weight" style="text-align:center;" value="0" /></td>
-    <td>
-      <select class="card-control act-stat edit-input" style="display:block">
-        <option value="لم تبدأ" selected>لم تبدأ</option>
-        <option value="قيد التنفيذ">قيد التنفيذ</option>
-        <option value="مكتملة">مكتملة</option>
-      </select>
-    </td>
-    <td style="text-align:center; vertical-align:middle;">
-      <input type="hidden" class="step-doc-path" id="doc_path_${id}_${newIdx}" value="" />
-      <button type="button" class="btn-review step-doc-btn" style="background:transparent; border:1px solid var(--line); color:var(--muted); padding:4px 6px;" onclick="document.getElementById('file_step_${id}_${newIdx}').click()" title="إرفاق مستند">📄</button>
-      <input type="file" id="file_step_${id}_${newIdx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${id}', '${newIdx}')" />
-    </td>
-    <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
-  `;
-  tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
-}
+    function addTableRow(id, emptyId) {
+      const emptyEl = document.getElementById(emptyId);
+      if(emptyEl) emptyEl.remove();
+      const tbody = document.getElementById(`tbl_${id}`).querySelector('tbody'); const tr = document.createElement('tr'); tr.className = 'action-row';
+      const newIdx = Date.now();
+      tr.innerHTML = `
+        <td class="num"><textarea class="card-control act-no" rows="1" style="text-align:center" disabled></textarea></td>
+        <td><textarea class="card-control act-proc text" rows="1" oninput="autoResize(this)"></textarea></td>
+        <td>
+          <textarea class="card-control text-view togglable" rows="1" disabled></textarea>
+          <input type="date" class="card-control act-start edit-input" style="display:block" />
+        </td>
+        <td>
+          <textarea class="card-control text-view togglable" rows="1" disabled></textarea>
+          <input type="date" class="card-control act-end edit-input" style="display:block" />
+        </td>
+        <td>
+          <textarea class="card-control text-view togglable" rows="1" style="text-align:center;" disabled>0</textarea>
+          <input type="number" min="0" max="100" class="card-control act-weight edit-input" style="text-align:center; display:block;" value="0" />
+        </td>
+        <td>
+          <textarea class="card-control text-view togglable" rows="1" disabled>لم تبدأ</textarea>
+          <select class="card-control act-stat edit-input" style="display:block;">
+            <option value="لم تبدأ" selected>لم تبدأ</option>
+            <option value="قيد التنفيذ">قيد التنفيذ</option>
+            <option value="مكتملة">مكتملة</option>
+          </select>
+        </td>
+        <td style="text-align:center; vertical-align:middle;">
+          <input type="hidden" class="step-doc-path" id="doc_path_${id}_${newIdx}" value="" />
+          <button type="button" class="btn-review step-doc-btn edit-input" style="background:transparent; border:1px solid var(--line); color:var(--muted); padding:4px 6px; font-size:14px; margin: 0 auto; display:block;" onclick="document.getElementById('file_step_${id}_${newIdx}').click()" title="إرفاق مستند">📄</button>
+          <input type="file" id="file_step_${id}_${newIdx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${id}', '${newIdx}')" />
+        </td>
+        <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
+      `;
+      tbody.appendChild(tr); updateTableNumbers(tbody); tr.querySelector('.act-proc').focus();
+    }
 
-    async function uploadStepDoc(event, initiativeId, rowIndexId) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  if (file.size > 5 * 1024 * 1024) {
-    showToast("حجم الملف يتجاوز 5 ميجابايت!", "error");
-    event.target.value = ''; 
-    return;
-  }
-
-  showToast("⏳ جاري رفع المستند الداعم...", "success");
-  
-  try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `step_doc_${initiativeId}_${Date.now()}.${fileExt}`;
-    
-    // تأكد من إنشاء Bucket في Supabase باسم 'step_documents'
-    const { data, error } = await window.supabaseClient.storage
-      .from('step_documents')
-      .upload(fileName, file, { upsert: true });
-      
-    if (error) throw error;
-
-    // تحديث الحقل المخفي ولون الزر بعد نجاح الرفع
-    document.getElementById(`doc_path_${initiativeId}_${rowIndexId}`).value = data.path;
-    const btn = event.target.previousElementSibling;
-    btn.style.background = "#16a34a";
-    btn.style.color = "#fff";
-    btn.title = "تم إرفاق المستند بنجاح";
-    
-    showToast("✅ تم رفع المستند بنجاح!", "success");
-  } catch (err) {
-    showToast("❌ خطأ في رفع المستند: " + err.message, "error");
-  }
-}
     async function saveInCardEdit(id) {
       const card = document.getElementById(`card-${id}`);
       showToast("⏳ جاري حفظ التعديلات..."); document.getElementById(`btnSave-${id}`).disabled = true;
       try {
+        const goalsArr = Array.from(card.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean);
+        const indArr = Array.from(card.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
+        
         let planArr = [];
         let totalWeight = 0;
         let completedWeight = 0;
         let hasValidationError = false;
 
-        const rows = card.querySelectorAll('.action-row');
-        rows.forEach((tr, index) => {
+        Array.from(card.querySelectorAll('.action-row')).forEach((tr, index) => {
           let no = tr.querySelector('.act-no').value.trim();
           let procedure = tr.querySelector('.act-proc').value.trim();
           let startDate = tr.querySelector('.act-start').value;
@@ -956,10 +950,10 @@ function addTableRow(id, emptyId) {
           let status = tr.querySelector('.act-stat').value;
           let docPath = tr.querySelector('.step-doc-path').value;
 
-          if (procedure !== "" || status !== "") {
+          if (procedure !== "" || status !== "" || weight > 0) {
             totalWeight += weight;
             if (status === 'مكتملة') {
-              if (!docPath) {
+              if (!docPath || docPath.trim() === '') {
                 alert(`الخطوة الإجرائية رقم (${no || index + 1}) تم تعيينها كـ "مكتملة". يرجى إرفاق المستند الداعم لها أولاً بالضغط على زر المستند.`);
                 hasValidationError = true;
               }
@@ -975,18 +969,11 @@ function addTableRow(id, emptyId) {
         }
 
         if (planArr.length > 0 && totalWeight !== 100) {
-          alert(`تحذير: مجموع أوزان خطوات العمل يجب أن يساوي 100% بالضبط. (المجموع الحالي: ${totalWeight}%)`);
+          alert(`تحذير: مجموع أوزان خطوات العمل يجب أن يساوي 100 بالضبط. (المجموع الحالي: ${totalWeight})`);
           document.getElementById(`btnSave-${id}`).disabled = false;
           return;
         }
 
-        // احتساب نسبة الإنجاز للمبادرة آلياً بناءً على أوزان الخطوات المكتملة
-        let autoCalculatedPct = planArr.length > 0 ? completedWeight : pctNumber(getVal(`f_pct_${id}`));
-
-        // ... (تكملة الكود لتجميع باقي المتغيرات - payload)
-        const goalsArr = Array.from(card.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean);
-        const indArr = Array.from(card.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
-        const planArr = Array.from(card.querySelectorAll('.action-row')).map(tr => ({ no: tr.querySelector('.act-no').value.trim(), procedure: tr.querySelector('.act-proc').value.trim(), status: tr.querySelector('.act-stat').value.trim() })).filter(r => r.procedure !== "" || r.status !== "");
         const getVal = (fieldId) => { const el = document.getElementById(fieldId); return el ? el.value : ""; };
         const getEditVal = (idBase, itemId) => { const editEl = document.getElementById(idBase + '_edit_' + itemId); return editEl ? editEl.value : getVal(idBase + '_' + itemId); };
 
@@ -996,31 +983,26 @@ function addTableRow(id, emptyId) {
         else { const execCheckboxes = document.querySelectorAll('#exec_dropdown_body_' + id + ' input[type="checkbox"]:checked'); executingEntityVal = Array.from(execCheckboxes).map(cb => cb.value).join('، '); }
         
         const suppEntityVal = isListViewActive ? getVal(`f_supp_head_${id}`) : getVal(`f_supp_body_${id}`);
-        
         const goalsStringified = goalsArr.join(' | ');
         const kpisStringified = indArr.join(' | ');
-        
-        const actionPlanStringified = planArr.map(p => {
-          return p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`;
-        }).join(' | ');
+
+        // احتساب نسبة التنفيذ آلياً
+        let autoCalculatedPct = planArr.length > 0 ? completedWeight : pctNumber(getVal(`f_pct_${id}`));
 
         const payload = {
           initiative_number: getVal(`f_no_${id}`),
-          // داخل كائن الـ payload
-          completion_percentage: autoCalculatedPct, // القيمة المحسوبة آلياً
-          action_plan: JSON.stringify(planArr),     // حفظ كـ JSON بدلاً من نص مدمج
-          five_year_programs: getVal(`f_fyp_${id}`),
-          five_year_indicators: getVal(`f_fyi_${id}`),
           initiative_name: getVal(`f_name_${id}`),
           timeline: getVal(`f_time_${id}`),
-          completion_percentage: pctNumber(getVal(`f_pct_${id}`)),
-          estimated_budget: pctNumber(getVal(`f_budg_${id}`)),
-          remaining_amount: pctNumber(getVal(`f_rem_${id}`)),
+          completion_percentage: autoCalculatedPct, // نسبة الإنجاز المحسوبة
+          estimated_budget: getVal(`f_budg_${id}`), // الاحتفاظ بالنص لدعم الرموز المالية
+          remaining_amount: getVal(`f_rem_${id}`),
           description: getVal(`f_desc_${id}`),
           executing_entity: executingEntityVal,
           supporting_entity: suppEntityVal,
           responsible_directorate: getVal(`f_dept_${id}`),
           program_name: getEditVal('f_prog', id),
+          five_year_programs: getVal(`f_fyp_${id}`),
+          five_year_indicators: getVal(`f_fyi_${id}`),
           start_date: getEditVal('f_start', id) || null,
           end_date: getEditVal('f_end', id) || null,
           status: getEditVal('f_status', id),
@@ -1036,8 +1018,8 @@ function addTableRow(id, emptyId) {
           last_modified_date: new Date().toISOString(),
           goals: goalsStringified,
           kpis: kpisStringified,
-          action_plan: actionPlanStringified,
-          plan_3feet_file: getVal(`f_plan_file_${id}`) // 🆕 حفظ مسار ملف خطة 3feet
+          action_plan: JSON.stringify(planArr), // حفظ خطة العمل كـ JSON
+          plan_3feet_file: getVal(`f_plan_file_${id}`) 
         };
         
         const { data, error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', id);
@@ -1064,16 +1046,21 @@ function addTableRow(id, emptyId) {
     function exportToExcel() {
       const data = getFilteredData();
       if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
-      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "اسم البرنامج": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => p.status ? `${p.no}- ${p.procedure} <${p.status}>` : `${p.no}- ${p.procedure}`).join(' \n ') : "" })));
+      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "برنامج الاستراتيجية": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (الوزن: ${p.weight}% | الحالة: ${p.status})`).join(' \n ') : "" })));
       ws['!dir'] = 'rtl'; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "المبادرات"); XLSX.writeFile(wb, "المبادرات_الصناعية.xlsx"); showToast("✅ تم التحميل.", "success");
     }
 
     function exportToPowerPoint() {
       const data = getFilteredData();
       if (!data.length) { showToast("لا توجد بيانات", "error"); return; } showToast("⏳ جاري إنشاء البوربوينت ...", "success");
-      let pptx = new PptxGenJS(); pptx.layout = 'LAYOUT_16x9'; 
+      let pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_16x9'; 
       const fixRtlText = (text) => text ? text.toString().replace(/\(/g, '&&OPEN&&').replace(/\)/g, '(').replace(/&&OPEN&&/g, ')') : "—";
-      const getFontSize = (text, type) => { let len = (text || "").toString().length; if(type === 'title') return len > 60 ? 11 : (len > 40 ? 13 : 15); if(type === 'desc') return len > 350 ? 8 : (len > 250 ? 9 : (len > 150 ? 10 : 11)); if(type === 'box') return len > 250 ? 8 : (len > 150 ? 9 : (len > 80 ? 10 : 11)); if(type === 'table') return len > 80 ? 8 : (len > 120 ? 7 : 9); return 11; };
+      const getFontSize = (text, type) => { let len = (text || "").toString().length;
+      if(type === 'title') return len > 60 ? 11 : (len > 40 ? 13 : 15);
+      if(type === 'desc') return len > 350 ? 8 : (len > 250 ? 9 : (len > 150 ? 10 : 11));
+      if(type === 'box') return len > 250 ? 8 : (len > 150 ? 9 : (len > 80 ? 10 : 11));
+      if(type === 'table') return len > 80 ? 8 : (len > 120 ? 7 : 9); return 11; };
       data.forEach(item => {
         let slide = pptx.addSlide(); slide.background = { color: "F8FAFC" }; const brandColor = "0B4F6C", altColor = "176B87", rtlOpts = { rtlMode: true, wrap: true, breakLine: true, isRtl: true };
         slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 10, h: 0.7, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } }); slide.addShape(pptx.ShapeType.roundRect, { x: 8.8, y: 0.1, w: 1.0, h: 0.5, fill: brandColor, rectRadius: 0.1 }); slide.addText(item.initiativeNo || "—", { x: 8.8, y: 0.1, w: 1.0, h: 0.5, color: "FFFFFF", bold: true, align: "center", valign: "middle", ...rtlOpts, fontSize: 12 });
@@ -1104,15 +1091,15 @@ function addTableRow(id, emptyId) {
         slide.addText(indsArr.length > 0 ? indsArr.map((ind, i) => ({ text: ` .${i + 1} ${fixRtlText(ind)}`, options: { breakLine: true, paraSpaceAfter: 6, rtlMode: true, align: "right" } })) : [{ text: "—", options: { align: "right", rtlMode: true } }], { x: 5.1, y: 2.6, w: 2.25, h: 2.1, color: "334155", valign: "top", align: "right", rtlMode: true, fontSize: getFontSize(indsArr.map((ind, i) => ` .${i + 1} ${fixRtlText(ind)}`).join("\n"), 'box') });
         slide.addShape(pptx.ShapeType.rect, { x: 0.2, y: 0.85, w: 4.7, h: 3.9, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
         slide.addText("خطة العمل / خطوات التنفيذ", { x: 0.2, y: 0.9, w: 4.7, h: 0.3, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
-        let tblRows = [[{ text: "الحالة", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "الإجراءات المعتمدة", options: { fill: "F1F5F9", bold: true, align: "right", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "#", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }]];
+        let tblRows = [[{ text: "الحالة", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "الوزن", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "الإجراءات المعتمدة", options: { fill: "F1F5F9", bold: true, align: "right", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "#", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }]];
         if(item.actionPlan && item.actionPlan.length > 0) {
             item.actionPlan.slice(0, 8).forEach(p => {
                 let sColor = "0F172A"; if (p.status && (p.status.includes("اكتمل") || p.status.includes("منجز"))) sColor = "16A34A"; else if (p.status && (p.status.includes("متأخر") || p.status.includes("ملغى"))) sColor = "EF4444";
-                if (p.procedure || p.status) tblRows.push([{ text: fixRtlText(p.status), options: { align: "center", color: sColor, rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.procedure), options: { align: "right", rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.no) || "•", options: { align: "center", color: altColor, bold: true, rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }]);
+                if (p.procedure || p.status) tblRows.push([{ text: fixRtlText(p.status), options: { align: "center", color: sColor, rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.weight + '%'), options: { align: "center", rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.procedure), options: { align: "right", rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.no) || "•", options: { align: "center", color: altColor, bold: true, rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }]);
             });
         }
-        if(tblRows.length === 1) tblRows.push([{ text: "لا توجد خطوات مسجلة", options: { colspan: 3, align: "center", color: "64748B", rtlMode: true, isRtl: true } }]);
-        slide.addTable(tblRows, { x: 0.2, y: 1.25, w: 4.7, colW: [0.9, 3.5, 0.3], border: { pt: 0.5, color: "E2E8F0" }, fontSize: 9, valign: "middle", rtlMode: true, autoPage: false });
+        if(tblRows.length === 1) tblRows.push([{ text: "لا توجد خطوات مسجلة", options: { colspan: 4, align: "center", color: "64748B", rtlMode: true, isRtl: true } }]);
+        slide.addTable(tblRows, { x: 0.2, y: 1.25, w: 4.7, colW: [0.8, 0.6, 3.0, 0.3], border: { pt: 0.5, color: "E2E8F0" }, fontSize: 9, valign: "middle", rtlMode: true, autoPage: false });
       });
       pptx.writeFile({ fileName: `المبادرات_${new Date().getTime()}.pptx` }).then(() => showToast("✅ تم التصدير بنجاح", "success")).catch(err => showToast("❌ خطأ: " + err, "error"));
     }
@@ -1121,12 +1108,13 @@ function addTableRow(id, emptyId) {
       const item = initiatives.find(i => i.id === id);
       if(!item) return;
       const modal = document.getElementById('aiModal'); const loading = document.getElementById('aiLoading'); const content = document.getElementById('aiResponseContent'); const btnDownloadWord = document.getElementById('btnDownloadCardWord');
-      modal.classList.add('show'); loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = ''; btnDownloadWord.style.display = 'none';
+      modal.classList.add('show');
+      loading.style.display = 'block'; content.style.display = 'none'; content.innerHTML = ''; btnDownloadWord.style.display = 'none';
       
       const goalsText = Array.isArray(item.goals) ? item.goals.join(" | ") : (item.goals || "—");
       const indsText = Array.isArray(item.indicators) ? item.indicators.join(" | ") : (item.indicators || "—");
-      const planText = Array.isArray(item.actionPlan) ? item.actionPlan.map(p => `${p.no}- ${p.procedure} <${p.status}>`).join(" | ") : (item.actionPlan || "—");
-
+      const planText = Array.isArray(item.actionPlan) ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (الوزن: ${p.weight}%, الحالة: ${p.status})`).join(" | ") : (item.actionPlan || "—");
+      
       const payload = {
         initiativeNo: item.initiativeNo || "—",
         initiativeName: item.initiativeName || "—",
@@ -1139,6 +1127,8 @@ function addTableRow(id, emptyId) {
         executingEntity: item.executingEntity || "—",
         timeline: item.timeline || "—",
         programName: item.programName || "—",
+        fiveYearPrograms: item.fiveYearPrograms || "—",
+        fiveYearIndicators: item.fiveYearIndicators || "—",
         startDate: item.startDate || "—",
         endDate: item.endDate || "—",
         status: item.status || "—",
@@ -1147,7 +1137,6 @@ function addTableRow(id, emptyId) {
         notes: item.notes || "—",
         lastUpdate: item.lastUpdate || "—"
       };
-
       const { data: res, error } = await window.supabaseClient.functions.invoke('get-card-ai-advice', { body: payload });
 
       loading.style.display = 'none'; content.style.display = 'block';
@@ -1163,8 +1152,10 @@ function addTableRow(id, emptyId) {
     function downloadModalAsWord(elementId, baseFilename) {
       const content = document.getElementById(elementId).innerHTML;
       const htmlString = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>تقرير المبادرة - الاستراتيجية الصناعية</title><style>body { font-family: 'Tahoma', 'Arial', sans-serif; direction: rtl; text-align: right; line-height: 1.6; } h3 { color: #0b4f6c; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-top: 20px; font-size: 16px; } ul { padding-right: 20px; } li { margin-bottom: 8px; } b { color: #0f172a; }</style></head><body>${content}</body></html>`;
+      
       const blob = new Blob(['\ufeff' + htmlString], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href = url;
       a.download = baseFilename + '_' + new Date().toISOString().slice(0,10) + '.doc';
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
@@ -1172,37 +1163,32 @@ function addTableRow(id, emptyId) {
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
 
     async function sendChatMessage() {
-      const input = document.getElementById('chatInput'); const msg = input.value.trim();
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
       if(!msg || initiatives.length === 0) { if(initiatives.length === 0) showToast("الرجاء انتظار تحميل البيانات أولاً", "error"); return; }
 
       const chatBody = document.getElementById('chatBody'); const sendBtn = document.getElementById('chatSendBtn');
       chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`;
       chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] });
       input.value = ''; sendBtn.disabled = true; input.disabled = true;
-      
       const loadingId = 'loading-' + Date.now();
       chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري الرد...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
-
       let contextData = initiatives.map(item => {
         const goalsText = Array.isArray(item.goals) ? item.goals.join(' | ') : (item.goals || "—");
         return `📌 [رقم المبادرة: ${item.initiativeNo || "—"}]
 - اسم المبادرة: ${item.initiativeName || "—"}
-- وصف المبادرة: ${item.description || "—"}
 - أهداف المبادرة: ${goalsText}
 - نسبة التنفيذ: ${Math.round(pctNumber(item.completionPercent))}%
 - الجهة المنفذة: ${item.executingEntity || "—"}
 - الخطة الزمنية: ${item.timeline || "—"}
-- اسم البرنامج: ${item.programName || "—"}
-- تاريخ البدء: ${item.startDate || "—"} | تاريخ الانتهاء: ${item.endDate || "—"}
+- برنامج الاستراتيجية: ${item.programName || "—"}
 - الحالة: ${item.status || "—"}
 --------------------------------------------------`;
       }).join('\n');
-
       const payload = { context: contextData, history: chatHistoryLog.slice(-10) };
 
       const { data: res, error } = await window.supabaseClient.functions.invoke('chat-bot', { body: payload });
-
       document.getElementById(loadingId).remove();
       sendBtn.disabled = false; input.disabled = false; input.focus();
       
@@ -1212,7 +1198,6 @@ function addTableRow(id, emptyId) {
             .replace(/\n\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ')
             .replace(/\*\s/g, '<br><span style="color: var(--brand); margin-left: 5px;">■</span> ')
             .replace(/\n/g, '<br>');
-
          chatBody.innerHTML += `<div class="chat-msg ai">${cleanReply}</div>`;
          chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] });
       } else {
