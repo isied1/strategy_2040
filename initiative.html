@@ -624,13 +624,32 @@
       } catch (err) { showToast("❌ خطأ: " + err.message, "error"); btn.textContent = "تحديث 3feet plan 📁"; btn.disabled = false; }
     }
 
-    async function download3FeetPlan() {
+async function download3FeetPlan() {
        const path = document.getElementById(`f_plan_file`).value;
-       if (!path || path === "—") { showToast("لا يوجد ملف مرفق.", "error"); return; }
-       showToast("⏳ جاري التحميل...");
-       const { data, error } = await window.supabaseClient.storage.from('3feet_plans').download(path);
-       if (error) { showToast("❌ تعذر التحميل.", "error"); return; }
-       const url = URL.createObjectURL(data); const a = document.createElement('a'); a.href = url; a.download = path.split('/').pop(); a.click(); URL.revokeObjectURL(url);
+       if (!path || path === "—" || path.trim() === "") { 
+           showToast("لا يوجد ملف مرفق.", "error"); 
+           return; 
+       }
+       
+       showToast("⏳ جاري التحميل...", "success"); // إظهار الإشعار المبدئي
+       
+       try {
+           const { data, error } = await window.supabaseClient.storage.from('3feet_plans').download(path);
+           if (error) throw error;
+           
+           const url = URL.createObjectURL(data); 
+           const a = document.createElement('a'); 
+           a.href = url; 
+           a.download = path.split('/').pop(); 
+           document.body.appendChild(a); 
+           a.click(); 
+           document.body.removeChild(a); 
+           URL.revokeObjectURL(url);
+           
+           showToast("✅ تم تحميل الملف بنجاح!", "success"); // سيستبدل الإشعار القديم
+       } catch (err) {
+           showToast("❌ تعذر التحميل أو حدث خطأ.", "error");
+       }
     }
 
     async function saveData() {
