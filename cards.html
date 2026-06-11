@@ -106,6 +106,7 @@
         <span id="displayUserName" onclick="toggleUserDropdown()" style="padding: 4px 8px; border-radius: 8px;"></span>
         <div id="userDropdownMenu" class="dropdown-content" style="right: 0; left: auto; min-width: 180px;">
           <button id="btnAdminUsers" class="hidden" onclick="goToAdminPage()" style="font-weight: bold; color: var(--brand2);">إدارة المستخدمين ⚙️</button>
+          <button id="btnAdminEntities" class="hidden" onclick="openManageEntitiesModal()" style="font-weight: bold; color: var(--brand2);">إدارة الجهات المنفذة 🏢</button>
         </div>
       </div>
       <span id="displayUserRole" style="font-size:11px; background:#e2e8f0; padding:2px 8px; border-radius:10px; color:#475569;"></span>
@@ -204,6 +205,19 @@
       clearTimeout(toastTimeout);
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
+    function openManageEntitiesModal() { renderEntityTable(); document.getElementById('entityModal').classList.add('show'); }
+    function closeEntityModal() { document.getElementById('entityModal').classList.remove('show'); }
+    
+    function renderEntityTable() {
+      const tbody = document.getElementById('entityTableBody');
+      tbody.innerHTML = entitiesList.map(e => `
+        <tr><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.contact)}</td><td><span dir="ltr">${escapeHtml(e.phone)}</span></td><td>${escapeHtml(e.email)}</td>
+          <td style="text-align:center"><button class="btn-review btn-edit-mode" onclick="editEntityForm('${e.id}', '${escapeHtml(e.name)}', '${escapeHtml(e.contact)}', '${escapeHtml(e.phone)}', '${escapeHtml(e.email)}')">تعديل</button></td></tr>
+      `).join('');
+    }
+    function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
+    function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
+    
 
     async function fetchUserProfile(email) {
       const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
@@ -242,6 +256,23 @@
 
     function autoResize(el) { if(!el) return; el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
     function initAutoResize() { document.querySelectorAll('textarea.card-control').forEach(el => { autoResize(el); el.addEventListener('input', function() { autoResize(this); }); }); }
+    async function saveEntity() {
+       const id = document.getElementById('ent_rowIndex').value;
+       const name = document.getElementById('ent_name').value.trim();
+       const contact = document.getElementById('ent_contact').value.trim();
+       const phone = document.getElementById('ent_phone').value.trim();
+       const email = document.getElementById('ent_email').value.trim();
+       if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
+       showToast("⏳ جاري الحفظ...");
+       
+       const payload = { name, contact, phone, email };
+       let result;
+       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
+       else { result = await window.supabaseClient.from('entities').insert([payload]); }
+
+       if(result.error) { showToast("فشل حفظ البيانات: " + result.error.message, "error"); } 
+       else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
+    }
 
     async function loadAllDataFromServer() {
       showToast("⏳ جاري الاتصال بالخادم ...");
