@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <link rel="icon" type="image/png" href="favicon.png" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>تفاصيل المبادرة - الاستراتيجية الصناعية 2040</title>
@@ -19,6 +18,8 @@
     
     .btn-logout { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; }
     .btn-logout:hover { background: #dc2626; }
+    .btn-primary { background: var(--brand); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.2s; }
+    .btn-primary:hover { background: var(--brand2); }
     
     .dropdown { position: relative; display: inline-block; height: 100%; }
     .dropdown-content { display: none; position: absolute; left: 0; top: calc(100% + 8px); background-color: #fff; min-width: 240px; box-shadow: var(--shadow); border: 1px solid var(--line); border-radius: 12px; z-index: 1000; overflow: hidden; }
@@ -98,9 +99,13 @@
     .multi-select-item:hover { background: var(--soft); color: var(--brand2); font-weight: bold; }
     .multi-select-item input[type="checkbox"] { width: 16px; height: 16px; margin:0; }
 
+    /* نوافذ المستخدم (إدارة الجهات والمساعد) */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.25s ease; }
     .modal-overlay.show { opacity: 1; pointer-events: auto; }
     .modal-content { background: #fff; border-radius: var(--radius); width: 850px; max-width: 95vw; max-height: 92vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .form-grid label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: var(--brand2); }
+    
     @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
 
     .chat-fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; border: none; }
@@ -119,13 +124,45 @@
 <body>
   <div id="toastPopup" class="toast-popup"></div>
 
+  <!-- نافذة إدارة الجهات المنفذة -->
+  <div class="modal-overlay" id="entityModal">
+    <div class="modal-content">
+      <h2 style="color:var(--brand2); margin-top:0;">إدارة الجهات المنفذة</h2>
+      <div class="form-grid">
+        <input type="hidden" id="ent_rowIndex" value="" />
+        <div style="display:flex; flex-direction:column;"><label>اسم الجهة</label><input type="text" id="ent_name" placeholder="الاسم الكامل للجهة"></div>
+        <div style="display:flex; flex-direction:column;"><label>نقطة التواصل</label><input type="text" id="ent_contact" placeholder="اسم المسؤول"></div>
+        <div style="display:flex; flex-direction:column;"><label>رقم الهاتف</label><input type="text" id="ent_phone" placeholder="968+"></div>
+        <div style="display:flex; flex-direction:column;"><label>البريد الإلكتروني</label><input type="text" id="ent_email" placeholder="email@gov.om"></div>
+      </div>
+      <div style="margin-bottom: 24px; display:flex; gap:10px;">
+        <button class="btn-primary" onclick="saveEntity()">حفظ بيانات الجهة 💾</button>
+        <button class="btn-review" style="padding:10px 20px; background:#ef4444;" onclick="resetEntityForm()">تفريغ الحقول</button>
+      </div>
+      <table style="width: 100%; border: 1px solid var(--line); border-collapse: separate; border-spacing: 0; font-size:12px;">
+        <thead><tr>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">اسم الجهة</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">نقطة التواصل</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">رقم الهاتف</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">الإيميل</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:center; width:70px;">الإجراء</th>
+        </tr></thead>
+        <tbody id="entityTableBody"></tbody>
+      </table>
+      <div style="text-align:left; margin-top:20px; padding-top:15px; border-top:1px solid var(--line);">
+        <button class="btn-review" style="padding:8px 24px; background:#ef4444;" onclick="closeEntityModal()">إغلاق النافذة</button>
+      </div>
+    </div>
+  </div>
+
   <header id="appHeader" class="header-bar shell" style="max-width: 100%; margin-bottom: 24px;">
-    <h1>الاستراتيجية الصناعية 2040</h1>
+    <h1>الاستراتيجية الصناعية 2040 - استعراض المبادرات</h1>
     <div class="header-user">
       <div class="dropdown" style="position: relative; display: inline-block;">
         <span id="displayUserName" onclick="toggleUserDropdown()" style="padding: 4px 8px; border-radius: 8px;"></span>
         <div id="userDropdownMenu" class="dropdown-content" style="right: 0; left: auto; min-width: 180px;">
           <button id="btnAdminUsers" class="hidden" onclick="goToAdminPage()" style="font-weight: bold; color: var(--brand2);">إدارة المستخدمين ⚙️</button>
+          <button id="btnAdminEntities" class="hidden" onclick="openManageEntitiesModal()" style="font-weight: bold; color: var(--brand2);">إدارة الجهات المنفذة 🏢</button>
         </div>
       </div>
       <span id="displayUserRole" style="font-size:11px; background:#e2e8f0; padding:2px 8px; border-radius:10px; color:#475569;"></span>
@@ -214,6 +251,7 @@
           document.getElementById('displayUserName').style.cursor = 'pointer';
           document.getElementById('displayUserName').style.textDecoration = 'underline';
           document.getElementById('btnAdminUsers').classList.remove('hidden'); 
+          document.getElementById('btnAdminEntities').classList.remove('hidden'); 
         } else { 
           document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
         }
@@ -227,7 +265,7 @@
         const { data: itemData, error } = await window.supabaseClient.from('initiatives').select('*').eq('id', id).single();
         if (error || !itemData) throw new Error("المبادرة غير موجودة");
         
-        const { data: entData } = await window.supabaseClient.from('entities').select('name');
+        const { data: entData } = await window.supabaseClient.from('entities').select('*');
         entitiesList = entData || [];
 
         let parsedGoals = []; if(itemData.goals) parsedGoals = itemData.goals.split('|').map(g => g.trim()).filter(Boolean);
@@ -308,6 +346,7 @@
           <div class="meta">
             <div class="mini"><span>الخطة الزمنية</span><b><textarea id="f_time" class="card-control" rows="1" disabled>${escapeHtml(item.timeline)}</textarea></b></div>
             <div class="mini"><span>نسبة التنفيذ</span><b><textarea id="f_pct" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
+            
             <div class="mini" style="overflow: visible; z-index:11;"><span>الجهة المنفذة</span><b>
               <textarea id="f_exec_view" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
               <div class="multi-select-container edit-input" id="f_exec_edit_wrap">
@@ -316,6 +355,7 @@
               </div>
             </b></div>
             <div class="mini"><span>الجهة المساندة</span><b><textarea id="f_supp" class="card-control text" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
+            
             <div class="mini"><span>الموازنة التقديرية</span><b><textarea id="f_budg" class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
           </div>
         </div>
@@ -524,6 +564,37 @@
     function toggleMultiSelect(id) { document.getElementById(id).classList.toggle('show'); }
     function updateMultiSelectDisplay(dropdownId, dispId) { const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); const vals = Array.from(checkboxes).map(cb => cb.value); document.getElementById(dispId).textContent = vals.length > 0 ? vals.join('، ') : 'اختر الجهات...'; }
     document.addEventListener('click', e => { if(!e.target.closest('.multi-select-container')) { document.querySelectorAll('.multi-select-dropdown').forEach(d => d.classList.remove('show')); } });
+
+    /* تفاصيل دوال الجهات المنفذة */
+    function openManageEntitiesModal() { renderEntityTable(); document.getElementById('entityModal').classList.add('show'); }
+    function closeEntityModal() { document.getElementById('entityModal').classList.remove('show'); }
+    
+    function renderEntityTable() {
+      const tbody = document.getElementById('entityTableBody');
+      tbody.innerHTML = entitiesList.map(e => `
+        <tr><td style="padding:8px; border-bottom:1px solid var(--line);">${escapeHtml(e.name)}</td><td style="padding:8px; border-bottom:1px solid var(--line);">${escapeHtml(e.contact || '—')}</td><td style="padding:8px; border-bottom:1px solid var(--line);"><span dir="ltr">${escapeHtml(e.phone || '—')}</span></td><td style="padding:8px; border-bottom:1px solid var(--line);">${escapeHtml(e.email || '—')}</td>
+          <td style="padding:8px; border-bottom:1px solid var(--line); text-align:center"><button class="btn-review btn-edit-mode" style="background:#eab308; color:#000; padding:4px 10px;" onclick="editEntityForm('${e.id || ''}', '${escapeHtml(e.name)}', '${escapeHtml(e.contact || '')}', '${escapeHtml(e.phone || '')}', '${escapeHtml(e.email || '')}')">تعديل</button></td></tr>
+      `).join('');
+    }
+    function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
+    function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
+    
+    async function saveEntity() {
+       const id = document.getElementById('ent_rowIndex').value;
+       const name = document.getElementById('ent_name').value.trim();
+       const contact = document.getElementById('ent_contact').value.trim();
+       const phone = document.getElementById('ent_phone').value.trim();
+       const email = document.getElementById('ent_email').value.trim();
+       if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
+       showToast("⏳ جاري الحفظ...");
+       const payload = { name, contact, phone, email };
+       let result;
+       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
+       else { result = await window.supabaseClient.from('entities').insert([payload]); }
+
+       if(result.error) { showToast("فشل حفظ البيانات: " + result.error.message, "error"); } 
+       else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadInitiativeData(currentItem.id); }
+    }
 
     async function uploadStepDoc(event, rowIndexId) {
       const file = event.target.files[0]; if (!file) return;
