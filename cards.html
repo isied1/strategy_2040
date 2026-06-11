@@ -1,10 +1,9 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>مبادرات الاستراتيجية الصناعية 2040</title>
+  <title>الاستراتيجية الصناعية 2040 - استعراض المبادرات</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/libs/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
@@ -94,13 +93,51 @@
     .chat-input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid var(--line); gap: 8px; }
     .chat-input-area input { flex: 1; border: 1px solid var(--line); border-radius: 20px; padding: 10px 16px; outline: none; font-family: inherit; }
     .chat-input-area button { background: var(--brand); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
+
+    /* نافذة الجهات المنفذة */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: all 0.25s ease; }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal-content { background: #fff; border-radius: var(--radius); width: 850px; max-width: 95vw; max-height: 92vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .form-grid label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: var(--brand2); }
   </style>
 </head>
 <body>
   <div id="toastPopup" class="toast-popup"></div>
 
+  <!-- نافذة إدارة الجهات المنفذة -->
+  <div class="modal-overlay" id="entityModal">
+    <div class="modal-content">
+      <h2 style="color:var(--brand2); margin-top:0;">إدارة الجهات المنفذة</h2>
+      <div class="form-grid">
+        <input type="hidden" id="ent_rowIndex" value="" />
+        <div style="display:flex; flex-direction:column;"><label>اسم الجهة</label><input type="text" id="ent_name" placeholder="الاسم الكامل للجهة"></div>
+        <div style="display:flex; flex-direction:column;"><label>نقطة التواصل</label><input type="text" id="ent_contact" placeholder="اسم المسؤول"></div>
+        <div style="display:flex; flex-direction:column;"><label>رقم الهاتف</label><input type="text" id="ent_phone" placeholder="968+"></div>
+        <div style="display:flex; flex-direction:column;"><label>البريد الإلكتروني</label><input type="text" id="ent_email" placeholder="email@gov.om"></div>
+      </div>
+      <div style="margin-bottom: 24px; display:flex; gap:10px;">
+        <button class="btn-primary" onclick="saveEntity()">حفظ بيانات الجهة 💾</button>
+        <button class="btn-review" style="padding:10px 20px; background:#ef4444;" onclick="resetEntityForm()">تفريغ الحقول</button>
+      </div>
+      <table style="width: 100%; border: 1px solid var(--line); border-collapse: separate; border-spacing: 0; font-size:12px;">
+        <thead><tr>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">اسم الجهة</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">نقطة التواصل</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">رقم الهاتف</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:right;">الإيميل</th>
+          <th style="padding:8px; background:#f1f5f9; text-align:center; width:70px;">الإجراء</th>
+        </tr></thead>
+        <tbody id="entityTableBody"></tbody>
+      </table>
+      <div style="text-align:left; margin-top:20px; padding-top:15px; border-top:1px solid var(--line);">
+        <button class="btn-review" style="padding:8px 24px; background:#ef4444;" onclick="closeEntityModal()">إغلاق النافذة</button>
+      </div>
+    </div>
+  </div>
+
   <header id="appHeader" class="header-bar hidden">
-    <h1>الاستراتيجية الصناعية 2040</h1>
+    <h1>الاستراتيجية الصناعية 2040 - استعراض المبادرات</h1>
     <div class="header-user">
       <div class="dropdown" style="position: relative; display: inline-block;">
         <span id="displayUserName" onclick="toggleUserDropdown()" style="padding: 4px 8px; border-radius: 8px;"></span>
@@ -205,19 +242,6 @@
       clearTimeout(toastTimeout);
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
-    function openManageEntitiesModal() { renderEntityTable(); document.getElementById('entityModal').classList.add('show'); }
-    function closeEntityModal() { document.getElementById('entityModal').classList.remove('show'); }
-    
-    function renderEntityTable() {
-      const tbody = document.getElementById('entityTableBody');
-      tbody.innerHTML = entitiesList.map(e => `
-        <tr><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.contact)}</td><td><span dir="ltr">${escapeHtml(e.phone)}</span></td><td>${escapeHtml(e.email)}</td>
-          <td style="text-align:center"><button class="btn-review btn-edit-mode" onclick="editEntityForm('${e.id}', '${escapeHtml(e.name)}', '${escapeHtml(e.contact)}', '${escapeHtml(e.phone)}', '${escapeHtml(e.email)}')">تعديل</button></td></tr>
-      `).join('');
-    }
-    function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
-    function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
-    
 
     async function fetchUserProfile(email) {
       const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
@@ -248,6 +272,7 @@
         document.getElementById('displayUserName').style.cursor = 'pointer';
         document.getElementById('displayUserName').style.textDecoration = 'underline';
         document.getElementById('btnAdminUsers').classList.remove('hidden'); 
+        document.getElementById('btnAdminEntities').classList.remove('hidden'); 
       } else { 
         document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
       }
@@ -256,23 +281,6 @@
 
     function autoResize(el) { if(!el) return; el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
     function initAutoResize() { document.querySelectorAll('textarea.card-control').forEach(el => { autoResize(el); el.addEventListener('input', function() { autoResize(this); }); }); }
-    async function saveEntity() {
-       const id = document.getElementById('ent_rowIndex').value;
-       const name = document.getElementById('ent_name').value.trim();
-       const contact = document.getElementById('ent_contact').value.trim();
-       const phone = document.getElementById('ent_phone').value.trim();
-       const email = document.getElementById('ent_email').value.trim();
-       if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
-       showToast("⏳ جاري الحفظ...");
-       
-       const payload = { name, contact, phone, email };
-       let result;
-       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
-       else { result = await window.supabaseClient.from('entities').insert([payload]); }
-
-       if(result.error) { showToast("فشل حفظ البيانات: " + result.error.message, "error"); } 
-       else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
-    }
 
     async function loadAllDataFromServer() {
       showToast("⏳ جاري الاتصال بالخادم ...");
@@ -303,10 +311,14 @@
           };
         });
 
-        const uniqueEntities = [...new Set((initData || []).map(i => i.executing_entity).filter(Boolean))];
-        entitiesList = uniqueEntities.map((name, index) => ({ id: index, name: name }));
+        const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*');
+        if (entError) {
+          const uniqueEntities = [...new Set((initData || []).map(i => i.executing_entity).filter(Boolean))];
+          entitiesList = uniqueEntities.map((name, index) => ({ id: index, name: name, contact: "—", phone: "—", email: "—" }));
+        } else { entitiesList = entData || []; }
 
         renderEntityOptions(''); populateFollowUpOptions(); renderCards();
+        if(document.getElementById('entityModal').classList.contains('show')){ renderEntityTable(); }
         showToast("✅ اكتمل تحميل البيانات.", "success");
       } catch(err) { showToast('❌ فشل جلب البيانات: ' + err.message, "error"); }
     }
@@ -392,9 +404,100 @@
     els.entityOptions.addEventListener('mousedown', e => { const opt = e.target.closest('.entity-option'); if(opt) { selectedEntity = opt.dataset.value; els.entitySearchBox.value = selectedEntity; els.entitySearchBox.placeholder = selectedEntity || 'كل الجهات المنفذة'; els.entityOptions.classList.add('hidden'); renderCards(); } });
     function toggleMenu() { document.getElementById("dropdownMenu").classList.toggle("show"); }
 
-    function exportToExcel() { showToast("ميزة التصدير مفعلة", "success"); }
-    function exportToPowerPoint() { showToast("ميزة التصدير مفعلة", "success"); }
+    /* تفاصيل دوال الجهات المنفذة */
+    function openManageEntitiesModal() { renderEntityTable(); document.getElementById('entityModal').classList.add('show'); }
+    function closeEntityModal() { document.getElementById('entityModal').classList.remove('show'); }
+    
+    function renderEntityTable() {
+      const tbody = document.getElementById('entityTableBody');
+      tbody.innerHTML = entitiesList.map(e => `
+        <tr><td style="padding:8px; border-bottom:1px solid var(--line);">${escapeHtml(e.name)}</td><td style="padding:8px; border-bottom:1px solid var(--line);">${escapeHtml(e.contact || '—')}</td><td style="padding:8px; border-bottom:1px solid var(--line);"><span dir="ltr">${escapeHtml(e.phone || '—')}</span></td><td style="padding:8px; border-bottom:1px solid var(--line);">${escapeHtml(e.email || '—')}</td>
+          <td style="padding:8px; border-bottom:1px solid var(--line); text-align:center"><button class="btn-review btn-edit-mode" style="background:#eab308; color:#000; padding:4px 10px;" onclick="editEntityForm('${e.id || ''}', '${escapeHtml(e.name)}', '${escapeHtml(e.contact || '')}', '${escapeHtml(e.phone || '')}', '${escapeHtml(e.email || '')}')">تعديل</button></td></tr>
+      `).join('');
+    }
+    function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
+    function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
+    
+    async function saveEntity() {
+       const id = document.getElementById('ent_rowIndex').value;
+       const name = document.getElementById('ent_name').value.trim();
+       const contact = document.getElementById('ent_contact').value.trim();
+       const phone = document.getElementById('ent_phone').value.trim();
+       const email = document.getElementById('ent_email').value.trim();
+       if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
+       showToast("⏳ جاري الحفظ...");
+       const payload = { name, contact, phone, email };
+       let result;
+       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
+       else { result = await window.supabaseClient.from('entities').insert([payload]); }
 
+       if(result.error) { showToast("فشل حفظ البيانات: " + result.error.message, "error"); } 
+       else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
+    }
+
+    /* تفاصيل دوال الاكسل والبوربوينت المنسوخة بالضبط من الكود الاصلي */
+    function exportToExcel() {
+      const data = getFilteredData();
+      if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
+      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "برنامج الاستراتيجية": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (الوزن: ${p.weight}% | الحالة: ${p.status})`).join(' \n ') : "" })));
+      ws['!dir'] = 'rtl'; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "المبادرات"); XLSX.writeFile(wb, "المبادرات_الصناعية.xlsx"); showToast("✅ تم التحميل.", "success");
+    }
+
+    function exportToPowerPoint() {
+      const data = getFilteredData();
+      if (!data.length) { showToast("لا توجد بيانات", "error"); return; } showToast("⏳ جاري إنشاء البوربوينت ...", "success");
+      let pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_16x9'; 
+      const fixRtlText = (text) => text ? text.toString().replace(/\(/g, '&&OPEN&&').replace(/\)/g, '(').replace(/&&OPEN&&/g, ')') : "—";
+      const getFontSize = (text, type) => { let len = (text || "").toString().length;
+      if(type === 'title') return len > 60 ? 11 : (len > 40 ? 13 : 15);
+      if(type === 'desc') return len > 350 ? 8 : (len > 250 ? 9 : (len > 150 ? 10 : 11));
+      if(type === 'box') return len > 250 ? 8 : (len > 150 ? 9 : (len > 80 ? 10 : 11));
+      if(type === 'table') return len > 80 ? 8 : (len > 120 ? 7 : 9); return 11; };
+      data.forEach(item => {
+        let slide = pptx.addSlide(); slide.background = { color: "F8FAFC" }; const brandColor = "0B4F6C", altColor = "176B87", rtlOpts = { rtlMode: true, wrap: true, breakLine: true, isRtl: true };
+        slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 10, h: 0.7, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } }); slide.addShape(pptx.ShapeType.roundRect, { x: 8.8, y: 0.1, w: 1.0, h: 0.5, fill: brandColor, rectRadius: 0.1 }); slide.addText(item.initiativeNo || "—", { x: 8.8, y: 0.1, w: 1.0, h: 0.5, color: "FFFFFF", bold: true, align: "center", valign: "middle", ...rtlOpts, fontSize: 12 });
+        slide.addText(fixRtlText(item.initiativeName), { x: 4.5, y: 0.1, w: 4.2, h: 0.5, color: brandColor, bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: getFontSize(item.initiativeName, 'title') });
+        slide.addText("الخطة الزمنية:", { x: 2.5, y: 0.1, w: 1.0, h: 0.5, color: "64748B", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
+        slide.addText(fixRtlText(item.timeline), { x: 1.5, y: 0.1, w: 1.0, h: 0.5, color: brandColor, bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 12 });
+        slide.addText("نسبة التنفيذ:", { x: 0.8, y: 0.1, w: 1.0, h: 0.5, color: "64748B", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
+        slide.addText(fixRtlText(Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%'), { x: 0.1, y: 0.1, w: 0.7, h: 0.5, color: altColor, bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 12 });
+        slide.addShape(pptx.ShapeType.rect, { x: 0, y: 4.925, w: 10, h: 0.7, fill: brandColor });
+        slide.addText("الجهة المنفذة:", { x: 8.8, y: 5.0, w: 1.0, h: 0.55, color: "F8FAFC", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 10 });
+        slide.addText(fixRtlText(item.executingEntity), { x: 6.8, y: 5.0, w: 2.0, h: 0.55, color: "FFFFFF", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
+        slide.addText("الجهة المساندة:", { x: 5.5, y: 5.0, w: 1.0, h: 0.55, color: "F8FAFC", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 10 });
+        slide.addText(fixRtlText(item.supportingEntity), { x: 3.2, y: 5.0, w: 2.3, h: 0.55, color: "FFFFFF", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
+        slide.addText("الموازنة:", { x: 2.1, y: 5.0, w: 0.8, h: 0.55, color: "F8FAFC", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 10 });
+        slide.addText(fixRtlText(item.estimatedBudget), { x: 1.4, y: 5.0, w: 0.7, h: 0.55, color: "FFFFFF", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
+        slide.addText("المتبقي:", { x: 0.7, y: 5.0, w: 0.7, h: 0.55, color: "F8FAFC", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 10 });
+        slide.addText(fixRtlText(item.remainingAmount), { x: 0.0, y: 5.0, w: 0.7, h: 0.55, color: "FFFFFF", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
+        slide.addShape(pptx.ShapeType.rect, { x: 5.1, y: 0.85, w: 4.7, h: 1.3, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
+        slide.addText("وصف المبادرة", { x: 5.1, y: 0.9, w: 4.7, h: 0.25, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
+        slide.addText(fixRtlText(item.description), { x: 5.1, y: 1.2, w: 4.7, h: 0.9, color: "334155", align: "right", valign: "top", ...rtlOpts, fontSize: getFontSize(item.description, 'desc') });
+        let goalsArr = Array.isArray(item.goals) ? item.goals.filter(Boolean) : [item.goals].filter(Boolean);
+        slide.addShape(pptx.ShapeType.rect, { x: 7.55, y: 2.25, w: 2.25, h: 2.5, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
+        slide.addText("أهداف المبادرة", { x: 7.55, y: 2.3, w: 2.25, h: 0.25, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
+        slide.addText(goalsArr.length > 0 ? goalsArr.map((g, i) => ({ text: ` .${i + 1} ${fixRtlText(g)}`, options: { breakLine: true, paraSpaceAfter: 6, rtlMode: true, align: "right" } })) : [{ text: "—", options: { align: "right", rtlMode: true } }], { x: 7.55, y: 2.6, w: 2.25, h: 2.1, color: "334155", valign: "top", align: "right", rtlMode: true, fontSize: getFontSize(goalsArr.map((g, i) => ` .${i + 1} ${fixRtlText(g)}`).join("\n"), 'box') });
+        let indsArr = Array.isArray(item.indicators) ? item.indicators.filter(Boolean) : [item.indicators].filter(Boolean);
+        slide.addShape(pptx.ShapeType.rect, { x: 5.1, y: 2.25, w: 2.25, h: 2.5, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
+        slide.addText("المؤشرات الرئيسية", { x: 5.1, y: 2.3, w: 2.25, h: 0.25, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
+        slide.addText(indsArr.length > 0 ? indsArr.map((ind, i) => ({ text: ` .${i + 1} ${fixRtlText(ind)}`, options: { breakLine: true, paraSpaceAfter: 6, rtlMode: true, align: "right" } })) : [{ text: "—", options: { align: "right", rtlMode: true } }], { x: 5.1, y: 2.6, w: 2.25, h: 2.1, color: "334155", valign: "top", align: "right", rtlMode: true, fontSize: getFontSize(indsArr.map((ind, i) => ` .${i + 1} ${fixRtlText(ind)}`).join("\n"), 'box') });
+        slide.addShape(pptx.ShapeType.rect, { x: 0.2, y: 0.85, w: 4.7, h: 3.9, fill: "FFFFFF", line: { color: "E2E8F0", width: 1 } });
+        slide.addText("خطة العمل / خطوات التنفيذ", { x: 0.2, y: 0.9, w: 4.7, h: 0.3, color: brandColor, bold: true, align: "center", ...rtlOpts, fontSize: 12 });
+        let tblRows = [[{ text: "الحالة", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "الوزن", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "الإجراءات المعتمدة", options: { fill: "F1F5F9", bold: true, align: "right", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }, { text: "#", options: { fill: "F1F5F9", bold: true, align: "center", rtlMode: true, isRtl: true, fontFace: "Tahoma", fontSize: 10 } }]];
+        if(item.actionPlan && item.actionPlan.length > 0) {
+            item.actionPlan.slice(0, 8).forEach(p => {
+                let sColor = "0F172A"; if (p.status && (p.status.includes("اكتمل") || p.status.includes("منجز"))) sColor = "16A34A"; else if (p.status && (p.status.includes("متأخر") || p.status.includes("ملغى"))) sColor = "EF4444";
+                if (p.procedure || p.status) tblRows.push([{ text: fixRtlText(p.status), options: { align: "center", color: sColor, rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.weight + '%'), options: { align: "center", rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.procedure), options: { align: "right", rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }, { text: fixRtlText(p.no) || "•", options: { align: "center", color: altColor, bold: true, rtlMode: true, isRtl: true, fontSize: getFontSize(p.procedure, 'table') } }]);
+            });
+        }
+        if(tblRows.length === 1) tblRows.push([{ text: "لا توجد خطوات مسجلة", options: { colspan: 4, align: "center", color: "64748B", rtlMode: true, isRtl: true } }]);
+        slide.addTable(tblRows, { x: 0.2, y: 1.25, w: 4.7, colW: [0.8, 0.6, 3.0, 0.3], border: { pt: 0.5, color: "E2E8F0" }, fontSize: 9, valign: "middle", rtlMode: true, autoPage: false });
+      });
+      pptx.writeFile({ fileName: `المبادرات_${new Date().getTime()}.pptx` }).then(() => showToast("✅ تم التصدير بنجاح", "success")).catch(err => showToast("❌ خطأ: " + err, "error"));
+    }
+
+    /* دالة الشات بوت العائم للصفحة الرئيسية */
     function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
     async function sendChatMessage() {
       const input = document.getElementById('chatInput'); const msg = input.value.trim(); if(!msg) return;
