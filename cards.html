@@ -417,21 +417,44 @@ const { data: entData, error: entError } = await window.supabaseClient.from('ent
     function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
     function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
     
-    async function saveEntity() {
+async function saveEntity() {
        const id = document.getElementById('ent_rowIndex').value;
        const name = document.getElementById('ent_name').value.trim();
        const contact = document.getElementById('ent_contact').value.trim();
        const phone = document.getElementById('ent_phone').value.trim();
        const email = document.getElementById('ent_email').value.trim();
+       
        if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
        showToast("⏳ جاري الحفظ...");
+       
        const payload = { name, contact, phone, email };
        let result;
-       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
-       else { result = await window.supabaseClient.from('entities').insert([payload]); }
+       
+       if(id) { 
+           result = await window.supabaseClient.from('entities').update(payload).eq('id', id); 
+       } else { 
+           result = await window.supabaseClient.from('entities').insert([payload]); 
+       }
 
-       if(result.error) { showToast("فشل حفظ البيانات: " + result.error.message, "error"); } 
-       else { showToast("✅ تم حفظ الجهة بنجاح", "success"); resetEntityForm(); loadAllDataFromServer(); }
+       if(result.error) { 
+           showToast("فشل حفظ البيانات: " + result.error.message, "error"); 
+       } else { 
+           showToast("✅ تم حفظ الجهة بنجاح", "success"); 
+           resetEntityForm(); 
+           
+           // التعديل: جلب الجهات المحدثة من القاعدة لضمان الترتيب والحصول على ID الجهات الجديدة
+           const { data: updatedEntities } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });
+           
+           if(updatedEntities) {
+               entitiesList = updatedEntities; // تحديث المصفوفة في الذاكرة
+               renderEntityTable(); // تحديث الجدول المعروض أمامك فوراً
+               
+               // تحديث القوائم المنسدلة في الخلفية بدون الحاجة لإعادة تحميل الصفحة بالكامل
+               if (typeof renderEntityOptions === 'function') {
+                   renderEntityOptions(document.getElementById('entitySearchBox').value || ''); 
+               }
+           }
+       }
     }
 
     /* تفاصيل دوال الاكسل والبوربوينت المنسوخة بالضبط من الكود الاصلي */
