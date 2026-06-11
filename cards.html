@@ -59,8 +59,8 @@
     .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;position:relative}
     
     .card-head{padding:16px;background:linear-gradient(180deg,#fff,var(--soft));border-bottom:1px solid var(--line)}
-    .topline{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .badge{background:var(--brand2);color:#fff;border-radius:20px;padding:4px 12px;font-weight:bold;font-size:12px;direction:ltr}
+    .topline{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .badge{background:var(--brand2);color:#fff;border-radius:20px;padding:4px 12px;font-weight:bold;font-size:12px;direction:ltr;display:inline-block;}
     .card h2{margin:0;font-size:17px;line-height:1.5;color:#0f172a}
     
     .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
@@ -80,6 +80,19 @@
     .card-control { width: 100%; border: 1px solid transparent; background: transparent; font-family: inherit; color: inherit; font-size: inherit; font-weight: inherit; outline: none; padding: 4px 6px; margin: 0; resize: none; overflow: hidden; line-height: 1.6; }
     .empty{color:var(--muted);background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:10px;text-align:center;font-size:12px}
     .hidden{display:none!important}
+
+    /* الشات بوت العائم */
+    .chat-fab { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; border: none; }
+    .chat-window { position: fixed; bottom: 100px; left: 30px; width: 360px; max-width: 90vw; height: 500px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; z-index: 9999; transform: translateY(20px); opacity: 0; pointer-events: none; transition: all 0.3s ease; border: 1px solid var(--line); overflow: hidden; }
+    .chat-window.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .chat-header { background: var(--brand2); color: #fff; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    .chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: var(--bg); }
+    .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; word-wrap: break-word; }
+    .chat-msg.user { align-self: flex-start; background: var(--brand); color: #fff; border-bottom-right-radius: 2px; }
+    .chat-msg.ai { align-self: flex-end; background: #fff; border: 1px solid var(--line); color: var(--ink); border-bottom-left-radius: 2px; }
+    .chat-input-area { display: flex; padding: 12px; background: #fff; border-top: 1px solid var(--line); gap: 8px; }
+    .chat-input-area input { flex: 1; border: 1px solid var(--line); border-radius: 20px; padding: 10px 16px; outline: none; font-family: inherit; }
+    .chat-input-area button { background: var(--brand); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -145,12 +158,29 @@
     <section id="cards" class="cards"></section>
   </main>
 
+  <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div style="display:flex; align-items:center; gap:8px;"><span>🤖</span> مساعد الاستراتيجية</div>
+      <button style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;" onclick="toggleChat()">✖</button>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="chat-msg ai">أهلاً بك! 👋 أنا المساعد الذكي للاستراتيجية. يمكنك سؤالي عن المبادرات المعروضة هنا.</div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key === 'Enter') sendChatMessage()" />
+      <button id="chatSendBtn" onclick="sendChatMessage()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(180deg);"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_3lCPQVLuTY2ZI5OyDuc1Aw_ZnF1RgAI';
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let entitiesList = []; let initiatives = []; let selectedEntity = ''; let currentUser = null;
+    let entitiesList = []; let initiatives = []; let selectedEntity = ''; let currentUser = null; let chatHistoryLog = [];
 
     const els = {
       cards: document.getElementById('cards'), searchInput: document.getElementById('searchInput'),
@@ -225,16 +255,16 @@
           let parsedGoals = item.goals ? item.goals.split('|').map(g => g.trim()).filter(Boolean) : [];
           let parsedKpis = item.kpis ? item.kpis.split('|').map(k => k.trim()).filter(Boolean) : [];
           let parsedPlan = []; 
-          if(item.action_plan) { 
-            try { parsedPlan = JSON.parse(item.action_plan); } catch(e) { }
-          }
+          if(item.action_plan) { try { parsedPlan = JSON.parse(item.action_plan); } catch(e) { } }
+          
           return {
             id: item.id, initiativeNo: item.initiative_number || "—", initiativeName: item.initiative_name || "—",
             timeline: item.timeline || "—", completionPercent: item.completion_percentage || 0,
             estimatedBudget: item.estimated_budget || "—", remainingAmount: item.remaining_amount || "—",
             description: item.description || "", executingEntity: item.executing_entity || "—",
             supportingEntity: item.supporting_entity || "—", programName: item.program_name || "—",
-            followUpManager: item.follow_up_responsible || "—", actionPlan: parsedPlan, goals: parsedGoals, indicators: parsedKpis
+            followUpManager: item.follow_up_responsible || "—", actionPlan: parsedPlan, goals: parsedGoals, indicators: parsedKpis,
+            status: item.status || "لم تبدأ", challenges: item.challenges || ""
           };
         });
 
@@ -276,21 +306,26 @@
         
         const goalsHtml = item.goals.length ? item.goals.map(g => `<li><div style="display:flex;gap:6px;"><textarea class="card-control text" rows="1" disabled>${escapeHtml(g)}</textarea></div></li>`).join('') : '<div class="empty">لم تسجل أهداف</div>';
         const indsHtml = item.indicators.length ? item.indicators.map(n => `<li><div style="display:flex;gap:6px;"><textarea class="card-control text" rows="1" disabled>${escapeHtml(n)}</textarea></div></li>`).join('') : '<div class="empty">لم تسجل مؤشرات</div>';
+        
+        let statusColor = '#64748b'; if(item.status === 'مكتملة') statusColor = '#16a34a'; else if(item.status === 'قيد التنفيذ') statusColor = '#eab308';
 
         return `<article class="card">
           <div class="card-head">
             <div class="topline">
-              <span class="badge">${escapeHtml(item.initiativeNo || 'بدون رقم')}</span>
+              <div style="display:flex; gap:8px;">
+                <span class="badge">${escapeHtml(item.initiativeNo || 'بدون رقم')}</span>
+                <span class="badge" style="background:${statusColor};">${escapeHtml(item.status || 'لم تبدأ')}</span>
+              </div>
               <button class="btn-review" style="padding: 4px 12px; font-size: 12px;" onclick="window.open('initiative.html?id=${item.id}', '_blank')">استعراض المبادرة ↗️</button>
             </div>
             <h2><textarea class="card-control text" rows="1" disabled>${escapeHtml(item.initiativeName)}</textarea></h2>
             <div class="meta">
               <div class="mini"><span>الخطة الزمنية</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.timeline)}</textarea></b></div>
               <div class="mini"><span>نسبة التنفيذ</span><b><textarea class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
+              <div class="mini"><span>الموازنة التقديرية</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
+              <div class="mini"><span>المبلغ المتبقي</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
               <div class="mini" style="grid-column: span 2;"><span>الجهة المنفذة</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea></b></div>
               <div class="mini" style="grid-column: span 2;"><span>الجهة المساندة</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
-              <div class="mini"><span>الموازنة</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
-              <div class="mini"><span>المتبقي</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
             </div>
           </div>
           <div class="card-body">
@@ -324,6 +359,23 @@
 
     function exportToExcel() { showToast("ميزة التصدير مفعلة", "success"); }
     function exportToPowerPoint() { showToast("ميزة التصدير مفعلة", "success"); }
+
+    /* دالة الشات بوت العائم للصفحة الرئيسية */
+    function toggleChat() { document.getElementById('chatWindow').classList.toggle('show'); }
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput'); const msg = input.value.trim(); if(!msg) return;
+      const chatBody = document.getElementById('chatBody'); chatBody.innerHTML += `<div class="chat-msg user">${escapeHtml(msg)}</div>`;
+      chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] }); input.value = '';
+      const loadingId = 'loading-' + Date.now(); chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}">⏳...</div>`; chatBody.scrollTop = chatBody.scrollHeight;
+      
+      let contextData = initiatives.map(item => `[رقم المبادرة: ${item.initiativeNo}] المبادرة: ${item.initiativeName}، النسبة: ${Math.round(pctNumber(item.completionPercent))}%، المنفذ: ${item.executingEntity}`).join('\n');
+      const { data: res, error } = await window.supabaseClient.functions.invoke('chat-bot', { body: { context: contextData, history: chatHistoryLog.slice(-5) } });
+      
+      document.getElementById(loadingId).remove();
+      if(!error && res.success) { chatBody.innerHTML += `<div class="chat-msg ai">${res.reply.replace(/\n/g, '<br>')}</div>`; chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] }); }
+      else { chatBody.innerHTML += `<div class="chat-msg ai" style="color:red">❌ فشل الاتصال.</div>`; }
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
   </script>
 </body>
 </html>
