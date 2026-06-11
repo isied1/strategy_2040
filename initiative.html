@@ -41,7 +41,7 @@
 
     .card h2{margin:0 0 16px 0;font-size:22px;line-height:1.5;color:#0f172a}
     
-    .meta{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+    .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
     .mini{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;min-height:60px}
     .mini span{display:block;color:var(--muted);font-size:12px;line-height:1.2;margin-bottom:4px}
     .mini b{font-size:14px;word-break:break-word}
@@ -306,22 +306,23 @@
           
           <div class="meta">
             <div class="mini"><span>الخطة الزمنية</span><b><textarea id="f_time" class="card-control" rows="1" disabled>${escapeHtml(item.timeline)}</textarea></b></div>
-            <div class="mini"><span>نسبة التنفيذ</span><b><textarea class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
+            <div class="mini"><span>نسبة التنفيذ</span><b><textarea id="f_pct" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
             <div class="mini"><span>الموازنة التقديرية</span><b><textarea id="f_budg" class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
-            
-            <div class="mini" style="overflow: visible;"><span>الجهة المنفذة</span><b>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="section grid-info grid-2col" style="z-index: 10;">
+            <div class="info" style="overflow: visible;"><span>الجهة المنفذة</span><b>
               <textarea id="f_exec_view" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
               <div class="multi-select-container edit-input" id="f_exec_edit_wrap">
                 <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown')" id="exec_disp">${escapeHtml(item.executingEntity) || 'اختر الجهة...'}</div>
                 <div class="multi-select-dropdown" id="exec_dropdown">${checkBoxesHtml}</div>
               </div>
             </b></div>
-            <div class="mini"><span>الجهة المساندة</span><b><textarea id="f_supp" class="card-control text" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
-            <div class="mini"><span>المبلغ المتبقي</span><b><textarea id="f_rem" class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
+            <div class="info"><span>الجهة المساندة</span><b><textarea id="f_supp" class="card-control text" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
           </div>
-        </div>
 
-        <div class="card-body">
           <div class="section"><div class="section-title">وصف المبادرة</div><div class="text"><textarea id="f_desc" class="card-control" rows="1" disabled>${escapeHtml(item.description)}</textarea></div></div>
 
           <div class="section grid-info grid-2col" style="background:transparent; border:none; padding:0;">
@@ -343,6 +344,7 @@
             </div>
           </div>
 
+          <!-- تم نقل المبلغ المتبقي ليصبح بين تاريخ الانتهاء والمسؤول عن المتابعة -->
           <div class="section grid-info grid-4col">
             <div class="info"><span>المديرية / الدائرة المسؤولة عن المبادرة</span><b><textarea id="f_dept" class="card-control" rows="1" disabled>${escapeHtml(item.responsibleDepartment)}</textarea></b></div>
             <div class="info"><span>برنامج الاستراتيجية الصناعية 2040</span><b>
@@ -363,8 +365,8 @@
               <textarea id="f_end" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.endDate)}</textarea>
               <input type="date" id="f_end_edit" class="card-control edit-input" value="${escapeHtml(item.endDate)}" />
             </b></div>
+            <div class="info"><span>المبلغ المتبقي</span><b><textarea id="f_rem" class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
             <div class="info"><span>المسؤول عن المتابعة</span><b><textarea id="f_fum" class="card-control" rows="1" disabled>${escapeHtml(item.followUpManager)}</textarea></b></div>
-            <div class="info" style="grid-column: span 1; background:transparent; border:none;"></div>
           </div>
 
           <div class="section grid-info grid-3col">
@@ -407,7 +409,7 @@
                   </td>
                   <td>
                     <textarea class="card-control text-view togglable" rows="1" disabled>${escapeHtml(r.status)}</textarea>
-                    <select class="card-control act-stat edit-input">
+                    <select class="card-control act-stat edit-input" onchange="handleStatusChange(this, '${idx}')">
                       <option value="لم تبدأ" ${r.status === 'لم تبدأ' ? 'selected' : ''}>لم تبدأ</option>
                       <option value="قيد التنفيذ" ${r.status === 'قيد التنفيذ' ? 'selected' : ''}>قيد التنفيذ</option>
                       <option value="مكتملة" ${r.status === 'مكتملة' ? 'selected' : ''}>مكتملة</option>
@@ -428,20 +430,10 @@
 
           <div class="section"><div class="section-title">الموقف التنفيذي</div><div class="text"><textarea id="f_execpos" class="card-control" rows="1" disabled>${escapeHtml(item.executivePosition)}</textarea></div></div>
           
-          <div class="section grid-info grid-3col" style="background:transparent; border:none; padding:0; margin-bottom:0; box-shadow:none;">
-            <div class="info" style="border:none; border-left: 1px dashed var(--line); border-radius:0; background:transparent;">
-               <div class="section-title" style="color:var(--brand2); border:none;">التحديات / المعوقات</div>
-               <div class="text"><textarea id="f_chal" class="card-control" rows="1" disabled>${escapeHtml(item.challenges)}</textarea></div>
-            </div>
-            <div class="info" style="border:none; border-left: 1px dashed var(--line); border-radius:0; background:transparent;">
-               <div class="section-title" style="border:none;">آخر تحديث</div>
-               <div class="text"><textarea id="f_lupd" class="card-control" rows="1" disabled>${escapeHtml(item.lastUpdate)}</textarea></div>
-            </div>
-            <div class="info" style="border:none; border-radius:0; background:transparent;">
-               <div class="section-title" style="border:none;">الملاحظات</div>
-               <div class="text"><textarea id="f_note" class="card-control" rows="1" disabled>${escapeHtml(item.notes)}</textarea></div>
-            </div>
-          </div>
+          <!-- تم فصل التحديات والملاحظات لأسطر مستقلة -->
+          <div class="section"><div class="section-title" style="color:var(--brand2)">التحديات / المعوقات</div><div class="text"><textarea id="f_chal" class="card-control" rows="1" disabled>${escapeHtml(item.challenges)}</textarea></div></div>
+          <div class="section"><div class="section-title">آخر تحديث</div><div class="text"><textarea id="f_lupd" class="card-control" rows="1" disabled>${escapeHtml(item.lastUpdate)}</textarea></div></div>
+          <div class="section"><div class="section-title">الملاحظات</div><div class="text"><textarea id="f_note" class="card-control" rows="1" disabled>${escapeHtml(item.notes)}</textarea></div></div>
 
           <div style="font-size:12px; color:var(--muted); margin-top:20px; border-top:1px dashed var(--line); padding-top:10px; display:flex; justify-content:space-between">
             <span>المُعدِّل الأخير: <b>${escapeHtml(item.lastEditor)}</b></span>
@@ -452,6 +444,22 @@
       </article>`;
 
       initAutoResize();
+    }
+
+    // دالة حذف المستند آلياً عند تغيير حالة الخطوة
+    function handleStatusChange(selectEl, rowIdx) {
+      if (selectEl.value === 'قيد التنفيذ' || selectEl.value === 'لم تبدأ') {
+        document.getElementById(`doc_path_${rowIdx}`).value = "";
+        const tr = selectEl.closest('tr');
+        const viewLink = tr.querySelector('a.text-view');
+        if(viewLink) viewLink.style.display = 'none';
+        const btn = tr.querySelector('.step-doc-btn');
+        if(btn) {
+          btn.style.background = 'transparent';
+          btn.style.color = 'var(--muted)';
+          btn.title = 'إرفاق مستند';
+        }
+      }
     }
 
     function autoResize(el) { if(!el) return; el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
@@ -494,7 +502,7 @@
         </td>
         <td>
           <textarea class="card-control text-view togglable" rows="1" disabled>لم تبدأ</textarea>
-          <select class="card-control act-stat edit-input" style="display:block;">
+          <select class="card-control act-stat edit-input" style="display:block;" onchange="handleStatusChange(this, '${newIdx}')">
             <option value="لم تبدأ" selected>لم تبدأ</option>
             <option value="قيد التنفيذ">قيد التنفيذ</option>
             <option value="مكتملة">مكتملة</option>
@@ -587,7 +595,6 @@
           }
         });
         
-        // إصلاح مشكلة الإشعار المعلق في حال وجود خطأ في خطة العمل
         if (hasValidationError) { 
            document.getElementById(`btnSave`).disabled = false; 
            showToast("❌ يرجى إرفاق المستندات للخطوات المكتملة", "error");
@@ -600,7 +607,6 @@
            return; 
         }
 
-        // الحساب التلقائي لحالة المبادرة بناءً على حالة خطوات خطة العمل
         let autoStatus = currentItem.status;
         if(totalSteps > 0) {
            if(completedSteps === totalSteps) autoStatus = "مكتملة";
@@ -614,12 +620,12 @@
 
         const payload = {
           initiative_name: getVal(`f_name`), timeline: getVal(`f_time`),
-          completion_percentage: planArr.length > 0 ? completedWeight : 0, // حساب الإنجاز التلقائي
+          completion_percentage: planArr.length > 0 ? completedWeight : 0, 
           estimated_budget: getVal(`f_budg`), remaining_amount: getVal(`f_rem`), description: getVal(`f_desc`),
           executing_entity: executingEntityVal, supporting_entity: getVal(`f_supp`), responsible_directorate: getVal(`f_dept`),
           program_name: getEditVal('f_prog'), five_year_programs: getVal(`f_fyp`), five_year_indicators: getVal(`f_fyi`),
           start_date: getEditVal('f_start') || null, end_date: getEditVal('f_end') || null, 
-          status: autoStatus, // تطبيق الحساب التلقائي
+          status: autoStatus, 
           follow_up_responsible: getVal(`f_fum`), executive_status: getVal(`f_execpos`), challenges: getVal(`f_chal`),
           latest_update: getVal(`f_lupd`), notes: getVal(`f_note`), implementation_manager: getVal(`f_exm`),
           phone_number: getVal(`f_phone`), email: getVal(`f_email`),
