@@ -33,7 +33,7 @@
     .card{background:var(--card);border:2px solid var(--brand);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
     .card-head{padding:20px;background:linear-gradient(180deg,#fff,var(--soft));border-bottom:1px solid var(--line)}
     .topline{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-    .badge{background:var(--brand2);color:#fff;border-radius:20px;padding:6px 16px;font-weight:bold;font-size:14px;direction:ltr}
+    .badge{background:var(--brand2);color:#fff;border-radius:20px;padding:6px 16px;font-weight:bold;font-size:14px;direction:ltr;display:inline-block;}
     
     .btn-review{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:bold;}
     .btn-edit-mode { background:#eab308; color:#0f172a; } .btn-edit-mode:hover { background:#ca8a04; color:#fff; }
@@ -41,7 +41,7 @@
 
     .card h2{margin:0 0 16px 0;font-size:22px;line-height:1.5;color:#0f172a}
     
-    .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .meta{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
     .mini{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;min-height:60px}
     .mini span{display:block;color:var(--muted);font-size:12px;line-height:1.2;margin-bottom:4px}
     .mini b{font-size:14px;word-break:break-word}
@@ -207,7 +207,6 @@
         const { data: profile } = await window.supabaseClient.from('profiles').select('role, name').eq('email', session.user.email).single();
         currentUser = profile ? { name: profile.name, role: String(profile.role).toLowerCase() } : { name: "مستخدم", role: "viewer" };
         
-        // إعداد شريط المستخدم
         document.getElementById('displayUserName').textContent = currentUser.name;
         if (currentUser.role === 'admin') {
           document.getElementById('displayUserRole').textContent = 'مدير النظام'; 
@@ -238,7 +237,6 @@
            try { 
              parsedPlan = JSON.parse(itemData.action_plan); 
            } catch(e) { 
-             // تشغيل المحلل الاحتياطي في حال كانت البيانات مفصولة بعلامة |
              let segments = itemData.action_plan.split('|').map(s => s.trim()).filter(Boolean);
              segments.forEach((seg, idx) => {
                let no = idx + 1; let procedure = seg; let status = "لم تبدأ";
@@ -281,11 +279,16 @@
       const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
       const checkBoxesHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown', 'exec_disp')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
 
+      let statusColor = '#64748b'; if(item.status === 'مكتملة') statusColor = '#16a34a'; else if(item.status === 'قيد التنفيذ') statusColor = '#eab308';
+
       container.innerHTML = `
       <article class="card mode-view" id="mainCard">
         <div class="card-head">
           <div class="topline">
-            <span class="badge" id="lbl_no">${escapeHtml(item.initiativeNo || 'بدون رقم')}</span>
+            <div style="display:flex; gap:8px;">
+              <span class="badge" id="lbl_no">${escapeHtml(item.initiativeNo || 'بدون رقم')}</span>
+              <span class="badge" style="background:${statusColor};">${escapeHtml(item.status || 'لم تبدأ')}</span>
+            </div>
             <input type="hidden" id="f_no" value="${escapeHtml(item.initiativeNo)}" />
             <div style="display:flex; gap:8px;">
               <button type="button" class="btn-review" style="background:#4f46e5;" onclick="askSmartAdvisor()">🤖 المستشار الذكي</button>
@@ -303,24 +306,22 @@
           
           <div class="meta">
             <div class="mini"><span>الخطة الزمنية</span><b><textarea id="f_time" class="card-control" rows="1" disabled>${escapeHtml(item.timeline)}</textarea></b></div>
-            <div class="mini"><span>نسبة التنفيذ</span><b><textarea id="f_pct" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
+            <div class="mini"><span>نسبة التنفيذ</span><b><textarea class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
             <div class="mini"><span>الموازنة التقديرية</span><b><textarea id="f_budg" class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
-            <div class="mini"><span>المبلغ المتبقي</span><b><textarea id="f_rem" class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
-          </div>
-        </div>
-
-        <div class="card-body">
-          <div class="section grid-info grid-2col" style="z-index: 10;">
-            <div class="info" style="overflow: visible;"><span>الجهة المنفذة</span><b>
+            
+            <div class="mini" style="overflow: visible;"><span>الجهة المنفذة</span><b>
               <textarea id="f_exec_view" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
               <div class="multi-select-container edit-input" id="f_exec_edit_wrap">
                 <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown')" id="exec_disp">${escapeHtml(item.executingEntity) || 'اختر الجهة...'}</div>
                 <div class="multi-select-dropdown" id="exec_dropdown">${checkBoxesHtml}</div>
               </div>
             </b></div>
-            <div class="info"><span>الجهة المساندة</span><b><textarea id="f_supp" class="card-control text" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
+            <div class="mini"><span>الجهة المساندة</span><b><textarea id="f_supp" class="card-control text" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
+            <div class="mini"><span>المبلغ المتبقي</span><b><textarea id="f_rem" class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
           </div>
+        </div>
 
+        <div class="card-body">
           <div class="section"><div class="section-title">وصف المبادرة</div><div class="text"><textarea id="f_desc" class="card-control" rows="1" disabled>${escapeHtml(item.description)}</textarea></div></div>
 
           <div class="section grid-info grid-2col" style="background:transparent; border:none; padding:0;">
@@ -362,14 +363,8 @@
               <textarea id="f_end" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.endDate)}</textarea>
               <input type="date" id="f_end_edit" class="card-control edit-input" value="${escapeHtml(item.endDate)}" />
             </b></div>
-            <div class="info"><span>الحالة</span><b>
-              <textarea id="f_status" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.status)}</textarea>
-              <select id="f_status_edit" class="card-control edit-input">
-                <option value="">تحديد الحالة...</option>
-                ${STATUS_OPTIONS.map(s => `<option value="${escapeHtml(s)}" ${item.status === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
-              </select>
-            </b></div>
             <div class="info"><span>المسؤول عن المتابعة</span><b><textarea id="f_fum" class="card-control" rows="1" disabled>${escapeHtml(item.followUpManager)}</textarea></b></div>
+            <div class="info" style="grid-column: span 1; background:transparent; border:none;"></div>
           </div>
 
           <div class="section grid-info grid-3col">
@@ -432,9 +427,21 @@
           </div>
 
           <div class="section"><div class="section-title">الموقف التنفيذي</div><div class="text"><textarea id="f_execpos" class="card-control" rows="1" disabled>${escapeHtml(item.executivePosition)}</textarea></div></div>
-          <div class="section"><div class="section-title" style="color:var(--brand2)">التحديات / المعوقات</div><div class="text"><textarea id="f_chal" class="card-control" rows="1" disabled>${escapeHtml(item.challenges)}</textarea></div></div>
-          <div class="section"><div class="section-title">آخر تحديث</div><div class="text"><textarea id="f_lupd" class="card-control" rows="1" disabled>${escapeHtml(item.lastUpdate)}</textarea></div></div>
-          <div class="section"><div class="section-title">الملاحظات</div><div class="text"><textarea id="f_note" class="card-control" rows="1" disabled>${escapeHtml(item.notes)}</textarea></div></div>
+          
+          <div class="section grid-info grid-3col" style="background:transparent; border:none; padding:0; margin-bottom:0; box-shadow:none;">
+            <div class="info" style="border:none; border-left: 1px dashed var(--line); border-radius:0; background:transparent;">
+               <div class="section-title" style="color:var(--brand2); border:none;">التحديات / المعوقات</div>
+               <div class="text"><textarea id="f_chal" class="card-control" rows="1" disabled>${escapeHtml(item.challenges)}</textarea></div>
+            </div>
+            <div class="info" style="border:none; border-left: 1px dashed var(--line); border-radius:0; background:transparent;">
+               <div class="section-title" style="border:none;">آخر تحديث</div>
+               <div class="text"><textarea id="f_lupd" class="card-control" rows="1" disabled>${escapeHtml(item.lastUpdate)}</textarea></div>
+            </div>
+            <div class="info" style="border:none; border-radius:0; background:transparent;">
+               <div class="section-title" style="border:none;">الملاحظات</div>
+               <div class="text"><textarea id="f_note" class="card-control" rows="1" disabled>${escapeHtml(item.notes)}</textarea></div>
+            </div>
+          </div>
 
           <div style="font-size:12px; color:var(--muted); margin-top:20px; border-top:1px dashed var(--line); padding-top:10px; display:flex; justify-content:space-between">
             <span>المُعدِّل الأخير: <b>${escapeHtml(item.lastEditor)}</b></span>
@@ -460,7 +467,6 @@
       setTimeout(() => { card.querySelectorAll('.card-control').forEach(input => { if(!input.classList.contains('act-no')) { input.removeAttribute('disabled'); } autoResize(input); }); }, 10);
     }
 
-    /* دوال إضافة وإزالة الأسطر */
     function addListRow(containerId, inputClass, emptyId) {
       const emptyEl = document.getElementById(emptyId); if(emptyEl) emptyEl.remove();
       const li = document.createElement('li'); li.innerHTML = `<div style="display:flex;gap:6px;"><textarea class="card-control ${inputClass} text" rows="1" oninput="autoResize(this)"></textarea><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, false)">-</button></div>`;
@@ -517,7 +523,6 @@
     function updateMultiSelectDisplay(dropdownId, dispId) { const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); const vals = Array.from(checkboxes).map(cb => cb.value); document.getElementById(dispId).textContent = vals.length > 0 ? vals.join('، ') : 'اختر الجهات...'; }
     document.addEventListener('click', e => { if(!e.target.closest('.multi-select-container')) { document.querySelectorAll('.multi-select-dropdown').forEach(d => d.classList.remove('show')); } });
 
-    /* دوال رفع الملفات */
     async function uploadStepDoc(event, rowIndexId) {
       const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { showToast("حجم الملف يتجاوز 5 ميجابايت!", "error"); event.target.value = ''; return; }
@@ -554,29 +559,54 @@
        const url = URL.createObjectURL(data); const a = document.createElement('a'); a.href = url; a.download = path.split('/').pop(); a.click(); URL.revokeObjectURL(url);
     }
 
-    /* حفظ التعديلات */
     async function saveData() {
       document.getElementById(`btnSave`).disabled = true; showToast("⏳ جاري الحفظ...");
       try {
         const goalsArr = Array.from(document.querySelectorAll('.goal-item')).map(i => i.value.trim()).filter(Boolean);
         const indArr = Array.from(document.querySelectorAll('.ind-item')).map(i => i.value.trim()).filter(Boolean);
         let planArr = [], totalWeight = 0, completedWeight = 0, hasValidationError = false;
+        
+        let totalSteps = 0, completedSteps = 0, notStartedSteps = 0;
 
         document.querySelectorAll('.action-row').forEach((tr, index) => {
           let no = tr.querySelector('.act-no').value.trim(), procedure = tr.querySelector('.act-proc').value.trim();
           let startDate = tr.querySelector('.act-start').value, endDate = tr.querySelector('.act-end').value;
           let weight = parseFloat(tr.querySelector('.act-weight').value) || 0, status = tr.querySelector('.act-stat').value, docPath = tr.querySelector('.step-doc-path').value;
+          
           if (procedure !== "" || status !== "" || weight > 0) {
             totalWeight += weight;
+            totalSteps++;
+            if(status === 'مكتملة') completedSteps++;
+            else if(status === 'لم تبدأ') notStartedSteps++;
+            
             if (status === 'مكتملة') {
-              if (!docPath) { alert(`الخطوة (${no || index + 1}) مكتملة بلا مستند!`); hasValidationError = true; }
+              if (!docPath) { alert(`الخطوة (${no || index + 1}) تم تعيينها كـ مكتملة بلا مستند! يرجى إرفاق المستند الداعم.`); hasValidationError = true; }
               completedWeight += weight;
             }
             planArr.push({ no, procedure, startDate, endDate, weight, status, docPath });
           }
         });
-        if (hasValidationError) { document.getElementById(`btnSave`).disabled = false; return; }
-        if (planArr.length > 0 && totalWeight !== 100) { alert(`تحذير: مجموع الأوزان ${totalWeight} وليس 100`); document.getElementById(`btnSave`).disabled = false; return; }
+        
+        // إصلاح مشكلة الإشعار المعلق في حال وجود خطأ في خطة العمل
+        if (hasValidationError) { 
+           document.getElementById(`btnSave`).disabled = false; 
+           showToast("❌ يرجى إرفاق المستندات للخطوات المكتملة", "error");
+           return; 
+        }
+        if (planArr.length > 0 && totalWeight !== 100) { 
+           alert(`تحذير: مجموع الأوزان هو ${totalWeight} وليس 100 كما ينبغي.`); 
+           document.getElementById(`btnSave`).disabled = false;
+           showToast("❌ يرجى التحقق من أوزان الخطوات", "error"); 
+           return; 
+        }
+
+        // الحساب التلقائي لحالة المبادرة بناءً على حالة خطوات خطة العمل
+        let autoStatus = currentItem.status;
+        if(totalSteps > 0) {
+           if(completedSteps === totalSteps) autoStatus = "مكتملة";
+           else if(notStartedSteps === totalSteps) autoStatus = "لم تبدأ";
+           else autoStatus = "قيد التنفيذ";
+        }
 
         const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
         const getEditVal = (idBase) => document.getElementById(idBase + '_edit') ? document.getElementById(idBase + '_edit').value : getVal(idBase);
@@ -584,11 +614,12 @@
 
         const payload = {
           initiative_name: getVal(`f_name`), timeline: getVal(`f_time`),
-          completion_percentage: planArr.length > 0 ? completedWeight : pctNumber(getVal(`f_pct`)),
+          completion_percentage: planArr.length > 0 ? completedWeight : 0, // حساب الإنجاز التلقائي
           estimated_budget: getVal(`f_budg`), remaining_amount: getVal(`f_rem`), description: getVal(`f_desc`),
           executing_entity: executingEntityVal, supporting_entity: getVal(`f_supp`), responsible_directorate: getVal(`f_dept`),
           program_name: getEditVal('f_prog'), five_year_programs: getVal(`f_fyp`), five_year_indicators: getVal(`f_fyi`),
-          start_date: getEditVal('f_start') || null, end_date: getEditVal('f_end') || null, status: getEditVal('f_status'),
+          start_date: getEditVal('f_start') || null, end_date: getEditVal('f_end') || null, 
+          status: autoStatus, // تطبيق الحساب التلقائي
           follow_up_responsible: getVal(`f_fum`), executive_status: getVal(`f_execpos`), challenges: getVal(`f_chal`),
           latest_update: getVal(`f_lupd`), notes: getVal(`f_note`), implementation_manager: getVal(`f_exm`),
           phone_number: getVal(`f_phone`), email: getVal(`f_email`),
@@ -598,11 +629,10 @@
         
         const { error } = await window.supabaseClient.from('initiatives').update(payload).eq('id', currentItem.id);
         if (error) throw error;
-        showToast("✅ تم الحفظ!", "success"); setTimeout(() => location.reload(), 1000);
+        showToast("✅ تم الحفظ بنجاح!", "success"); setTimeout(() => location.reload(), 1000);
       } catch (e) { showToast("❌ فشل: " + e.message, "error"); document.getElementById(`btnSave`).disabled = false; }
     }
 
-    /* الذكاء الاصطناعي والمحادثة */
     async function askSmartAdvisor() {
       document.getElementById('aiModal').classList.add('show'); document.getElementById('aiLoading').style.display = 'block'; document.getElementById('aiResponseContent').style.display = 'none';
       const payload = { ...currentItem };
