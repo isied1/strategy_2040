@@ -311,8 +311,7 @@
           };
         });
 
-        const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*');
-        if (entError) {
+const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });        if (entError) {
           const uniqueEntities = [...new Set((initData || []).map(i => i.executing_entity).filter(Boolean))];
           entitiesList = uniqueEntities.map((name, index) => ({ id: index, name: name, contact: "—", phone: "—", email: "—" }));
         } else { entitiesList = entData || []; }
