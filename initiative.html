@@ -266,8 +266,7 @@
         const { data: itemData, error } = await window.supabaseClient.from('initiatives').select('*').eq('id', id).single();
         if (error || !itemData) throw new Error("المبادرة غير موجودة");
         
-        const { data: entData } = await window.supabaseClient.from('entities').select('*');
-        entitiesList = entData || [];
+const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });        entitiesList = entData || [];
 
         let parsedGoals = []; if(itemData.goals) parsedGoals = itemData.goals.split('|').map(g => g.trim()).filter(Boolean);
         let parsedKpis = []; if(itemData.kpis) parsedKpis = itemData.kpis.split('|').map(k => k.trim()).filter(Boolean);
@@ -455,8 +454,7 @@
                   </td>
                   <td style="text-align:center; vertical-align:middle;">
                     <input type="hidden" class="step-doc-path" value="${escapeHtml(r.docPath || '')}" id="doc_path_${idx}" />
-                    <a class="text-view togglable" href="${r.docPath ? 'https://ictyhtprnmfewjrlrctg.supabase.co/storage/v1/object/public/step_documents/' + r.docPath : '#'}" target="_blank" style="text-decoration:none; display:${r.docPath ? 'inline-block' : 'none'}; font-size:18px;" title="عرض المستند">📄</a>
-                    <button type="button" class="btn-review step-doc-btn edit-input" style="background:${r.docPath ? '#16a34a' : 'transparent'}; border:1px solid var(--line); color:${r.docPath ? '#fff' : 'var(--muted)'}; padding:6px; font-size:14px; margin: 0 auto;" onclick="document.getElementById('file_step_${idx}').click()" title="${r.docPath ? 'استبدال المستند' : 'إرفاق مستند'}">📄</button>
+<a class="text-view togglable" href="${r.docPath ? 'https://ictyhtprnmfewjrlrctg.supabase.co/storage/v1/object/public/step_documents/' + r.docPath + '?download=' : '#'}" download style="text-decoration:none; display:${r.docPath ? 'inline-block' : 'none'}; font-size:18px;" title="تحميل المستند">📄</a>                    <button type="button" class="btn-review step-doc-btn edit-input" style="background:${r.docPath ? '#16a34a' : 'transparent'}; border:1px solid var(--line); color:${r.docPath ? '#fff' : 'var(--muted)'}; padding:6px; font-size:14px; margin: 0 auto;" onclick="document.getElementById('file_step_${idx}').click()" title="${r.docPath ? 'استبدال المستند' : 'إرفاق مستند'}">📄</button>
                     <input type="file" id="file_step_${idx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${idx}')" />
                   </td>
                   <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
