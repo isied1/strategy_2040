@@ -258,6 +258,7 @@
 
     let initiatives = [];
     let currentUser = null;
+    let entitiesList = []; // تم الإضافة للاحتفاظ بقائمة الجهات
     window.currentTopInits = []; 
     window.currentDelayedInits = []; 
     let chatHistoryLog = [];
@@ -282,6 +283,18 @@
     function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function pctNumber(v) { const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
     
+    // دالة تحويل الـ ID لأسماء للعرض
+    function getEntityNames(savedValue) {
+      if (!savedValue || savedValue === "—") return "—";
+      const parts = savedValue.split('،').map(s => s.trim());
+      const names = parts.map(part => {
+        let ent = entitiesList.find(e => String(e.id) === String(part));
+        if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
+        return ent ? ent.name : part; 
+      }).filter(Boolean);
+      return names.length > 0 ? names.join('، ') : "—";
+    }
+
     let toastTimeout;
     function showToast(message, type = "") {
       const toast = document.getElementById("toastPopup"); toast.className = "toast-popup show " + type; toast.innerHTML = message;
@@ -290,7 +303,7 @@
     }
 
     // جلب الصلاحيات من جدول profiles
-async function fetchUserProfile(email) {
+    async function fetchUserProfile(email) {
       const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
       
       // 🌟 التحديث الأمني: الطرد الفوري لأي شخص يتسلل بدون أن تضيفه الإدارة
@@ -350,19 +363,25 @@ async function fetchUserProfile(email) {
       fetchCloudData();
     }
 
-async function fetchCloudData() {
+    async function fetchCloudData() {
       document.getElementById('loading').classList.remove('hidden'); 
       document.getElementById('dashboardContent').classList.add('hidden');
       
-      const { data, error } = await window.supabaseClient.from('initiatives').select('*').order('created_at', { ascending: true });
+      // جلب المبادرات والجهات المنفذة معاً
+      const [initRes, entRes] = await Promise.all([
+        window.supabaseClient.from('initiatives').select('*').order('created_at', { ascending: true }),
+        window.supabaseClient.from('entities').select('*').order('id', { ascending: true })
+      ]);
       
-      if (error) { 
-        showToast("فشل جلب البيانات: " + error.message, "error"); 
+      if (initRes.error) { 
+        showToast("فشل جلب البيانات: " + initRes.error.message, "error"); 
       } else { 
+        entitiesList = entRes.data || []; // حفظ قائمة الجهات في المتغير العام
+
         document.getElementById('loading').classList.add('hidden'); 
         document.getElementById('dashboardContent').classList.remove('hidden'); 
         
-        let rawInitiatives = data || [];
+        let rawInitiatives = initRes.data || [];
 
         // 🌟 فلتر الصلاحيات: حجب المبادرات غير المصرح بها
         if (currentUser.role !== 'admin' && currentUser.allowed_initiatives && currentUser.allowed_initiatives.trim() !== '') {
@@ -390,7 +409,8 @@ async function fetchCloudData() {
         if (status !== "مكتملة" && item.end_date) { const end = new Date(item.end_date); if (!isNaN(end) && end < today) { delayedCount++; item.delayedDays = Math.floor((today - end) / (1000 * 60 * 60 * 24)); window.currentDelayedInits.push(item); } }
         const progName = (item.program_name || "").trim();
         if (programs[progName] !== undefined) { programs[progName].count++; programs[progName].totalPct += pct; }
-        const entityField = (item.executing_entity || "").trim();
+        
+        const entityField = getEntityNames(item.executing_entity || "").trim(); // استخدام الدالة الجديدة لجلب الاسم
         if (entityField && entityField !== "—") { const parts = entityField.split(/[،,]/).map(p => p.trim()).filter(Boolean); parts.forEach(ent => { if (!entities[ent]) entities[ent] = { count: 0, totalPct: 0 }; entities[ent].count++; entities[ent].totalPct += pct; }); }
         if (item.is_key_initiative && String(item.is_key_initiative).trim() === "نعم") { window.currentTopInits.push(item); }
       });
@@ -415,7 +435,7 @@ async function fetchCloudData() {
 
       const topList = document.getElementById('topInitiativesList'); topList.innerHTML = '';
       if(window.currentTopInits.length === 0) { topList.innerHTML = '<div style="color:var(--muted); text-align:center; padding:20px; line-height:1.6">لا توجد مبادرات مميزة محددة حالياً.</div>'; } 
-      else { window.currentTopInits.forEach(item => { topList.innerHTML += `<div class="top-init-item" onclick="openInitModal('${item.id}')"><h4>${escapeHtml(item.initiative_name)}</h4><div class="top-init-flex"><span>الجهة المنفذة: <b>${escapeHtml(item.executing_entity || 'غير محددة')}</b></span><span class="top-init-pct">${Math.round(pctNumber(item.completion_percentage))}%</span></div></div>`; }); }
+      else { window.currentTopInits.forEach(item => { topList.innerHTML += `<div class="top-init-item" onclick="openInitModal('${item.id}')"><h4>${escapeHtml(item.initiative_name)}</h4><div class="top-init-flex"><span>الجهة المنفذة: <b>${escapeHtml(getEntityNames(item.executing_entity) || 'غير محددة')}</b></span><span class="top-init-pct">${Math.round(pctNumber(item.completion_percentage))}%</span></div></div>`; }); }
     }
 
     function openInitModal(id) {
@@ -453,7 +473,7 @@ initsDetailsArr.push(
           `- خطة العمل: ${item.action_plan || "—"}\n` +
           `- نسبة التنفيذ: ${Math.round(pct)}%\n` +
           `- الموازنة التقديرية: ${item.estimated_budget || "—"}\n` +
-          `- الجهة المنفذة: ${item.executing_entity || "—"}\n` +
+          `- الجهة المنفذة: ${getEntityNames(item.executing_entity) || "—"}\n` +
           `- الخطة الزمنية: ${item.timeline || "—"}\n` +
           `- اسم البرنامج: ${item.program_name || "—"}\n` +
           `- تاريخ البدء: ${item.start_date || "—"} | تاريخ الانتهاء: ${item.end_date || "—"}\n` +
@@ -495,13 +515,13 @@ async function sendChatMessage() {
       chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}" style="color:var(--muted); font-style:italic;">⏳ جاري الرد ...</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
 
-      // 🌟 التحديث: تضمين كافة الحقول المطلوبة لتغذية الذكاء الاصطناعي
+      // 🌟 التحديث: تضمين كافة الحقول المطلوبة لتغذية الذكاء الاصطناعي مع معالجة أسماء الجهات
       let contextData = initiatives.map(item => `📌 [رقم المبادرة: ${item.initiative_number || "—"}]
 - اسم المبادرة: ${item.initiative_name || "—"}
 - وصف المبادرة: ${item.description || "—"}
 - أهداف المبادرة: ${item.goals || "—"}
 - نسبة التنفيذ: ${Math.round(pctNumber(item.completion_percentage))}%
-- الجهة المنفذة: ${item.executing_entity || "—"}
+- الجهة المنفذة: ${getEntityNames(item.executing_entity) || "—"}
 - الخطة الزمنية: ${item.timeline || "—"}
 - اسم البرنامج: ${item.program_name || "—"}
 - تاريخ البدء: ${item.start_date || "—"} | تاريخ الانتهاء: ${item.end_date || "—"}
