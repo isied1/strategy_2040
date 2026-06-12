@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>تفاصيل المبادرة - الاستراتيجية الصناعية 2040</title>
@@ -17,10 +16,10 @@
     .header-bar h1 { margin: 0; color: var(--brand2); font-size: 22px; font-weight: 800; }
     .header-user { display: flex; align-items: center; gap: 16px; font-weight: bold; }
     
-    .btn-logout { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; }
-    .btn-logout:hover { background: #dc2626; }
     .btn-primary { background: var(--brand); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.2s; }
     .btn-primary:hover { background: var(--brand2); }
+    .btn-logout { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; }
+    .btn-logout:hover { background: #dc2626; }
     
     .dropdown { position: relative; display: inline-block; height: 100%; }
     .dropdown-content { display: none; position: absolute; left: 0; top: calc(100% + 8px); background-color: #fff; min-width: 240px; box-shadow: var(--shadow); border: 1px solid var(--line); border-radius: 12px; z-index: 1000; overflow: hidden; }
@@ -125,7 +124,6 @@
 <body>
   <div id="toastPopup" class="toast-popup"></div>
 
-  <!-- نافذة إدارة الجهات المنفذة -->
   <div class="modal-overlay" id="entityModal">
     <div class="modal-content">
       <h2 style="color:var(--brand2); margin-top:0;">إدارة الجهات المنفذة</h2>
@@ -157,13 +155,13 @@
   </div>
 
   <header id="appHeader" class="header-bar shell" style="max-width: 100%; margin-bottom: 24px;">
-    <h1>الاستراتيجية الصناعية</h1>
+    <h1>الاستراتيجية الصناعية 2040 - استعراض المبادرات</h1>
     <div class="header-user">
       <div class="dropdown" style="position: relative; display: inline-block;">
         <span id="displayUserName" onclick="toggleUserDropdown()" style="padding: 4px 8px; border-radius: 8px;"></span>
         <div id="userDropdownMenu" class="dropdown-content" style="right: 0; left: auto; min-width: 180px;">
-          <button id="btnAdminUsers" class="hidden" onclick="goToAdminPage()" style="font-weight: bold; color: var(--brand2);">إدارة المستخدمين</button>
-          <button id="btnAdminEntities" class="hidden" onclick="openManageEntitiesModal()" style="font-weight: bold; color: var(--brand2);">إدارة الجهات المنفذة</button>
+          <button id="btnAdminUsers" class="hidden" onclick="goToAdminPage()" style="font-weight: bold; color: var(--brand2);">إدارة المستخدمين ⚙️</button>
+          <button id="btnAdminEntities" class="hidden" onclick="openManageEntitiesModal()" style="font-weight: bold; color: var(--brand2);">إدارة الجهات المنفذة 🏢</button>
         </div>
       </div>
       <span id="displayUserRole" style="font-size:11px; background:#e2e8f0; padding:2px 8px; border-radius:10px; color:#475569;"></span>
@@ -223,36 +221,35 @@
 
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
-// 1. دالة لتحويل الـ ID المحفوظ إلى أسماء تُعرض للمستخدم
-function getEntityNames(savedValue) {
-  if (!savedValue || savedValue === "—") return "—";
-  const parts = savedValue.split('،').map(s => s.trim());
-  const names = parts.map(part => {
-    let ent = entitiesList.find(e => String(e.id) === String(part));
-    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
-    return ent ? ent.name : part; 
-  }).filter(Boolean);
-  return names.length > 0 ? names.join('، ') : "—";
-}
+    
+    // 🌟 دوال مساعدة لربط الجهات برقم الـ ID
+    function getEntityNames(savedValue) {
+      if (!savedValue || savedValue === "—") return "—";
+      const parts = savedValue.split('،').map(s => s.trim());
+      const names = parts.map(part => {
+        let ent = entitiesList.find(e => String(e.id) === String(part));
+        if (!ent) ent = entitiesList.find(e => e.name === part);
+        return ent ? ent.name : part; 
+      }).filter(Boolean);
+      return names.length > 0 ? names.join('، ') : "—";
+    }
 
-// 2. دالة لضبط علامات (الصح) في القائمة المنسدلة
-function getEntityIds(savedValue) {
-  if (!savedValue || savedValue === "—") return [];
-  const parts = savedValue.split('،').map(s => s.trim());
-  return parts.map(part => {
-    let ent = entitiesList.find(e => String(e.id) === String(part));
-    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
-    return ent ? String(ent.id) : part; 
-  });
-}
+    function getEntityIds(savedValue) {
+      if (!savedValue || savedValue === "—") return [];
+      const parts = savedValue.split('،').map(s => s.trim());
+      return parts.map(part => {
+        let ent = entitiesList.find(e => String(e.id) === String(part));
+        if (!ent) ent = entitiesList.find(e => e.name === part);
+        return ent ? String(ent.id) : part; 
+      });
+    }
 
-// 3. تعديل دالة العرض لتأخذ الاسم من (data-name) بدلاً من قيمة الحقل التي أصبحت ID
-function updateMultiSelectDisplay(dropdownId, dispId) { 
-  const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); 
-  const names = Array.from(checkboxes).map(cb => cb.dataset.name); // الاعتماد على الاسم للعرض
-  document.getElementById(dispId).textContent = names.length > 0 ? names.join('، ') : 'اختر الجهات...'; 
-}
-      
+    function updateMultiSelectDisplay(dropdownId, dispId) { 
+      const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); 
+      const names = Array.from(checkboxes).map(cb => cb.dataset.name);
+      document.getElementById(dispId).textContent = names.length > 0 ? names.join('، ') : 'اختر الجهات...'; 
+    }
+    
     let toastTimeout;
     function showToast(message, type = "") {
       const toast = document.getElementById("toastPopup");
@@ -261,41 +258,69 @@ function updateMultiSelectDisplay(dropdownId, dispId) {
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
-    async function logoutUser() { await window.supabaseClient.auth.signOut(); window.location.href = 'login.html'; }
-    function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
-    function goToAdminPage() { window.location.href = "admin.html"; }
+    // إدارة النشاط والخمول
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; 
+    function resetActivityTimer() { localStorage.setItem('last_activity_time', Date.now()); }
+    function checkInactivity() {
+      const lastActive = localStorage.getItem('last_activity_time');
+      if (lastActive && (Date.now() - parseInt(lastActive) > INACTIVITY_LIMIT)) {
+        logoutUser("انتهت جلسة العمل بسبب عدم النشاط. يرجى تسجيل الدخول مجدداً.");
+      }
+    }
+    ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => { document.addEventListener(event, resetActivityTimer, { passive: true }); });
+    setInterval(checkInactivity, 60000); 
+
+    async function fetchUserProfile(email) {
+      const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
+      if (error || !data) { alert("حسابك غير مسجل في قائمة الصلاحيات."); await window.supabaseClient.auth.signOut(); window.location.href = 'login.html'; return null; }
+      return { email: data.email, name: data.name || email.split('@')[0], role: String(data.role || 'viewer').toLowerCase().trim(), allowed_initiatives: data.allowed_initiatives || '' };
+    }
 
     window.onload = async function() {
       const urlParams = new URLSearchParams(window.location.search);
       const initId = urlParams.get('id');
       if (!initId) { document.getElementById('loadingMsg').innerHTML = '❌ لم يتم تحديد مبادرة لعرضها. يرجى العودة للقائمة.'; return; }
 
-      const { data: { session } } = await window.supabaseClient.auth.getSession();
-      if (session && session.user) {
-        const { data: profile } = await window.supabaseClient.from('profiles').select('role, name').eq('email', session.user.email).single();
-        currentUser = profile ? { name: profile.name, role: String(profile.role).toLowerCase() } : { name: "مستخدم", role: "viewer" };
-        
-        document.getElementById('displayUserName').textContent = currentUser.name;
-        if (currentUser.role === 'admin') {
-          document.getElementById('displayUserRole').textContent = 'مدير النظام'; 
-          document.getElementById('displayUserName').style.cursor = 'pointer';
-          document.getElementById('displayUserName').style.textDecoration = 'underline';
-          document.getElementById('btnAdminUsers').classList.remove('hidden'); 
-          document.getElementById('btnAdminEntities').classList.remove('hidden'); 
-        } else { 
-          document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
-        }
+      try {
+        const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+        if (session && session.user) {
+          currentUser = await fetchUserProfile(session.user.email);
+          resetActivityTimer();
+          
+          document.getElementById('displayUserName').textContent = currentUser.name;
+          if (currentUser.role === 'admin') {
+            document.getElementById('displayUserRole').textContent = 'مدير النظام'; 
+            document.getElementById('displayUserName').style.cursor = 'pointer';
+            document.getElementById('displayUserName').style.textDecoration = 'underline';
+            document.getElementById('btnAdminUsers').classList.remove('hidden'); 
+            document.getElementById('btnAdminEntities').classList.remove('hidden'); 
+          } else { 
+            document.getElementById('displayUserRole').textContent = currentUser.role === 'editor' ? 'صلاحية التعديل' : 'للمشاهدة فقط';
+          }
 
-        await loadInitiativeData(initId);
-      } else { window.location.href = 'login.html'; }
+          await loadInitiativeData(initId);
+        } else { window.location.href = 'login.html'; }
+      } catch(e) { window.location.href = 'login.html'; }
     };
+
+    async function logoutUser(msg = "تم تسجيل الخروج بنجاح.") { 
+      await window.supabaseClient.auth.signOut(); 
+      localStorage.removeItem('last_activity_time');
+      currentUser = null;
+      if(msg) alert(msg);
+      window.location.href = 'login.html'; 
+    }
+    
+    function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
+    function goToAdminPage() { window.location.href = "admin.html"; }
 
     async function loadInitiativeData(id) {
       try {
         const { data: itemData, error } = await window.supabaseClient.from('initiatives').select('*').eq('id', id).single();
         if (error || !itemData) throw new Error("المبادرة غير موجودة");
         
-const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });        entitiesList = entData || [];
+        const { data: entData } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });
+        entitiesList = entData || [];
 
         let parsedGoals = []; if(itemData.goals) parsedGoals = itemData.goals.split('|').map(g => g.trim()).filter(Boolean);
         let parsedKpis = []; if(itemData.kpis) parsedKpis = itemData.kpis.split('|').map(k => k.trim()).filter(Boolean);
@@ -344,14 +369,14 @@ const { data: entData, error: entError } = await window.supabaseClient.from('ent
       const canEdit = currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin');
       const editBtnHtml = canEdit ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit" onclick="enableEditMode()">تعديل البيانات 📝</button>` : '';
       
-const execNamesDisplay = getEntityNames(item.executingEntity);
-const currentExecIds = getEntityIds(item.executingEntity);
+      const execNamesDisplay = getEntityNames(item.executingEntity);
+      const currentExecIds = getEntityIds(item.executingEntity);
 
-const checkBoxesHtml = entitiesList.map(e => { 
-  const isChecked = currentExecIds.includes(String(e.id)) ? 'checked' : ''; 
-  return `<label class="multi-select-item"><input type="checkbox" value="${e.id}" data-name="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown', 'exec_disp')"><span>${escapeHtml(e.name)}</span></label>`; 
-}).join('');
-        
+      const checkBoxesHtml = entitiesList.map(e => { 
+        const isChecked = currentExecIds.includes(String(e.id)) ? 'checked' : ''; 
+        return `<label class="multi-select-item"><input type="checkbox" value="${e.id}" data-name="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown', 'exec_disp')"><span>${escapeHtml(e.name)}</span></label>`; 
+      }).join('');
+
       let statusColor = '#64748b'; if(item.status === 'مكتملة') statusColor = '#16a34a'; else if(item.status === 'قيد التنفيذ') statusColor = '#eab308';
 
       container.innerHTML = `
@@ -488,7 +513,8 @@ const checkBoxesHtml = entitiesList.map(e => {
                   </td>
                   <td style="text-align:center; vertical-align:middle;">
                     <input type="hidden" class="step-doc-path" value="${escapeHtml(r.docPath || '')}" id="doc_path_${idx}" />
-<a class="text-view togglable" href="${r.docPath ? 'https://ictyhtprnmfewjrlrctg.supabase.co/storage/v1/object/public/step_documents/' + r.docPath + '?download=' : '#'}" download style="text-decoration:none; display:${r.docPath ? 'inline-block' : 'none'}; font-size:18px;" title="تحميل المستند">📄</a>                    <button type="button" class="btn-review step-doc-btn edit-input" style="background:${r.docPath ? '#16a34a' : 'transparent'}; border:1px solid var(--line); color:${r.docPath ? '#fff' : 'var(--muted)'}; padding:6px; font-size:14px; margin: 0 auto;" onclick="document.getElementById('file_step_${idx}').click()" title="${r.docPath ? 'استبدال المستند' : 'إرفاق مستند'}">📄</button>
+                    <a class="text-view togglable" href="${r.docPath ? 'https://ictyhtprnmfewjrlrctg.supabase.co/storage/v1/object/public/step_documents/' + r.docPath + '?download=' : '#'}" download style="text-decoration:none; display:${r.docPath ? 'inline-block' : 'none'}; font-size:18px;" title="تحميل المستند">📄</a>
+                    <button type="button" class="btn-review step-doc-btn edit-input" style="background:${r.docPath ? '#16a34a' : 'transparent'}; border:1px solid var(--line); color:${r.docPath ? '#fff' : 'var(--muted)'}; padding:6px; font-size:14px; margin: 0 auto;" onclick="document.getElementById('file_step_${idx}').click()" title="${r.docPath ? 'استبدال المستند' : 'إرفاق مستند'}">📄</button>
                     <input type="file" id="file_step_${idx}" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx" onchange="uploadStepDoc(event, '${idx}')" />
                   </td>
                   <td class="act-cell-remove"><button type="button" class="btn-circle btn-remove-item" onclick="confirmRemoveRow(this, true)">-</button></td>
@@ -499,6 +525,7 @@ const checkBoxesHtml = entitiesList.map(e => {
           </div>
 
           <div class="section"><div class="section-title">الموقف التنفيذي</div><div class="text"><textarea id="f_execpos" class="card-control" rows="1" disabled>${escapeHtml(item.executivePosition)}</textarea></div></div>
+          
           <div class="section"><div class="section-title" style="color:var(--brand2)">التحديات / المعوقات</div><div class="text"><textarea id="f_chal" class="card-control" rows="1" disabled>${escapeHtml(item.challenges)}</textarea></div></div>
           <div class="section"><div class="section-title">آخر تحديث</div><div class="text"><textarea id="f_lupd" class="card-control" rows="1" disabled>${escapeHtml(item.lastUpdate)}</textarea></div></div>
           <div class="section"><div class="section-title">الملاحظات</div><div class="text"><textarea id="f_note" class="card-control" rows="1" disabled>${escapeHtml(item.notes)}</textarea></div></div>
@@ -612,24 +639,19 @@ const checkBoxesHtml = entitiesList.map(e => {
     function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
     function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
     
-async function saveEntity() {
+    async function saveEntity() {
        const id = document.getElementById('ent_rowIndex').value;
        const name = document.getElementById('ent_name').value.trim();
        const contact = document.getElementById('ent_contact').value.trim();
        const phone = document.getElementById('ent_phone').value.trim();
        const email = document.getElementById('ent_email').value.trim();
-       
        if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
        showToast("⏳ جاري الحفظ...");
-       
        const payload = { name, contact, phone, email };
        let result;
        
-       if(id) { 
-           result = await window.supabaseClient.from('entities').update(payload).eq('id', id); 
-       } else { 
-           result = await window.supabaseClient.from('entities').insert([payload]); 
-       }
+       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
+       else { result = await window.supabaseClient.from('entities').insert([payload]); }
 
        if(result.error) { 
            showToast("فشل حفظ البيانات: " + result.error.message, "error"); 
@@ -637,17 +659,12 @@ async function saveEntity() {
            showToast("✅ تم حفظ الجهة بنجاح", "success"); 
            resetEntityForm(); 
            
-           // التعديل: جلب الجهات المحدثة من القاعدة لضمان الترتيب والحصول على ID الجهات الجديدة
            const { data: updatedEntities } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });
-           
            if(updatedEntities) {
-               entitiesList = updatedEntities; // تحديث المصفوفة في الذاكرة
-               renderEntityTable(); // تحديث الجدول المعروض أمامك فوراً
-               
-               // تحديث القوائم المنسدلة في الخلفية بدون الحاجة لإعادة تحميل الصفحة بالكامل
-               if (typeof renderEntityOptions === 'function') {
-                   renderEntityOptions(document.getElementById('entitySearchBox').value || ''); 
-               }
+               entitiesList = updatedEntities; 
+               renderEntityTable(); 
+               if (typeof renderEntityOptions === 'function') { renderEntityOptions(document.getElementById('entitySearchBox').value || ''); }
+               loadInitiativeData(currentItem.id);
            }
        }
     }
@@ -668,7 +685,7 @@ async function saveEntity() {
 
     async function upload3FeetPlan(event) {
       const file = event.target.files[0]; if (!file) return;
-      showToast("⏳ جاري الرفع..."); const btn = document.getElementById(`btn3feet`); btn.textContent = "جاري الرفع... ⏳"; btn.disabled = true;
+      showToast("⏳ جاري الرفع...", "success"); const btn = document.getElementById(`btn3feet`); btn.textContent = "جاري الرفع... ⏳"; btn.disabled = true;
       try {
         const fileName = `plan_${currentItem.id}_${Date.now()}.${file.name.split('.').pop()}`;
         const { data, error } = await window.supabaseClient.storage.from('3feet_plans').upload(fileName, file, { upsert: true });
@@ -679,32 +696,16 @@ async function saveEntity() {
       } catch (err) { showToast("❌ خطأ: " + err.message, "error"); btn.textContent = "تحديث 3feet plan 📁"; btn.disabled = false; }
     }
 
-async function download3FeetPlan() {
+    async function download3FeetPlan() {
        const path = document.getElementById(`f_plan_file`).value;
-       if (!path || path === "—" || path.trim() === "") { 
-           showToast("لا يوجد ملف مرفق.", "error"); 
-           return; 
-       }
-       
-       showToast("⏳ جاري التحميل...", "success"); // إظهار الإشعار المبدئي
-       
+       if (!path || path === "—") { showToast("لا يوجد ملف مرفق.", "error"); return; }
+       showToast("⏳ جاري التحميل...", "success");
        try {
            const { data, error } = await window.supabaseClient.storage.from('3feet_plans').download(path);
            if (error) throw error;
-           
-           const url = URL.createObjectURL(data); 
-           const a = document.createElement('a'); 
-           a.href = url; 
-           a.download = path.split('/').pop(); 
-           document.body.appendChild(a); 
-           a.click(); 
-           document.body.removeChild(a); 
-           URL.revokeObjectURL(url);
-           
-           showToast("✅ تم تحميل الملف بنجاح!", "success"); // سيستبدل الإشعار القديم
-       } catch (err) {
-           showToast("❌ تعذر التحميل أو حدث خطأ.", "error");
-       }
+           const url = URL.createObjectURL(data); const a = document.createElement('a'); a.href = url; a.download = path.split('/').pop(); document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+           showToast("✅ تم تحميل الملف بنجاح!", "success");
+       } catch(e) { showToast("❌ تعذر التحميل.", "error"); }
     }
 
     async function saveData() {
@@ -781,7 +782,7 @@ async function download3FeetPlan() {
 
     async function askSmartAdvisor() {
       document.getElementById('aiModal').classList.add('show'); document.getElementById('aiLoading').style.display = 'block'; document.getElementById('aiResponseContent').style.display = 'none';
-      const payload = { ...currentItem };
+      const payload = { ...currentItem, executingEntity: getEntityNames(currentItem.executingEntity) };
       const { data: res, error } = await window.supabaseClient.functions.invoke('get-card-ai-advice', { body: payload });
       document.getElementById('aiLoading').style.display = 'none'; document.getElementById('aiResponseContent').style.display = 'block';
       if(!error && res.success) { document.getElementById('aiResponseContent').innerHTML = res.advice; document.getElementById('btnDownloadCardWord').style.display = 'inline-block'; } 
@@ -795,11 +796,12 @@ async function download3FeetPlan() {
       chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] }); input.value = '';
       const loadingId = 'loading-' + Date.now(); chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}">⏳...</div>`; chatBody.scrollTop = chatBody.scrollHeight;
       
-      const contextData = `المبادرة: ${currentItem.initiativeName}، النسبة: ${currentItem.completionPercent}%، التحديات: ${currentItem.challenges}`;
+      const contextData = `المبادرة: ${currentItem.initiativeName}، النسبة: ${currentItem.completionPercent}%، المنفذ: ${getEntityNames(currentItem.executingEntity)}، التحديات: ${currentItem.challenges}`;
       const { data: res, error } = await window.supabaseClient.functions.invoke('chat-bot', { body: { context: contextData, history: chatHistoryLog.slice(-5) } });
       
       document.getElementById(loadingId).remove();
       if(!error && res.success) { chatBody.innerHTML += `<div class="chat-msg ai">${res.reply.replace(/\n/g, '<br>')}</div>`; chatHistoryLog.push({ role: 'model', parts: [{ text: res.reply }] }); }
+      else { chatBody.innerHTML += `<div class="chat-msg ai" style="color:red">❌ فشل الاتصال.</div>`; chatHistoryLog.pop(); }
       chatBody.scrollTop = chatBody.scrollHeight;
     }
     
