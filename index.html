@@ -264,21 +264,53 @@
     let chatHistoryLog = [];
 
     // ----- 🛡️ نظام إدارة الجلسة والنشاط (الخروج التلقائي بعد 30 دقيقة) -----
+// ----- 🛡️ نظام إدارة الجلسة والنشاط (مُحسّن) -----
     const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 دقيقة بالملي ثانية
-    
-    function resetActivityTimer() { localStorage.setItem('last_activity_time', Date.now()); }
+    let lastActivityUpdate = 0; // لتقليل الضغط على المتصفح
+
+    // دالة خاصة بالخروج التلقائي (بدون استخدام alert الذي يُجمد المتصفح)
+    async function executeAutoLogout() {
+      localStorage.removeItem('last_activity_time');
+      if (window.supabaseClient) {
+          await window.supabaseClient.auth.signOut();
+      }
+      currentUser = null;
+      // توجيه المستخدم لصفحة الدخول (يمكنك التقاط هذا المتغير في صفحة الدخول لعرض رسالة)
+      window.location.href = 'login.html?timeout=1';
+    }
+
     function checkInactivity() {
       const lastActive = localStorage.getItem('last_activity_time');
       if (lastActive && (Date.now() - parseInt(lastActive) > INACTIVITY_LIMIT)) {
-        logoutUser("انتهت جلسة العمل بسبب عدم النشاط لمدة 30 دقيقة للحماية. يرجى تسجيل الدخول مجدداً.");
+        executeAutoLogout();
       }
     }
-    // تحديث النشاط عند أي حركة أو ضغطة زر
-    ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+
+    function resetActivityTimer() {
+      const now = Date.now();
+      const lastActive = localStorage.getItem('last_activity_time');
+
+      // 1. فحص استباقي: إذا مر 30 دقيقة، امنع تحديث الوقت وقم بتسجيل الخروج فوراً
+      if (lastActive && (now - parseInt(lastActive) > INACTIVITY_LIMIT)) {
+         executeAutoLogout();
+         return;
+      }
+
+      // 2. تحديث العداد كل 3 ثوانٍ كحد أقصى (لمنع انهيار أداء المتصفح بسبب حركة الماوس)
+      if (now - lastActivityUpdate > 3000) {
+        localStorage.setItem('last_activity_time', now);
+        lastActivityUpdate = now;
+      }
+    }
+
+    // إضافة المستمعين (تمت إضافة visibilitychange لالتقاط عودة المستخدم للنافذة)
+    ['click', 'mousemove', 'keypress', 'scroll', 'touchstart', 'visibilitychange'].forEach(event => {
         document.addEventListener(event, resetActivityTimer, { passive: true });
     });
-    // فحص النشاط كل 60 ثانية
+
+    // الفحص الدوري
     setInterval(checkInactivity, 60000); 
+    // -----------------------------------------------------------------
 
     function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function pctNumber(v) { const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
