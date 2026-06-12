@@ -234,6 +234,35 @@
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function normalizeForCompare(v){ return String(v ?? '').replace(/\s+/g,' ').trim().replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ًٌٍَُِّْـ]/g,'').toLowerCase(); }
     function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
+    // 1. دالة لتحويل الـ ID المحفوظ إلى أسماء تُعرض للمستخدم
+function getEntityNames(savedValue) {
+  if (!savedValue || savedValue === "—") return "—";
+  const parts = savedValue.split('،').map(s => s.trim());
+  const names = parts.map(part => {
+    let ent = entitiesList.find(e => String(e.id) === String(part));
+    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
+    return ent ? ent.name : part; 
+  }).filter(Boolean);
+  return names.length > 0 ? names.join('، ') : "—";
+}
+
+// 2. دالة لضبط علامات (الصح) في القائمة المنسدلة
+function getEntityIds(savedValue) {
+  if (!savedValue || savedValue === "—") return [];
+  const parts = savedValue.split('،').map(s => s.trim());
+  return parts.map(part => {
+    let ent = entitiesList.find(e => String(e.id) === String(part));
+    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
+    return ent ? String(ent.id) : part; 
+  });
+}
+
+// 3. تعديل دالة العرض لتأخذ الاسم من (data-name) بدلاً من قيمة الحقل التي أصبحت ID
+function updateMultiSelectDisplay(dropdownId, dispId) { 
+  const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); 
+  const names = Array.from(checkboxes).map(cb => cb.dataset.name); // الاعتماد على الاسم للعرض
+  document.getElementById(dispId).textContent = names.length > 0 ? names.join('، ') : 'اختر الجهات...'; 
+}
     
     let toastTimeout;
     function showToast(message, type = "") {
@@ -330,14 +359,18 @@ const { data: entData, error: entError } = await window.supabaseClient.from('ent
       els.followUpSelect.innerHTML = opts.join('');
     }
 
-    function getFilteredData(){
-      const q = normalizeForCompare(els.searchInput.value), fu = normalizeForCompare(els.followUpSelect.value), prog = normalizeForCompare(els.programSelect.value);
-      let data = initiatives.filter(item => {
-        const blob = [item.initiativeNo, item.initiativeName, item.description, item.executingEntity].join(' ');
-        return (!q || normalizeForCompare(blob).includes(q)) && (!selectedEntity || normalizeForCompare(item.executingEntity).includes(normalizeForCompare(selectedEntity))) && (!fu || normalizeForCompare(item.followUpManager).includes(fu)) && (!prog || normalizeForCompare(item.programName).includes(prog));
-      });
-      return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
-    }
+function getFilteredData(){
+  const q = normalizeForCompare(els.searchInput.value), fu = normalizeForCompare(els.followUpSelect.value), prog = normalizeForCompare(els.programSelect.value);
+  let data = initiatives.filter(item => {
+    const execNames = getEntityNames(item.executingEntity); // استخراج الاسم للبحث
+    const blob = [item.initiativeNo, item.initiativeName, item.description, execNames].join(' ');
+    return (!q || normalizeForCompare(blob).includes(q)) && 
+           (!selectedEntity || normalizeForCompare(execNames).includes(normalizeForCompare(selectedEntity))) && 
+           (!fu || normalizeForCompare(item.followUpManager).includes(fu)) && 
+           (!prog || normalizeForCompare(item.programName).includes(prog));
+  });
+  return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
+}
 
     function renderCards(){
       const data = getFilteredData();
