@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>مبادرات الاستراتيجية الصناعية 2040</title>
+  <title>الاستراتيجية الصناعية 2040 - استعراض المبادرات</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/libs/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
@@ -105,7 +105,6 @@
 <body>
   <div id="toastPopup" class="toast-popup"></div>
 
-  <!-- نافذة إدارة الجهات المنفذة -->
   <div class="modal-overlay" id="entityModal">
     <div class="modal-content">
       <h2 style="color:var(--brand2); margin-top:0;">إدارة الجهات المنفذة</h2>
@@ -137,13 +136,13 @@
   </div>
 
   <header id="appHeader" class="header-bar hidden">
-    <h1>الاستراتيجية الصناعية 2040</h1>
+    <h1>الاستراتيجية الصناعية 2040 - استعراض المبادرات</h1>
     <div class="header-user">
       <div class="dropdown" style="position: relative; display: inline-block;">
         <span id="displayUserName" onclick="toggleUserDropdown()" style="padding: 4px 8px; border-radius: 8px;"></span>
         <div id="userDropdownMenu" class="dropdown-content" style="right: 0; left: auto; min-width: 180px;">
-          <button id="btnAdminUsers" class="hidden" onclick="goToAdminPage()" style="font-weight: bold; color: var(--brand2);">إدارة المستخدمين</button>
-          <button id="btnAdminEntities" class="hidden" onclick="openManageEntitiesModal()" style="font-weight: bold; color: var(--brand2);">إدارة الجهات المنفذة</button>
+          <button id="btnAdminUsers" class="hidden" onclick="goToAdminPage()" style="font-weight: bold; color: var(--brand2);">إدارة المستخدمين ⚙️</button>
+          <button id="btnAdminEntities" class="hidden" onclick="openManageEntitiesModal()" style="font-weight: bold; color: var(--brand2);">إدارة الجهات المنفذة 🏢</button>
         </div>
       </div>
       <span id="displayUserRole" style="font-size:11px; background:#e2e8f0; padding:2px 8px; border-radius:10px; color:#475569;"></span>
@@ -175,7 +174,7 @@
         </div>
         
         <div style="display: flex; gap: 8px; height: 100%;">
-          <button onclick="window.location.href='index.html'" class="btn-menu" title="الصفحة الرئيسية (لوحة المؤشرات)">
+          <button onclick="window.location.href='dashboard.html'" class="btn-menu" title="الصفحة الرئيسية (لوحة المؤشرات)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           </button>
           <button onclick="loadAllDataFromServer()" class="btn-menu" title="تحديث البيانات">
@@ -234,35 +233,34 @@
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function normalizeForCompare(v){ return String(v ?? '').replace(/\s+/g,' ').trim().replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ًٌٍَُِّْـ]/g,'').toLowerCase(); }
     function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
-    // 1. دالة لتحويل الـ ID المحفوظ إلى أسماء تُعرض للمستخدم
-function getEntityNames(savedValue) {
-  if (!savedValue || savedValue === "—") return "—";
-  const parts = savedValue.split('،').map(s => s.trim());
-  const names = parts.map(part => {
-    let ent = entitiesList.find(e => String(e.id) === String(part));
-    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
-    return ent ? ent.name : part; 
-  }).filter(Boolean);
-  return names.length > 0 ? names.join('، ') : "—";
-}
+    
+    // 🌟 دوال مساعدة لربط الجهات برقم الـ ID
+    function getEntityNames(savedValue) {
+      if (!savedValue || savedValue === "—") return "—";
+      const parts = savedValue.split('،').map(s => s.trim());
+      const names = parts.map(part => {
+        let ent = entitiesList.find(e => String(e.id) === String(part));
+        if (!ent) ent = entitiesList.find(e => e.name === part);
+        return ent ? ent.name : part; 
+      }).filter(Boolean);
+      return names.length > 0 ? names.join('، ') : "—";
+    }
 
-// 2. دالة لضبط علامات (الصح) في القائمة المنسدلة
-function getEntityIds(savedValue) {
-  if (!savedValue || savedValue === "—") return [];
-  const parts = savedValue.split('،').map(s => s.trim());
-  return parts.map(part => {
-    let ent = entitiesList.find(e => String(e.id) === String(part));
-    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
-    return ent ? String(ent.id) : part; 
-  });
-}
+    function getEntityIds(savedValue) {
+      if (!savedValue || savedValue === "—") return [];
+      const parts = savedValue.split('،').map(s => s.trim());
+      return parts.map(part => {
+        let ent = entitiesList.find(e => String(e.id) === String(part));
+        if (!ent) ent = entitiesList.find(e => e.name === part);
+        return ent ? String(ent.id) : part; 
+      });
+    }
 
-// 3. تعديل دالة العرض لتأخذ الاسم من (data-name) بدلاً من قيمة الحقل التي أصبحت ID
-function updateMultiSelectDisplay(dropdownId, dispId) { 
-  const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); 
-  const names = Array.from(checkboxes).map(cb => cb.dataset.name); // الاعتماد على الاسم للعرض
-  document.getElementById(dispId).textContent = names.length > 0 ? names.join('، ') : 'اختر الجهات...'; 
-}
+    function updateMultiSelectDisplay(dropdownId, dispId) { 
+      const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); 
+      const names = Array.from(checkboxes).map(cb => cb.dataset.name);
+      document.getElementById(dispId).textContent = names.length > 0 ? names.join('، ') : 'اختر الجهات...'; 
+    }
     
     let toastTimeout;
     function showToast(message, type = "") {
@@ -272,9 +270,21 @@ function updateMultiSelectDisplay(dropdownId, dispId) {
       if(type === "success" || type === "error") { toastTimeout = setTimeout(() => { toast.classList.remove("show"); }, 3500); }
     }
 
+    // إدارة النشاط والخمول
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; 
+    function resetActivityTimer() { localStorage.setItem('last_activity_time', Date.now()); }
+    function checkInactivity() {
+      const lastActive = localStorage.getItem('last_activity_time');
+      if (lastActive && (Date.now() - parseInt(lastActive) > INACTIVITY_LIMIT)) {
+        logoutUser("انتهت جلسة العمل بسبب عدم النشاط. يرجى تسجيل الدخول مجدداً.");
+      }
+    }
+    ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => { document.addEventListener(event, resetActivityTimer, { passive: true }); });
+    setInterval(checkInactivity, 60000); 
+
     async function fetchUserProfile(email) {
       const { data, error } = await window.supabaseClient.from('profiles').select('email, role, name, allowed_initiatives').eq('email', email).single();
-      if (error || !data) return null;
+      if (error || !data) { alert("حسابك غير مسجل في قائمة الصلاحيات."); await window.supabaseClient.auth.signOut(); window.location.href = 'login.html'; return null; }
       return { email: data.email, name: data.name || email.split('@')[0], role: String(data.role || 'viewer').toLowerCase().trim(), allowed_initiatives: data.allowed_initiatives || '' };
     }
 
@@ -283,12 +293,20 @@ function updateMultiSelectDisplay(dropdownId, dispId) {
         const { data: { session }, error } = await window.supabaseClient.auth.getSession();
         if (session && session.user) {
           currentUser = await fetchUserProfile(session.user.email);
+          resetActivityTimer();
           initAppAfterLogin();
         } else { window.location.href = 'login.html'; } 
       } catch(e) { window.location.href = 'login.html'; }
     };
 
-    async function logoutUser() { await window.supabaseClient.auth.signOut(); window.location.href = 'login.html'; }
+    async function logoutUser(msg = "تم تسجيل الخروج بنجاح.") { 
+      await window.supabaseClient.auth.signOut(); 
+      localStorage.removeItem('last_activity_time');
+      currentUser = null;
+      if(msg) alert(msg);
+      window.location.href = 'login.html'; 
+    }
+    
     function toggleUserDropdown() { if (currentUser && currentUser.role === 'admin') document.getElementById("userDropdownMenu").classList.toggle("show"); }
     function goToAdminPage() { window.location.href = "admin.html"; }
 
@@ -317,6 +335,12 @@ function updateMultiSelectDisplay(dropdownId, dispId) {
         const { data: initData, error: initError } = await window.supabaseClient.from('initiatives').select('*').order('initiative_number', { ascending: true });
         if (initError) throw initError;
 
+        const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });
+        if (entError) {
+          const uniqueEntities = [...new Set((initData || []).map(i => i.executing_entity).filter(Boolean))];
+          entitiesList = uniqueEntities.map((name, index) => ({ id: index, name: name, contact: "—", phone: "—", email: "—" }));
+        } else { entitiesList = entData || []; }
+
         let rawInitiatives = initData || [];
         if (currentUser.role !== 'admin' && currentUser.allowed_initiatives && currentUser.allowed_initiatives.trim() !== '') {
            const allowedIds = currentUser.allowed_initiatives.split(',').map(s => s.trim());
@@ -340,11 +364,6 @@ function updateMultiSelectDisplay(dropdownId, dispId) {
           };
         });
 
-const { data: entData, error: entError } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });        if (entError) {
-          const uniqueEntities = [...new Set((initData || []).map(i => i.executing_entity).filter(Boolean))];
-          entitiesList = uniqueEntities.map((name, index) => ({ id: index, name: name, contact: "—", phone: "—", email: "—" }));
-        } else { entitiesList = entData || []; }
-
         renderEntityOptions(''); populateFollowUpOptions(); renderCards();
         if(document.getElementById('entityModal').classList.contains('show')){ renderEntityTable(); }
         showToast("✅ اكتمل تحميل البيانات.", "success");
@@ -359,18 +378,18 @@ const { data: entData, error: entError } = await window.supabaseClient.from('ent
       els.followUpSelect.innerHTML = opts.join('');
     }
 
-function getFilteredData(){
-  const q = normalizeForCompare(els.searchInput.value), fu = normalizeForCompare(els.followUpSelect.value), prog = normalizeForCompare(els.programSelect.value);
-  let data = initiatives.filter(item => {
-    const execNames = getEntityNames(item.executingEntity); // استخراج الاسم للبحث
-    const blob = [item.initiativeNo, item.initiativeName, item.description, execNames].join(' ');
-    return (!q || normalizeForCompare(blob).includes(q)) && 
-           (!selectedEntity || normalizeForCompare(execNames).includes(normalizeForCompare(selectedEntity))) && 
-           (!fu || normalizeForCompare(item.followUpManager).includes(fu)) && 
-           (!prog || normalizeForCompare(item.programName).includes(prog));
-  });
-  return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
-}
+    function getFilteredData(){
+      const q = normalizeForCompare(els.searchInput.value), fu = normalizeForCompare(els.followUpSelect.value), prog = normalizeForCompare(els.programSelect.value);
+      let data = initiatives.filter(item => {
+        const execNames = getEntityNames(item.executingEntity); // 🌟 استخدام الاسم للبحث بدلاً من الـ ID
+        const blob = [item.initiativeNo, item.initiativeName, item.description, execNames].join(' ');
+        return (!q || normalizeForCompare(blob).includes(q)) && 
+               (!selectedEntity || normalizeForCompare(execNames).includes(normalizeForCompare(selectedEntity))) && 
+               (!fu || normalizeForCompare(item.followUpManager).includes(fu)) && 
+               (!prog || normalizeForCompare(item.programName).includes(prog));
+      });
+      return data.slice().sort((a,b)=> String(a.initiativeNo).localeCompare(String(b.initiativeNo), 'ar', {numeric:true}) );
+    }
 
     function renderCards(){
       const data = getFilteredData();
@@ -382,6 +401,7 @@ function getFilteredData(){
       
       els.cards.innerHTML = data.map(item => {
         const pct = Math.max(0, Math.min(100, pctNumber(item.completionPercent)));
+        const execNamesDisplay = getEntityNames(item.executingEntity); // 🌟 العرض بالاسم
         
         const goalsHtml = item.goals.length ? item.goals.map(g => `<li><div style="display:flex;gap:6px;"><textarea class="card-control text" rows="1" disabled>${escapeHtml(g)}</textarea></div></li>`).join('') : '<div class="empty">لم تسجل أهداف</div>';
         const indsHtml = item.indicators.length ? item.indicators.map(n => `<li><div style="display:flex;gap:6px;"><textarea class="card-control text" rows="1" disabled>${escapeHtml(n)}</textarea></div></li>`).join('') : '<div class="empty">لم تسجل مؤشرات</div>';
@@ -403,7 +423,7 @@ function getFilteredData(){
               <div class="mini"><span>نسبة التنفيذ</span><b><textarea class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
               <div class="mini"><span>الموازنة التقديرية</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.estimatedBudget)}</textarea></b></div>
               <div class="mini"><span>المبلغ المتبقي</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.remainingAmount)}</textarea></b></div>
-              <div class="mini" style="grid-column: span 2;"><span>الجهة المنفذة</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea></b></div>
+              <div class="mini" style="grid-column: span 2;"><span>الجهة المنفذة</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(execNamesDisplay)}</textarea></b></div>
               <div class="mini" style="grid-column: span 2;"><span>الجهة المساندة</span><b><textarea class="card-control" rows="1" disabled>${escapeHtml(item.supportingEntity)}</textarea></b></div>
             </div>
           </div>
@@ -450,24 +470,19 @@ function getFilteredData(){
     function editEntityForm(id, name, contact, phone, email) { document.getElementById('ent_rowIndex').value = id; document.getElementById('ent_name').value = name; document.getElementById('ent_contact').value = contact; document.getElementById('ent_phone').value = phone; document.getElementById('ent_email').value = email; }
     function resetEntityForm() { document.getElementById('ent_rowIndex').value = ""; document.getElementById('ent_name').value = ""; document.getElementById('ent_contact').value = ""; document.getElementById('ent_phone').value = ""; document.getElementById('ent_email').value = ""; }
     
-async function saveEntity() {
+    async function saveEntity() {
        const id = document.getElementById('ent_rowIndex').value;
        const name = document.getElementById('ent_name').value.trim();
        const contact = document.getElementById('ent_contact').value.trim();
        const phone = document.getElementById('ent_phone').value.trim();
        const email = document.getElementById('ent_email').value.trim();
-       
        if(!name) { showToast("اسم الجهة مطلوب", "error"); return; }
        showToast("⏳ جاري الحفظ...");
-       
        const payload = { name, contact, phone, email };
        let result;
        
-       if(id) { 
-           result = await window.supabaseClient.from('entities').update(payload).eq('id', id); 
-       } else { 
-           result = await window.supabaseClient.from('entities').insert([payload]); 
-       }
+       if(id) { result = await window.supabaseClient.from('entities').update(payload).eq('id', id); } 
+       else { result = await window.supabaseClient.from('entities').insert([payload]); }
 
        if(result.error) { 
            showToast("فشل حفظ البيانات: " + result.error.message, "error"); 
@@ -475,26 +490,22 @@ async function saveEntity() {
            showToast("✅ تم حفظ الجهة بنجاح", "success"); 
            resetEntityForm(); 
            
-           // التعديل: جلب الجهات المحدثة من القاعدة لضمان الترتيب والحصول على ID الجهات الجديدة
+           // التحديث الفوري للجدول بعد الحفظ
            const { data: updatedEntities } = await window.supabaseClient.from('entities').select('*').order('id', { ascending: true });
-           
            if(updatedEntities) {
-               entitiesList = updatedEntities; // تحديث المصفوفة في الذاكرة
-               renderEntityTable(); // تحديث الجدول المعروض أمامك فوراً
-               
-               // تحديث القوائم المنسدلة في الخلفية بدون الحاجة لإعادة تحميل الصفحة بالكامل
-               if (typeof renderEntityOptions === 'function') {
-                   renderEntityOptions(document.getElementById('entitySearchBox').value || ''); 
-               }
+               entitiesList = updatedEntities; 
+               renderEntityTable(); 
+               if (typeof renderEntityOptions === 'function') { renderEntityOptions(document.getElementById('entitySearchBox').value || ''); }
+               loadAllDataFromServer();
            }
        }
     }
 
-    /* تفاصيل دوال الاكسل والبوربوينت المنسوخة بالضبط من الكود الاصلي */
+    /* دوال الاكسل والبوربوينت (باستخدام أسماء الجهات بدل الأرقام) */
     function exportToExcel() {
       const data = getFilteredData();
       if (!data.length) { showToast("لا توجد مبادرات.", "error"); return; } showToast("⏳ جاري تجهيز Excel...");
-      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": item.executingEntity, "الجهة المساندة": item.supportingEntity, "برنامج الاستراتيجية": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (الوزن: ${p.weight}% | الحالة: ${p.status})`).join(' \n ') : "" })));
+      const ws = XLSX.utils.json_to_sheet(data.map(item => ({ "رقم المبادرة": item.initiativeNo, "اسم المبادرة": item.initiativeName, "الجهة المنفذة": getEntityNames(item.executingEntity), "الجهة المساندة": item.supportingEntity, "برنامج الاستراتيجية": item.programName, "الخطة الزمنية": item.timeline, "نسبة التنفيذ": Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%', "الموازنة التقديرية": item.estimatedBudget, "المبلغ المتبقي": item.remainingAmount, "وصف المبادرة": item.description, "أهداف المبادرة": Array.isArray(item.goals) ? item.goals.join(' | ') : item.goals, "المؤشرات الرئيسية": Array.isArray(item.indicators) ? item.indicators.join(' | ') : item.indicators, "خطة العمل": item.actionPlan && item.actionPlan.length ? item.actionPlan.map(p => `${p.no}- ${p.procedure} (الوزن: ${p.weight}% | الحالة: ${p.status})`).join(' \n ') : "" })));
       ws['!dir'] = 'rtl'; const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "المبادرات"); XLSX.writeFile(wb, "المبادرات_الصناعية.xlsx"); showToast("✅ تم التحميل.", "success");
     }
 
@@ -519,7 +530,7 @@ async function saveEntity() {
         slide.addText(fixRtlText(Math.round(Math.max(0, Math.min(100, pctNumber(item.completionPercent)))) + '%'), { x: 0.1, y: 0.1, w: 0.7, h: 0.5, color: altColor, bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 12 });
         slide.addShape(pptx.ShapeType.rect, { x: 0, y: 4.925, w: 10, h: 0.7, fill: brandColor });
         slide.addText("الجهة المنفذة:", { x: 8.8, y: 5.0, w: 1.0, h: 0.55, color: "F8FAFC", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 10 });
-        slide.addText(fixRtlText(item.executingEntity), { x: 6.8, y: 5.0, w: 2.0, h: 0.55, color: "FFFFFF", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
+        slide.addText(fixRtlText(getEntityNames(item.executingEntity)), { x: 6.8, y: 5.0, w: 2.0, h: 0.55, color: "FFFFFF", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
         slide.addText("الجهة المساندة:", { x: 5.5, y: 5.0, w: 1.0, h: 0.55, color: "F8FAFC", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 10 });
         slide.addText(fixRtlText(item.supportingEntity), { x: 3.2, y: 5.0, w: 2.3, h: 0.55, color: "FFFFFF", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 11 });
         slide.addText("الموازنة:", { x: 2.1, y: 5.0, w: 0.8, h: 0.55, color: "F8FAFC", bold: true, align: "right", valign: "middle", ...rtlOpts, fontSize: 10 });
@@ -560,7 +571,7 @@ async function saveEntity() {
       chatHistoryLog.push({ role: 'user', parts: [{ text: msg }] }); input.value = '';
       const loadingId = 'loading-' + Date.now(); chatBody.innerHTML += `<div class="chat-msg ai" id="${loadingId}">⏳...</div>`; chatBody.scrollTop = chatBody.scrollHeight;
       
-      let contextData = initiatives.map(item => `[رقم المبادرة: ${item.initiativeNo}] المبادرة: ${item.initiativeName}، النسبة: ${Math.round(pctNumber(item.completionPercent))}%، المنفذ: ${item.executingEntity}`).join('\n');
+      let contextData = initiatives.map(item => `[رقم المبادرة: ${item.initiativeNo}] المبادرة: ${item.initiativeName}، النسبة: ${Math.round(pctNumber(item.completionPercent))}%، المنفذ: ${getEntityNames(item.executingEntity)}`).join('\n');
       const { data: res, error } = await window.supabaseClient.functions.invoke('chat-bot', { body: { context: contextData, history: chatHistoryLog.slice(-5) } });
       
       document.getElementById(loadingId).remove();
