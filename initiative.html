@@ -223,7 +223,36 @@
 
     function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
     function pctNumber(v){ const str = String(v || '0').trim(); let n = parseFloat(str.replace(/[^0-9.\-]/g, '')); if (!Number.isFinite(n)) return 0; if (n > 0 && n <= 1 && !str.includes('%')) { n = n * 100; } return n; }
-    
+// 1. دالة لتحويل الـ ID المحفوظ إلى أسماء تُعرض للمستخدم
+function getEntityNames(savedValue) {
+  if (!savedValue || savedValue === "—") return "—";
+  const parts = savedValue.split('،').map(s => s.trim());
+  const names = parts.map(part => {
+    let ent = entitiesList.find(e => String(e.id) === String(part));
+    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
+    return ent ? ent.name : part; 
+  }).filter(Boolean);
+  return names.length > 0 ? names.join('، ') : "—";
+}
+
+// 2. دالة لضبط علامات (الصح) في القائمة المنسدلة
+function getEntityIds(savedValue) {
+  if (!savedValue || savedValue === "—") return [];
+  const parts = savedValue.split('،').map(s => s.trim());
+  return parts.map(part => {
+    let ent = entitiesList.find(e => String(e.id) === String(part));
+    if (!ent) ent = entitiesList.find(e => e.name === part); // توافق مع البيانات القديمة
+    return ent ? String(ent.id) : part; 
+  });
+}
+
+// 3. تعديل دالة العرض لتأخذ الاسم من (data-name) بدلاً من قيمة الحقل التي أصبحت ID
+function updateMultiSelectDisplay(dropdownId, dispId) { 
+  const checkboxes = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:checked`); 
+  const names = Array.from(checkboxes).map(cb => cb.dataset.name); // الاعتماد على الاسم للعرض
+  document.getElementById(dispId).textContent = names.length > 0 ? names.join('، ') : 'اختر الجهات...'; 
+}
+      
     let toastTimeout;
     function showToast(message, type = "") {
       const toast = document.getElementById("toastPopup");
@@ -315,9 +344,14 @@ const { data: entData, error: entError } = await window.supabaseClient.from('ent
       const canEdit = currentUser && (currentUser.role === 'editor' || currentUser.role === 'admin');
       const editBtnHtml = canEdit ? `<button type="button" class="btn-review btn-edit-mode" id="btnEdit" onclick="enableEditMode()">تعديل البيانات 📝</button>` : '';
       
-      const currentEntities = (item.executingEntity || '').split('،').map(e => e.trim());
-      const checkBoxesHtml = entitiesList.map(e => { const isChecked = currentEntities.includes(e.name) ? 'checked' : ''; return `<label class="multi-select-item"><input type="checkbox" value="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown', 'exec_disp')"><span>${escapeHtml(e.name)}</span></label>`; }).join('');
+const execNamesDisplay = getEntityNames(item.executingEntity);
+const currentExecIds = getEntityIds(item.executingEntity);
 
+const checkBoxesHtml = entitiesList.map(e => { 
+  const isChecked = currentExecIds.includes(String(e.id)) ? 'checked' : ''; 
+  return `<label class="multi-select-item"><input type="checkbox" value="${e.id}" data-name="${escapeHtml(e.name)}" ${isChecked} onchange="updateMultiSelectDisplay('exec_dropdown', 'exec_disp')"><span>${escapeHtml(e.name)}</span></label>`; 
+}).join('');
+        
       let statusColor = '#64748b'; if(item.status === 'مكتملة') statusColor = '#16a34a'; else if(item.status === 'قيد التنفيذ') statusColor = '#eab308';
 
       container.innerHTML = `
@@ -348,9 +382,9 @@ const { data: entData, error: entError } = await window.supabaseClient.from('ent
             <div class="mini"><span>نسبة التنفيذ</span><b><textarea id="f_pct" class="card-control" rows="1" disabled>${Math.round(pct)}%</textarea></b><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>
             
             <div class="mini" style="overflow: visible; z-index:11;"><span>الجهة المنفذة</span><b>
-              <textarea id="f_exec_view" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(item.executingEntity)}</textarea>
+              <textarea id="f_exec_view" class="card-control text-view togglable" rows="1" disabled>${escapeHtml(execNamesDisplay)}</textarea>
               <div class="multi-select-container edit-input" id="f_exec_edit_wrap">
-                <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown')" id="exec_disp">${escapeHtml(item.executingEntity) || 'اختر الجهة...'}</div>
+                <div class="multi-select-display" onclick="toggleMultiSelect('exec_dropdown')" id="exec_disp">${escapeHtml(execNamesDisplay) || 'اختر الجهة...'}</div>
                 <div class="multi-select-dropdown" id="exec_dropdown">${checkBoxesHtml}</div>
               </div>
             </b></div>
