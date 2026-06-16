@@ -191,22 +191,6 @@
     </div>
   </div>
 
-   <button class="chat-fab" onclick="toggleChat()" title="تحدث مع المستشار الذكي">🤖</button>
-  <div class="chat-window" id="chatWindow">
-    <div class="chat-header">
-      <div style="display:flex; align-items:center; gap:8px;"><span>🤖</span> مساعد المبادرة</div>
-      <button style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;" onclick="toggleChat()">✖</button>
-    </div>
-    <div class="chat-body" id="chatBody">
-      <div class="chat-msg ai">أهلاً بك! 👋 أنا المساعد الذكي. يمكنك سؤالي عن تفاصيل هذه المبادرة وتحدياتها.</div>
-    </div>
-    <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key === 'Enter') sendChatMessage()" />
-      <button id="chatSendBtn" onclick="sendChatMessage()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(180deg);"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      </button>
-    </div>
-  </div>
 
   <script>
     const SUPABASE_URL = 'https://ictyhtprnmfewjrlrctg.supabase.co'; 
